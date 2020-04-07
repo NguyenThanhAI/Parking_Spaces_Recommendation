@@ -16,7 +16,7 @@ import shutil
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
 
-ROOT_DIR = os.path.abspath("..")
+ROOT_DIR = os.path.abspath("../")
 
 sys.path.append(ROOT_DIR)
 
@@ -173,6 +173,7 @@ class CarsAndVehiclesDataset(utils.Dataset):
 #  COCO Evaluation
 ############################################################
 
+
 def build_coco_results(dataset, image_ids, rois, class_ids, scores, masks):
     """Arrange resutls to match COCO specs in http://cocodataset.org/#format
         """
@@ -188,7 +189,7 @@ def build_coco_results(dataset, image_ids, rois, class_ids, scores, masks):
             class_id = class_ids[i]
             score = scores[i]
             bbox = np.around(rois[i], 1)
-            mask = mask[:, :, i]
+            mask = masks[:, :, i]
 
             result = {
                 "image_id": image_id,
@@ -249,7 +250,7 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     coco_results = coco.loadRes(results)
 
     # Evaluate
-    cocoEval = COCOeval(coco, coco_image_ids, eval_type)
+    cocoEval = COCOeval(coco, coco_results, eval_type)
     cocoEval.params.ImgIds = coco_image_ids
     cocoEval.evaluate()
     cocoEval.accumulate()
@@ -343,11 +344,10 @@ def evaluate(model, args):
                   limit=int(args.limit),)
 
 
-
-
 ############################################################
 #  Training
 ############################################################
+
 
 if __name__ == '__main__':
 
@@ -387,14 +387,14 @@ if __name__ == '__main__':
 
     # Configurations
     if args.command == "train":
-        config = CarsAndVehiclesConfig
+        config = CarsAndVehiclesConfig()
     else:
         class InferenceConfig(CarsAndVehiclesConfig):
             GPU_COUNT = 1
             IMAGES_PER_GPU = 1
             DETECTION_MIN_CONFIDENCE = 0
         config = InferenceConfig()
-        config.display()
+    config.display()
 
     # Create model
     if args.command == "train":
