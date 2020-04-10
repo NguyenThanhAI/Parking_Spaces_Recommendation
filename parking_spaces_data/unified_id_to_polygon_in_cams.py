@@ -3,7 +3,7 @@ import os
 import argparse
 import json
 
-from parking_spaces_data.order_in_json_to_unified_id import order_in_json_to_unified_id, cam_to_space_id
+from parking_spaces_data.order_in_json_to_unified_id import order_in_json_to_unified_id, cam_to_space_id, unified_id_and_adjacency_ids, unified_id_to_orientation_consideration
 
 
 def get_args():
@@ -47,10 +47,15 @@ if __name__ == '__main__':
         if "positions" not in unified_id_to_polygons[unified_id]:
             unified_id_to_polygons[unified_id]["positions"] = {}
 
+        if "reversed_considered_orients" not in unified_id_to_polygons[unified_id]:
+            unified_id_to_polygons[unified_id]["reversed_considered_orients"] = {}
+
         annotation_wrt_order = list(filter(lambda x: x["id"] == order, annotations))
         assert len(annotation_wrt_order) == 1
 
         unified_id_to_polygons[unified_id]["positions"][cam] = annotation_wrt_order[0]["segmentation"]
+        unified_id_to_polygons[unified_id].update(unified_id_and_adjacency_ids[unified_id])
+        unified_id_to_polygons[unified_id]["reversed_considered_orients"] = unified_id_to_orientation_consideration[unified_id]
 
     with open("parking_spaces_unified_id_segmen_in_cameras.json", "w") as f:
         json.dump(unified_id_to_polygons, f, indent=4)

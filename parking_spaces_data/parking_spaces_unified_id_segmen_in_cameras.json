@@ -25,6 +25,24 @@
                     282.7000000000007
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 40,
+            "western_adjacency": null,
+            "southern_adjacency": null,
+            "northern_adjacency": 70,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": 69
         }
     },
     "40": {
@@ -55,6 +73,24 @@
                     238.3168000000078
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 41,
+            "western_adjacency": 39,
+            "southern_adjacency": null,
+            "northern_adjacency": 69,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 70,
+            "north_east_adjacency": 68
         }
     },
     "41": {
@@ -83,6 +119,24 @@
                     237.49600000000464
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 42,
+            "western_adjacency": 40,
+            "southern_adjacency": null,
+            "northern_adjacency": 68,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 69,
+            "north_east_adjacency": 67
         }
     },
     "42": {
@@ -111,6 +165,24 @@
                     282.78400000000875
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 43,
+            "western_adjacency": 41,
+            "southern_adjacency": null,
+            "northern_adjacency": 67,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 68,
+            "north_east_adjacency": 66
         }
     },
     "43": {
@@ -139,6 +211,24 @@
                     283.17568000000756
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 44,
+            "western_adjacency": 42,
+            "southern_adjacency": null,
+            "northern_adjacency": 66,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 67,
+            "north_east_adjacency": 65
         }
     },
     "44": {
@@ -167,6 +257,24 @@
                     284.60000000000036
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 45,
+            "western_adjacency": 43,
+            "southern_adjacency": null,
+            "northern_adjacency": 65,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 66,
+            "north_east_adjacency": 64
         }
     },
     "45": {
@@ -195,6 +303,24 @@
                     285.92665600000873
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 46,
+            "western_adjacency": 44,
+            "southern_adjacency": null,
+            "northern_adjacency": 64,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 65,
+            "north_east_adjacency": 63
         }
     },
     "46": {
@@ -223,6 +349,21 @@
                     287.78944000000774
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 47,
+            "western_adjacency": 45,
+            "southern_adjacency": null,
+            "northern_adjacency": 63,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 64,
+            "north_east_adjacency": 62
         }
     },
     "47": {
@@ -251,6 +392,21 @@
                     289.72480000000724
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 48,
+            "western_adjacency": 46,
+            "southern_adjacency": null,
+            "northern_adjacency": 62,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 63,
+            "north_east_adjacency": 61
         }
     },
     "48": {
@@ -279,6 +435,21 @@
                     292.5760000000064
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 49,
+            "western_adjacency": 47,
+            "southern_adjacency": null,
+            "northern_adjacency": 61,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 62,
+            "north_east_adjacency": 60
         }
     },
     "49": {
@@ -307,6 +478,21 @@
                     294.90000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 50,
+            "western_adjacency": 48,
+            "southern_adjacency": null,
+            "northern_adjacency": 60,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 61,
+            "north_east_adjacency": 59
         }
     },
     "50": {
@@ -335,6 +521,24 @@
                     298.9600000000046
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "east"
+            ],
+            "cam_2": [
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 51,
+            "western_adjacency": 49,
+            "southern_adjacency": null,
+            "northern_adjacency": 59,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 60,
+            "north_east_adjacency": 58
         }
     },
     "51": {
@@ -363,6 +567,24 @@
                     302.32883200000833
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "east"
+            ],
+            "cam_2": [
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 52,
+            "western_adjacency": 50,
+            "southern_adjacency": null,
+            "northern_adjacency": 58,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 59,
+            "north_east_adjacency": 57
         }
     },
     "52": {
@@ -391,6 +613,24 @@
                     309.40000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "east"
+            ],
+            "cam_2": [
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 53,
+            "western_adjacency": 51,
+            "southern_adjacency": null,
+            "northern_adjacency": 57,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 58,
+            "north_east_adjacency": 56
         }
     },
     "53": {
@@ -419,6 +659,24 @@
                     312.4480000000058
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "east"
+            ],
+            "cam_2": [
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 54,
+            "western_adjacency": 52,
+            "southern_adjacency": null,
+            "northern_adjacency": 56,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 57,
+            "north_east_adjacency": 55
         }
     },
     "54": {
@@ -447,6 +705,24 @@
                     316.40000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "east"
+            ],
+            "cam_2": [
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 53,
+            "southern_adjacency": null,
+            "northern_adjacency": 55,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 56,
+            "north_east_adjacency": null
         }
     },
     "55": {
@@ -475,6 +751,24 @@
                     388.9081892570284
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 56,
+            "southern_adjacency": 54,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": 53,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "56": {
@@ -505,6 +799,24 @@
                     386.39791182728004
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 55,
+            "western_adjacency": 57,
+            "southern_adjacency": 53,
+            "northern_adjacency": null,
+            "south_east_adjacency": 54,
+            "south_west_adjacency": 52,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "57": {
@@ -533,6 +845,24 @@
                     383.5
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 56,
+            "western_adjacency": 59,
+            "southern_adjacency": 52,
+            "northern_adjacency": null,
+            "south_east_adjacency": 53,
+            "south_west_adjacency": 51,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "58": {
@@ -561,6 +891,24 @@
                     379.5
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 57,
+            "western_adjacency": 59,
+            "southern_adjacency": 51,
+            "northern_adjacency": null,
+            "south_east_adjacency": 52,
+            "south_west_adjacency": 50,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "59": {
@@ -589,6 +937,24 @@
                     377.0864560811933
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 58,
+            "western_adjacency": 60,
+            "southern_adjacency": 50,
+            "northern_adjacency": null,
+            "south_east_adjacency": 51,
+            "south_west_adjacency": 49,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "60": {
@@ -619,6 +985,21 @@
                     373.9899691030896
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 59,
+            "western_adjacency": 61,
+            "southern_adjacency": 49,
+            "northern_adjacency": null,
+            "south_east_adjacency": 50,
+            "south_west_adjacency": 48,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "61": {
@@ -647,6 +1028,21 @@
                     369.43799936380856
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 60,
+            "western_adjacency": 62,
+            "southern_adjacency": 48,
+            "northern_adjacency": null,
+            "south_east_adjacency": 49,
+            "south_west_adjacency": 47,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "62": {
@@ -675,6 +1071,21 @@
                     361.7000000000007
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 61,
+            "western_adjacency": 63,
+            "southern_adjacency": 47,
+            "northern_adjacency": null,
+            "south_east_adjacency": 48,
+            "south_west_adjacency": 46,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "63": {
@@ -703,6 +1114,21 @@
                     358.144906707279
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 62,
+            "western_adjacency": 64,
+            "southern_adjacency": 46,
+            "northern_adjacency": null,
+            "south_east_adjacency": 47,
+            "south_west_adjacency": 45,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "64": {
@@ -731,6 +1157,24 @@
                     354.0511940896522
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 63,
+            "western_adjacency": 65,
+            "southern_adjacency": 45,
+            "northern_adjacency": null,
+            "south_east_adjacency": 46,
+            "south_west_adjacency": 44,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "65": {
@@ -761,6 +1205,24 @@
                     350.8739957153284
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 64,
+            "western_adjacency": 66,
+            "southern_adjacency": 44,
+            "northern_adjacency": null,
+            "south_east_adjacency": 45,
+            "south_west_adjacency": 43,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "66": {
@@ -789,6 +1251,24 @@
                     350.90497971103105
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 65,
+            "western_adjacency": 67,
+            "southern_adjacency": 43,
+            "northern_adjacency": null,
+            "south_east_adjacency": 44,
+            "south_west_adjacency": 42,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "67": {
@@ -817,6 +1297,24 @@
                     345.34507381519506
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 66,
+            "western_adjacency": 68,
+            "southern_adjacency": 42,
+            "northern_adjacency": null,
+            "south_east_adjacency": 43,
+            "south_west_adjacency": 42,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "68": {
@@ -845,6 +1343,24 @@
                     342.862528974194
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 67,
+            "western_adjacency": 69,
+            "southern_adjacency": 41,
+            "northern_adjacency": null,
+            "south_east_adjacency": 42,
+            "south_west_adjacency": 40,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "69": {
@@ -873,6 +1389,24 @@
                     340.25681318730676
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 68,
+            "western_adjacency": 70,
+            "southern_adjacency": 40,
+            "northern_adjacency": null,
+            "south_east_adjacency": 41,
+            "south_west_adjacency": 39,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "70": {
@@ -903,6 +1437,24 @@
                     340.40000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 69,
+            "western_adjacency": null,
+            "southern_adjacency": 39,
+            "northern_adjacency": null,
+            "south_east_adjacency": 40,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "71": {
@@ -931,6 +1483,25 @@
                     102.59000000000196
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 72,
+            "western_adjacency": null,
+            "southern_adjacency": null,
+            "northern_adjacency": 94,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": 93
         }
     },
     "72": {
@@ -959,6 +1530,25 @@
                     107.90000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 73,
+            "western_adjacency": 71,
+            "southern_adjacency": null,
+            "northern_adjacency": 93,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 94,
+            "north_east_adjacency": 92
         }
     },
     "73": {
@@ -987,6 +1577,25 @@
                     116.60000000000036
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 74,
+            "western_adjacency": 72,
+            "southern_adjacency": null,
+            "northern_adjacency": 92,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 93,
+            "north_east_adjacency": 91
         }
     },
     "74": {
@@ -1015,6 +1624,25 @@
                     126.04000000000269
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 75,
+            "western_adjacency": 73,
+            "southern_adjacency": null,
+            "northern_adjacency": 91,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 92,
+            "north_east_adjacency": 90
         }
     },
     "75": {
@@ -1043,6 +1671,25 @@
                     134.10000000000218
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 76,
+            "western_adjacency": 74,
+            "southern_adjacency": null,
+            "northern_adjacency": 90,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 91,
+            "north_east_adjacency": 89
         }
     },
     "76": {
@@ -1071,6 +1718,22 @@
                     142.64000000000306
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 77,
+            "western_adjacency": 75,
+            "southern_adjacency": null,
+            "northern_adjacency": 89,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 90,
+            "north_east_adjacency": 88
         }
     },
     "77": {
@@ -1099,6 +1762,22 @@
                     153.05036800000744
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 78,
+            "western_adjacency": 76,
+            "southern_adjacency": null,
+            "northern_adjacency": 88,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 89,
+            "north_east_adjacency": 87
         }
     },
     "78": {
@@ -1129,6 +1808,22 @@
                     179.322880000007
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 79,
+            "western_adjacency": 77,
+            "southern_adjacency": null,
+            "northern_adjacency": 87,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 88,
+            "north_east_adjacency": 86
         }
     },
     "79": {
@@ -1157,6 +1852,25 @@
                     197.23600000000442
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "east"
+            ],
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 80,
+            "western_adjacency": 78,
+            "southern_adjacency": null,
+            "northern_adjacency": 86,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 87,
+            "north_east_adjacency": 85
         }
     },
     "80": {
@@ -1185,6 +1899,25 @@
                     216.2560000000085
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "east"
+            ],
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 81,
+            "western_adjacency": 79,
+            "southern_adjacency": null,
+            "northern_adjacency": 85,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 86,
+            "north_east_adjacency": 84
         }
     },
     "81": {
@@ -1213,6 +1946,25 @@
                     219.23968000000787
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "east"
+            ],
+            "cam_3": [
+                "west",
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 82,
+            "western_adjacency": 80,
+            "southern_adjacency": null,
+            "northern_adjacency": 84,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 85,
+            "north_east_adjacency": 83
         }
     },
     "82": {
@@ -1241,6 +1993,21 @@
                     241.10000000000036
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 81,
+            "southern_adjacency": null,
+            "northern_adjacency": 83,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 84,
+            "north_east_adjacency": null
         }
     },
     "83": {
@@ -1269,6 +2036,21 @@
                     283.71785728000395
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 84,
+            "southern_adjacency": 82,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": 81,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "84": {
@@ -1297,6 +2079,24 @@
                     249.99808000000667
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 83,
+            "western_adjacency": 85,
+            "southern_adjacency": 81,
+            "northern_adjacency": null,
+            "south_east_adjacency": 82,
+            "south_west_adjacency": 80,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "85": {
@@ -1325,6 +2125,24 @@
                     224.7280000000046
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 84,
+            "western_adjacency": 86,
+            "southern_adjacency": 80,
+            "northern_adjacency": null,
+            "south_east_adjacency": 81,
+            "south_west_adjacency": 79,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "86": {
@@ -1353,6 +2171,24 @@
                     202.4642560000084
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 85,
+            "western_adjacency": 87,
+            "southern_adjacency": 79,
+            "northern_adjacency": null,
+            "south_east_adjacency": 80,
+            "south_west_adjacency": 78,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "87": {
@@ -1381,6 +2217,24 @@
                     167.8000000000011
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 86,
+            "western_adjacency": 88,
+            "southern_adjacency": 78,
+            "northern_adjacency": null,
+            "south_east_adjacency": 79,
+            "south_west_adjacency": 77,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "88": {
@@ -1411,6 +2265,24 @@
                     143.5
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 87,
+            "western_adjacency": 89,
+            "southern_adjacency": 77,
+            "northern_adjacency": null,
+            "south_east_adjacency": 78,
+            "south_west_adjacency": 76,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "89": {
@@ -1439,6 +2311,24 @@
                     142.8400000000056
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 88,
+            "western_adjacency": 90,
+            "southern_adjacency": 76,
+            "northern_adjacency": null,
+            "south_east_adjacency": 77,
+            "south_west_adjacency": 75,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "90": {
@@ -1469,6 +2359,24 @@
                     133.86000000000604
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 89,
+            "western_adjacency": 91,
+            "southern_adjacency": 75,
+            "northern_adjacency": null,
+            "south_east_adjacency": 76,
+            "south_west_adjacency": 74,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "91": {
@@ -1497,6 +2405,24 @@
                     126.0
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 90,
+            "western_adjacency": 92,
+            "southern_adjacency": 74,
+            "northern_adjacency": null,
+            "south_east_adjacency": 75,
+            "south_west_adjacency": 73,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "92": {
@@ -1527,6 +2453,24 @@
                     118.40000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 91,
+            "western_adjacency": 93,
+            "southern_adjacency": 73,
+            "northern_adjacency": null,
+            "south_east_adjacency": 74,
+            "south_west_adjacency": 72,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "93": {
@@ -1555,6 +2499,24 @@
                     110.04000000000269
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 92,
+            "western_adjacency": 94,
+            "southern_adjacency": 72,
+            "northern_adjacency": null,
+            "south_east_adjacency": 73,
+            "south_west_adjacency": 71,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "94": {
@@ -1583,6 +2545,24 @@
                     105.0
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 93,
+            "western_adjacency": null,
+            "southern_adjacency": 71,
+            "northern_adjacency": null,
+            "south_east_adjacency": 72,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "95": {
@@ -1611,6 +2591,24 @@
                     128.01000000000568
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 96,
+            "western_adjacency": null,
+            "southern_adjacency": null,
+            "northern_adjacency": 118,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": 117
         }
     },
     "96": {
@@ -1639,6 +2637,24 @@
                     139.59616000000642
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 97,
+            "western_adjacency": 95,
+            "southern_adjacency": null,
+            "northern_adjacency": 117,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 118,
+            "north_east_adjacency": 116
         }
     },
     "97": {
@@ -1667,6 +2683,24 @@
                     149.09000000000196
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 98,
+            "western_adjacency": 96,
+            "southern_adjacency": null,
+            "northern_adjacency": 116,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 117,
+            "north_east_adjacency": 115
         }
     },
     "98": {
@@ -1695,6 +2729,24 @@
                     144.75000000000546
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 99,
+            "western_adjacency": 97,
+            "southern_adjacency": null,
+            "northern_adjacency": 115,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 116,
+            "north_east_adjacency": 114
         }
     },
     "99": {
@@ -1723,6 +2775,24 @@
                     178.60000000000036
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "west"
+            ],
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 100,
+            "western_adjacency": 98,
+            "southern_adjacency": null,
+            "northern_adjacency": 114,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 115,
+            "north_east_adjacency": 113
         }
     },
     "100": {
@@ -1753,6 +2823,21 @@
                     161.57286400000885
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 101,
+            "western_adjacency": 99,
+            "southern_adjacency": null,
+            "northern_adjacency": 113,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 114,
+            "north_east_adjacency": 112
         }
     },
     "101": {
@@ -1781,6 +2866,21 @@
                     175.5057971200058
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 102,
+            "western_adjacency": 100,
+            "southern_adjacency": null,
+            "northern_adjacency": 112,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 113,
+            "north_east_adjacency": 111
         }
     },
     "102": {
@@ -1809,6 +2909,21 @@
                     227.0571520000085
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 103,
+            "western_adjacency": 101,
+            "southern_adjacency": null,
+            "northern_adjacency": 111,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 112,
+            "north_east_adjacency": 110
         }
     },
     "103": {
@@ -1837,6 +2952,21 @@
                     247.40590305280784
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 104,
+            "western_adjacency": 102,
+            "southern_adjacency": null,
+            "northern_adjacency": 110,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 111,
+            "north_east_adjacency": 109
         }
     },
     "104": {
@@ -1867,6 +2997,21 @@
                     249.46264883200638
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 105,
+            "western_adjacency": 103,
+            "southern_adjacency": null,
+            "northern_adjacency": 109,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 110,
+            "north_east_adjacency": 108
         }
     },
     "105": {
@@ -1895,6 +3040,21 @@
                     302.52955648000716
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_3": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 106,
+            "western_adjacency": 104,
+            "southern_adjacency": null,
+            "northern_adjacency": 108,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 109,
+            "north_east_adjacency": 107
         }
     },
     "106": {
@@ -1923,6 +3083,17 @@
                     358.08491152998613
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 105,
+            "southern_adjacency": null,
+            "northern_adjacency": 107,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 108,
+            "north_east_adjacency": null
         }
     },
     "107": {
@@ -1939,6 +3110,21 @@
                     142.3000000000011
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 108,
+            "southern_adjacency": 106,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": 105,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "108": {
@@ -1967,6 +3153,25 @@
                     343.925248000005
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 107,
+            "western_adjacency": 109,
+            "southern_adjacency": 105,
+            "northern_adjacency": null,
+            "south_east_adjacency": 106,
+            "south_west_adjacency": 104,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "109": {
@@ -1995,6 +3200,25 @@
                     291.98848000000726
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 108,
+            "western_adjacency": 110,
+            "southern_adjacency": 104,
+            "northern_adjacency": null,
+            "south_east_adjacency": 105,
+            "south_west_adjacency": 103,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "110": {
@@ -2023,6 +3247,25 @@
                     269.40000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_east"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 109,
+            "western_adjacency": 111,
+            "southern_adjacency": 103,
+            "northern_adjacency": null,
+            "south_east_adjacency": 104,
+            "south_west_adjacency": 102,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "111": {
@@ -2051,6 +3294,25 @@
                     227.48224000000664
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 110,
+            "western_adjacency": 112,
+            "southern_adjacency": 102,
+            "northern_adjacency": null,
+            "south_east_adjacency": 103,
+            "south_west_adjacency": 101,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "112": {
@@ -2079,6 +3341,25 @@
                     211.27360000000772
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 111,
+            "western_adjacency": 113,
+            "southern_adjacency": 101,
+            "northern_adjacency": null,
+            "south_east_adjacency": 102,
+            "south_west_adjacency": 100,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "113": {
@@ -2107,6 +3388,25 @@
                     194.8000000000011
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 112,
+            "western_adjacency": 114,
+            "southern_adjacency": 100,
+            "northern_adjacency": null,
+            "south_east_adjacency": 101,
+            "south_west_adjacency": 99,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "114": {
@@ -2135,6 +3435,25 @@
                     183.20000000000073
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 113,
+            "western_adjacency": 115,
+            "southern_adjacency": 99,
+            "northern_adjacency": null,
+            "south_east_adjacency": 100,
+            "south_west_adjacency": 98,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "115": {
@@ -2165,6 +3484,25 @@
                     170.86325592398134
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 114,
+            "western_adjacency": 116,
+            "southern_adjacency": 98,
+            "northern_adjacency": null,
+            "south_east_adjacency": 99,
+            "south_west_adjacency": 97,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "116": {
@@ -2193,6 +3531,25 @@
                     160.14207999999962
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 115,
+            "western_adjacency": 117,
+            "southern_adjacency": 97,
+            "northern_adjacency": null,
+            "south_east_adjacency": 98,
+            "south_west_adjacency": 96,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "117": {
@@ -2221,6 +3578,25 @@
                     150.11968000000707
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 116,
+            "western_adjacency": 118,
+            "southern_adjacency": 96,
+            "northern_adjacency": null,
+            "south_east_adjacency": 97,
+            "south_west_adjacency": 95,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "118": {
@@ -2249,6 +3625,25 @@
                     137.65000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north_west"
+            ],
+            "cam_3": [
+                "west",
+                "north_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 117,
+            "western_adjacency": null,
+            "southern_adjacency": 95,
+            "northern_adjacency": null,
+            "south_east_adjacency": 96,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "119": {
@@ -2283,6 +3678,21 @@
                     716.6062639434986
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": 120,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "120": {
@@ -2313,6 +3723,21 @@
                     558.006669169923
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": 121,
+            "northern_adjacency": 119,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "121": {
@@ -2341,6 +3766,21 @@
                     546.200183603205
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": 122,
+            "northern_adjacency": 120,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "122": {
@@ -2371,6 +3811,21 @@
                     528.2090614718454
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": 123,
+            "northern_adjacency": 121,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "123": {
@@ -2399,6 +3854,21 @@
                     511.4467926291236
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": 124,
+            "northern_adjacency": 122,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "124": {
@@ -2427,6 +3897,21 @@
                     470.10000000000036
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": 125,
+            "northern_adjacency": 123,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "125": {
@@ -2455,6 +3940,21 @@
                     442.7749869766576
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": null,
+            "northern_adjacency": 124,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "126": {
@@ -2483,6 +3983,17 @@
                     503.4920434764754
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "127": {
@@ -2499,6 +4010,21 @@
                     269.5941529600059
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_1": [
+                "north"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": 128,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "128": {
@@ -2515,6 +4041,17 @@
                     289.0
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": null,
+            "southern_adjacency": null,
+            "northern_adjacency": 127,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "0": {
@@ -2531,6 +4068,17 @@
                     127.40000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 1,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "1": {
@@ -2547,6 +4095,17 @@
                     125.71000000000276
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 0,
+            "western_adjacency": 2,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "2": {
@@ -2563,6 +4122,17 @@
                     122.40000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 1,
+            "western_adjacency": 3,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "3": {
@@ -2579,6 +4149,17 @@
                     120.36400000000503
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 2,
+            "western_adjacency": 4,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "4": {
@@ -2595,6 +4176,17 @@
                     118.65280000000712
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 3,
+            "western_adjacency": 5,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "5": {
@@ -2611,6 +4203,17 @@
                     115.70000000000073
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 4,
+            "western_adjacency": 6,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "6": {
@@ -2627,6 +4230,17 @@
                     113.10000000000036
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 5,
+            "western_adjacency": 7,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "7": {
@@ -2643,6 +4257,17 @@
                     112.10000000000218
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 6,
+            "western_adjacency": 8,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "8": {
@@ -2659,6 +4284,17 @@
                     110.75000000000182
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 7,
+            "western_adjacency": 9,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "9": {
@@ -2675,6 +4311,17 @@
                     109.38000000000284
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 8,
+            "western_adjacency": 10,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "10": {
@@ -2691,6 +4338,17 @@
                     108.45000000000255
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 9,
+            "western_adjacency": 11,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "11": {
@@ -2707,6 +4365,17 @@
                     106.38000000000284
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 10,
+            "western_adjacency": 12,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "12": {
@@ -2723,6 +4392,17 @@
                     105.49600000000464
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 11,
+            "western_adjacency": 13,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "13": {
@@ -2739,6 +4419,17 @@
                     105.37600000000566
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 12,
+            "western_adjacency": 14,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "14": {
@@ -2755,6 +4446,17 @@
                     105.60000000000036
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 13,
+            "western_adjacency": 15,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "15": {
@@ -2771,6 +4473,17 @@
                     105.90000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 14,
+            "western_adjacency": null,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "16": {
@@ -2787,6 +4500,21 @@
                     127.20000000000073
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 17,
+            "western_adjacency": null,
+            "southern_adjacency": null,
+            "northern_adjacency": 38,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": 37
         }
     },
     "17": {
@@ -2803,6 +4531,21 @@
                     127.80000000000109
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 18,
+            "western_adjacency": 16,
+            "southern_adjacency": null,
+            "northern_adjacency": 37,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 38,
+            "north_east_adjacency": 36
         }
     },
     "18": {
@@ -2819,6 +4562,21 @@
                     145.33311999999387
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 19,
+            "western_adjacency": 17,
+            "southern_adjacency": null,
+            "northern_adjacency": 36,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 37,
+            "north_east_adjacency": 35
         }
     },
     "19": {
@@ -2835,6 +4593,21 @@
                     129.56799999999566
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south_west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 20,
+            "western_adjacency": 18,
+            "southern_adjacency": null,
+            "northern_adjacency": 35,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 36,
+            "north_east_adjacency": null
         }
     },
     "20": {
@@ -2851,6 +4624,17 @@
                     146.8000000000011
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 21,
+            "western_adjacency": 19,
+            "southern_adjacency": null,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 35,
+            "north_east_adjacency": 34
         }
     },
     "21": {
@@ -2867,6 +4651,21 @@
                     132.60000000000036
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 22,
+            "western_adjacency": 20,
+            "southern_adjacency": null,
+            "northern_adjacency": 34,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": 33
         }
     },
     "22": {
@@ -2883,6 +4682,21 @@
                     150.60000000000036
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 23,
+            "western_adjacency": 21,
+            "southern_adjacency": null,
+            "northern_adjacency": 33,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 34,
+            "north_east_adjacency": 32
         }
     },
     "23": {
@@ -2899,6 +4713,22 @@
                     136.48575999999412
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south",
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 24,
+            "western_adjacency": 22,
+            "southern_adjacency": null,
+            "northern_adjacency": 32,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 33,
+            "north_east_adjacency": 31
         }
     },
     "24": {
@@ -2915,6 +4745,21 @@
                     155.06000000000313
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 25,
+            "western_adjacency": 23,
+            "southern_adjacency": null,
+            "northern_adjacency": 31,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 32,
+            "north_east_adjacency": 30
         }
     },
     "25": {
@@ -2931,6 +4776,21 @@
                     158.9727999999959
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 26,
+            "western_adjacency": 24,
+            "southern_adjacency": null,
+            "northern_adjacency": 30,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 31,
+            "north_east_adjacency": 29
         }
     },
     "26": {
@@ -2947,6 +4807,21 @@
                     162.8000000000011
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 27,
+            "western_adjacency": 25,
+            "southern_adjacency": null,
+            "northern_adjacency": 29,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 30,
+            "north_east_adjacency": 28
         }
     },
     "27": {
@@ -2963,6 +4838,21 @@
                     164.8000000000011
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "south_east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 26,
+            "southern_adjacency": null,
+            "northern_adjacency": 28,
+            "south_east_adjacency": null,
+            "south_west_adjacency": null,
+            "north_west_adjacency": 29,
+            "north_east_adjacency": null
         }
     },
     "28": {
@@ -2979,6 +4869,21 @@
                     200.5254400000067
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 29,
+            "southern_adjacency": 27,
+            "northern_adjacency": null,
+            "south_east_adjacency": null,
+            "south_west_adjacency": 26,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "29": {
@@ -2995,6 +4900,21 @@
                     196.06000000000495
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 28,
+            "western_adjacency": 30,
+            "southern_adjacency": 26,
+            "northern_adjacency": null,
+            "south_east_adjacency": 27,
+            "south_west_adjacency": 25,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "30": {
@@ -3011,6 +4931,21 @@
                     191.77940992000913
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 29,
+            "western_adjacency": 31,
+            "southern_adjacency": 25,
+            "northern_adjacency": null,
+            "south_east_adjacency": 26,
+            "south_west_adjacency": 24,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "31": {
@@ -3027,6 +4962,21 @@
                     189.15520000000652
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 30,
+            "western_adjacency": 32,
+            "southern_adjacency": 24,
+            "northern_adjacency": null,
+            "south_east_adjacency": 25,
+            "south_west_adjacency": 23,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "32": {
@@ -3043,6 +4993,21 @@
                     185.90000000000146
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "east"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 31,
+            "western_adjacency": 33,
+            "southern_adjacency": 23,
+            "northern_adjacency": null,
+            "south_east_adjacency": 24,
+            "south_west_adjacency": 22,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "33": {
@@ -3059,6 +5024,17 @@
                     183.68320000000858
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 32,
+            "western_adjacency": 34,
+            "southern_adjacency": 22,
+            "northern_adjacency": null,
+            "south_east_adjacency": 23,
+            "south_west_adjacency": 21,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "34": {
@@ -3075,6 +5051,17 @@
                     181.92400000000453
                 ]
             ]
+        },
+        "reversed_considered_orients": {},
+        "adjacencies": {
+            "eastern_adjacency": 33,
+            "western_adjacency": null,
+            "southern_adjacency": 21,
+            "northern_adjacency": null,
+            "south_east_adjacency": 22,
+            "south_west_adjacency": 20,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "35": {
@@ -3091,6 +5078,21 @@
                     178.41280000000734
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": null,
+            "western_adjacency": 36,
+            "southern_adjacency": 19,
+            "northern_adjacency": null,
+            "south_east_adjacency": 20,
+            "south_west_adjacency": 18,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "36": {
@@ -3107,6 +5109,21 @@
                     177.98080000000846
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 35,
+            "western_adjacency": 37,
+            "southern_adjacency": 18,
+            "northern_adjacency": null,
+            "south_east_adjacency": 19,
+            "south_west_adjacency": 17,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "37": {
@@ -3123,6 +5140,21 @@
                     177.98416384000666
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 36,
+            "western_adjacency": 38,
+            "southern_adjacency": 17,
+            "northern_adjacency": null,
+            "south_east_adjacency": 18,
+            "south_west_adjacency": 16,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     },
     "38": {
@@ -3139,6 +5171,21 @@
                     177.35710720000498
                 ]
             ]
+        },
+        "reversed_considered_orients": {
+            "cam_2": [
+                "west"
+            ]
+        },
+        "adjacencies": {
+            "eastern_adjacency": 37,
+            "western_adjacency": null,
+            "southern_adjacency": 16,
+            "northern_adjacency": null,
+            "south_east_adjacency": 17,
+            "south_west_adjacency": null,
+            "north_west_adjacency": null,
+            "north_east_adjacency": null
         }
     }
 }

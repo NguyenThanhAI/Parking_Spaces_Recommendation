@@ -1073,10 +1073,9 @@ unified_id_and_adjacency_ids = {0: {"adjacencies": {"eastern_adjacency": None,
                                                       "north_west_adjacency": None,
                                                       "north_east_adjacency": None}}}
 
-import json
-
-with open("unified_id_and_adjacency_ids.json", "w") as f:
-    json.dump(unified_id_and_adjacency_ids, f, indent=4)
+#import json
+#with open("unified_id_and_adjacency_ids.json", "w") as f:
+#    json.dump(unified_id_and_adjacency_ids, f, indent=4)
 
 
 cam_to_orient_consideration = {"cam_1": {"east": list(range(50, 55)) + list(range(79, 83)),
@@ -1092,3 +1091,14 @@ cam_to_orient_consideration = {"cam_1": {"east": list(range(50, 55)) + list(rang
                                "cam_3": {"west": list(range(71, 82)) + list(range(84, 95)) + list(range(95, 106)) + list(range(108, 119)),
                                          "south_west": list(range(71, 82)),
                                          "north_west": list(range(108, 119))}}
+
+unified_id_to_orientation_consideration = {}
+for unified_id in range(129):
+    unified_id_to_orientation_consideration[unified_id] = {}
+    for cam in cam_to_orient_consideration:
+        unified_id_to_orientation_consideration[unified_id][cam] = list()
+        for orient in cam_to_orient_consideration[cam]:
+            if unified_id in cam_to_orient_consideration[cam][orient]:
+                unified_id_to_orientation_consideration[unified_id][cam].append(orient)
+        if len(unified_id_to_orientation_consideration[unified_id][cam]) == 0:
+            unified_id_to_orientation_consideration[unified_id].pop(cam)
