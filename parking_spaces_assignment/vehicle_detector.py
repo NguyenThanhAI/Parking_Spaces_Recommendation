@@ -19,7 +19,7 @@ ROOT_DIR = os.path.abspath("../")
 sys.path.append(ROOT_DIR)
 
 class VehicleDetector(object):
-    def __init__(self, checkpoint_name="mask_rcnn_cars_and_vehicles_0008.h5", cam="cam_1"):
+    def __init__(self, checkpoint_name="mask_rcnn_cars_and_vehicles_0008.h5"):
 
         PRETRAINED_DIR = os.path.join(ROOT_DIR, "test_object_detection_models")
 
@@ -27,13 +27,12 @@ class VehicleDetector(object):
 
         LOG_DIR = os.path.join(PRETRAINED_DIR, "logs")
 
-        self.cam = cam
 
         self.model = MaskRCNN(mode="inference", config=MaskRCNNConfig(), model_dir=LOG_DIR)
 
         self.model.load_weights(filepath=PRETRAINED_PATH, by_name=True)
 
-    def __call__(self, frame):
+    def __call__(self, frame, cam="cam_1"):
         rgb_frame = frame[:, :, ::-1]
 
         results = self.model.detect([rgb_frame], verbose=0)
@@ -46,14 +45,14 @@ class VehicleDetector(object):
 
         detections_list = []
 
-        for i, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
+        for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
             if score >= 0.0 and class_id in [1]:
                 y_min, x_min, y_max, x_max = roi
                 bbox = [x_min, y_min, x_max, y_max]
-                detections_list.append(VehicleDetection(score, bbox, mask, class_id, id, self.cam))
+                detections_list.append(VehicleDetection(score, bbox, mask, class_id, det_id, cam))
         return detections_list
 
 
-detector = VehicleDetector()
-image = cv2.imread(os.path.join(ROOT_DIR, "test_object_detection_models/images/car-park.jpg"))
-vehicles =  detector(image)
+#detector = VehicleDetector()
+#image = cv2.imread(os.path.join(ROOT_DIR, "test_object_detection_models/images/car-park.jpg"))
+#vehicles =  detector(image)
