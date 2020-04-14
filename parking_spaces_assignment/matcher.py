@@ -111,36 +111,30 @@ class Matcher(object):
             if row not in rows_to_cols:
                 rows_status_dict[row] = "available"
             else:
-                for col in rows_to_cols:
+                for col in rows_to_cols[row]:
                     if len(cols_to_rows[col]) == 1:
                         assert row in cols_to_rows[col]
                         rows_status_dict[row] = "available"
                     else:
                         assert row in cols_to_rows[col]
-                        orient_pairs = {"west_east": {}, "north_south": {}, "southeast_northwest": {}, "northeast_southwest": {}}
+                        # Initialize orient level east = 0, south = 0
+                        pspace_dict = {} # Dictionary of dictionary, each dictionary represents and parking space with information east level, south level and adjacencies against orient
                         for row_match in cols_to_rows[col]:
+                            row_match_dict = {}
+                            row_match_dict["east_level"] = 0
+                            row_match_dict["south_level"] = 0
                             pspace = parking_spaces_in_cam[row_match]
-                            for orient in pspace.adjacencies:
-                                neighbor = pspace.adjacencies[orient]
-                                if neighbor is None:
-                                    continue
-                                row_neighbor = unified_id_to_row[neighbor]
-                                if row_neighbor in cols_to_rows[col]:
-                                    if orient == "eastern_adjacency":
-                                        if row_match not in orient_pairs["west_east"]:
-                                            orient_pairs["west_east"][row_match] = row_neighbor
-                                    elif orient == "western_adjacency":
-                                        if row_neighbor not in orient_pairs["west_east"]:
-                                            orient_pairs["west_east"][row_neighbor] = row_match
-                                    elif orient == "southern_adjacency":
-                                        if row_match not in orient_pairs["north_south"]:
-                                            orient_pairs["north_south"][row_match] = row_neighbor
-                                    elif orient == "northern_adjacency":
-                                        if row_neighbor not in orient_pairs["north_south"]:
-                                            orient_pairs["north_south"][row_neighbor] = row_match
-
-
-
+                            adjacencies = {k: unified_id_to_row[v] for k, v in pspace.adjacencies.items()}
+                            adjacencies = dict(filter(lambda x: x[1] in cols_to_rows[col], adjacencies.items()))
+                            row_match_dict["adjacencies"] = adjacencies
+                            pspace_dict[row_match] = (row_match_dict)
+                        considered_row_list = []
+                        not_considered_row_list = [row_match for row_match in cols_to_rows[col]]
+                        for row_match in cols_to_rows[col]:
+                            for orient in pspace_dict[row_match]["adjacencies"]:
+                                if orient == "eastern_adjacency":
+                                    pspace_dict[pspace_dict[row_match]["adjacencies"][orient]]["east_level"] = pspace_dict[row_match]["south_level"] + 1
+                                elif
 
         return detections_list, parking_spaces_in_cam, ios, iov, iou
 
