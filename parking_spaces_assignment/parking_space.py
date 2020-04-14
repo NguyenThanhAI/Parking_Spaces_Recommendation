@@ -5,11 +5,12 @@ from parking_spaces_data.order_in_json_to_unified_id import cam_to_unified_id
 
 
 class ParkingSpace(object):
-    def __init__(self, unified_id, positions, reversed_considered_orients, adjacencies, active_cams: list, shape=(720, 1080)):
+    def __init__(self, unified_id, positions, reversed_considered_orients, adjacencies, active_cams: list, parking_ground="parking_ground_SA", shape=(720, 1080)):
         self.unified_id = unified_id
         self.positions = positions
         self.reversed_considered_orients = reversed_considered_orients
         self.adjacencies = adjacencies
+        self.parking_ground = parking_ground
         self.positions_mask = {}
 
         cam_list = list(self.positions.keys())
@@ -31,8 +32,9 @@ class ParkingSpace(object):
 
 
 class ParkingSpacesInitializer(object):
-    def __init__(self, active_cams: list, shape=(720, 1280), config_json_path="../parking_spaces_data/parking_spaces_unified_id_segmen_in_cameras.json"):
+    def __init__(self, active_cams: list, parking_ground="parking_ground_SA", shape=(720, 1280), config_json_path="../parking_spaces_data/parking_spaces_unified_id_segmen_in_cameras.json"):
         self.active_cams = active_cams
+        self.parking_ground = parking_ground
         self.unified_id_list = []
         for cam in active_cams:
             self.unified_id_list.extend(cam_to_unified_id[cam])
@@ -45,7 +47,7 @@ class ParkingSpacesInitializer(object):
     def initialize_parking_spaces(self):
         parking_spaces_list = []
         for unified_id in self.unified_id_list:
-            positions = self.config_json[str(unified_id)]["positions"]
+            positions = self.config_json[str(unified_id)]["positions"] # Sau khi sửa json sẽ phải thêm ["parking_ground_SA"] vào sau config_json
             reversed_considered_orients = self.config_json[str(unified_id)]["reversed_considered_orients"]
             adjacencies = self.config_json[str(unified_id)]["adjacencies"]
             parking_spaces_list.append(ParkingSpace(unified_id=unified_id,

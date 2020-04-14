@@ -32,7 +32,7 @@ class VehicleDetector(object):
 
         self.model.load_weights(filepath=PRETRAINED_PATH, by_name=True)
 
-    def __call__(self, frame, cam="cam_1"):
+    def __call__(self, frame, parking_ground="parking_ground_SA", cam="cam_1"):
         rgb_frame = frame[:, :, ::-1]
 
         results = self.model.detect([rgb_frame], verbose=0)
@@ -49,7 +49,7 @@ class VehicleDetector(object):
             if score >= 0.0 and class_id in [1]:
                 y_min, x_min, y_max, x_max = roi
                 bbox = [x_min, y_min, x_max, y_max]
-                detections_list.append(VehicleDetection(score, bbox, mask, class_id, det_id, cam))
+                detections_list.append(VehicleDetection(score, bbox, mask, class_id, det_id, parking_ground, cam))
         return detections_list
 
 
