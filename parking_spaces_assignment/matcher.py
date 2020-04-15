@@ -120,95 +120,160 @@ class Matcher(object):
                             print("Row {} and col {} is matched".format(row, col))
                         else:
                             assert row in cols_to_rows[col]
-                            west_poles = [] # Find west poles which parking space has western adjacencies south west adjacencies and south west adjacencies
-                            north_poles = [] # Find north poles
-                            #for row_match in cols_to_rows[col]:
-                            #    pspace = parking_spaces_in_cam[row_match]
-                            #    if (pspace.adjacencies["western_adjacency"] is None or unified_id_to_row[pspace.adjacencies["western_adjacency"]] not in cols_to_rows[col]) \
-                            #        and (pspace.adjacencies["south_west_adjacency"] is None or unified_id_to_row[pspace.adjacencies["south_west_adjacency"]] not in cols_to_rows[col]) \
-                            #        and (pspace.adjacencies["north_west_adjacency"] is None or unified_id_to_row[pspace.adjacencies["north_west_adjacency"]] not in cols_to_rows[col]):
-                            #        west_poles.append(row_match)
-                            #    if (pspace.adjacencies["northern_adjacency"] is None or unified_id_to_row[pspace.adjacencies["western_adjacency"]] not in cols_to_rows[col]) \
-                            #        and (pspace.adjacencies["north_west_adjacency"] is None or unified_id_to_row[pspace.adjacencies["south_west_adjacency"]] not in cols_to_rows[col]) \
-                            #        and (pspace.adjacencies["north_east_adjacency"] is None or unified_id_to_row[pspace.adjacencies["north_west_adjacency"]] not in cols_to_rows[col]):
-                            #        north_poles.append(row_match)
                             pspace_dict = {}  # Dictionary of dictionary, each dictionary represents and parking space with information east level, south level and adjacencies against orient
                             for row_match in cols_to_rows[col]:
                                 row_match_dict = {}
                                 row_match_dict["east_level"] = 0
                                 row_match_dict["south_level"] = 0
+                                row_match_dict["visited"] = False
                                 pspace = parking_spaces_in_cam[row_match]
-                                #adjacencies = {k: unified_id_to_row[v] for k, v in pspace.adjacencies.items()}
-                                #adjacencies = pspace.adjacencies
                                 adjacencies = dict(filter(lambda x: x[1] is not None, pspace.adjacencies.items()))
                                 adjacencies = dict(filter(lambda x: unified_id_to_row[x[1]] in cols_to_rows[col], adjacencies.items()))
                                 adjacencies = {k: unified_id_to_row[v] for k, v in adjacencies.items()}
                                 row_match_dict["adjacencies"] = adjacencies
-                                if ("western_adjacency" not in adjacencies and "south_west_adjacency" not in adjacencies and "north_west_adjacency" not in adjacencies):
-                                    west_poles.append(row_match)
-                                if ("northern_adjacency" not in adjacencies and "north_east_adjacency" not in adjacencies and "north_west_adjacency" not in adjacencies):
-                                    north_poles.append(row_match)
-                                pspace_dict[row_match] = (row_match_dict)
+                                row_match_dict["reversed_considered_orients"] = pspace.reversed_considered_orients[cam] if cam in pspace.reversed_considered_orients else {}
+                                pspace_dict[row_match] = row_match_dict
 
-                            def east_level_prop_south(row_match):
-                                if "southern_adjacency" in pspace[row_match]["adjacencies"]:
-                                    east_level = pspace[row_match]["east_level"]
-                                    row_match = pspace[row_match]["adjacencies"]["southern_adjacency"]
-                                    pspace[row_match]["east_level"] = east_level
-                                    east_level_prop_south(row_match)
+                            trace = []
+                            def traverse_neighbors(row_match):
+                                #pspace[row_match]["visited"] = True
+                                if "eastern_adjacency" in pspace_dict[row_match]["adjacencies"]:
+                                    traverse_east(row_match)
+
+                                if "western_adjacency" in pspace_dict[row_match]["adjacencies"]:
+                                    traverse_west(row_match)
+
+                                if "southern_adjacency" in pspace_dict[row_match]["adjacencies"]:
+                                    traverse_south(row_match)
+
+                                if "northern_adjacency" in pspace_dict[row_match]["adjacencies"]:
+                                    traverse_north(row_match)
+
+                                if "south_east_adjacency" in pspace_dict[row_match]["adjacencies"]:
+                                    traverse_south_east(row_match)
+
+                                if "south_west_adjacency" in pspace_dict[row_match]["adjacencies"]:
+                                    traverse_south_west(row_match)
+
+                                if "north_west_adjacency" in pspace_dict[row_match]["adjacencies"]:
+                                    traverse_north_west(row_match)
+
+                                if "north_east_adjacency" in pspace_dict[row_match]["adjacencies"]:
+                                    traverse_north_east(row_match)
+
+                            def traverse_east(row_match):
+                                if not pspace_dict[pspace_dict[row_match]["adjacencies"]["eastern_adjacency"]]["visited"]:
+                                    east_level = pspace_dict[row_match]["east_level"]
+                                    south_level = pspace_dict[row_match]["south_level"]
+                                    row_match = pspace_dict[row_match]["adjacencies"]["eastern_adjacency"]
+                                    pspace_dict[row_match]["east_level"] = east_level + 1
+                                    pspace_dict[row_match]["south_level"] = south_level
+                                    pspace_dict[row_match]["visited"] = True
+                                    trace.append(row_match)
+                                    traverse_neighbors(row_match)
                                 else:
                                     return
 
-                            def east_level_prop_north(row_match):
-                                if "northern_adjacency" in pspace[row_match]["adjacencies"]:
-                                    east_level = pspace[row_match]["east_level"]
-                                    row_match = pspace[row_match]["adjacencies"]["northern_adjacency"]
-                                    pspace[row_match]["east_level"] = east_level
-                                    east_level_prop_north(row_match)
+                            def traverse_west(row_match):
+                                if not pspace_dict[pspace_dict[row_match]["adjacencies"]["western_adjacency"]]["visited"]:
+                                    east_level = pspace_dict[row_match]["east_level"]
+                                    south_level = pspace_dict[row_match]["south_level"]
+                                    row_match = pspace_dict[row_match]["adjacencies"]["western_adjacency"]
+                                    pspace_dict[row_match]["east_level"] = east_level - 1
+                                    pspace_dict[row_match]["south_level"] = south_level
+                                    pspace_dict[row_match]["visited"] = True
+                                    trace.append(row_match)
+                                    traverse_neighbors(row_match)
                                 else:
                                     return
 
-                            def south_level_prop_west(row_match):
-                                if "western_adjacency" in pspace[row_match]["adjacencies"]:
-                                    south_level = pspace[row_match]["south_level"]
-                                    row_match = pspace[row_match]["adjacencies"]["western_adjacency"]
-                                    pspace[row_match]["south_level"] = south_level
-                                    south_level_prop_west(row_match)
+                            def traverse_south(row_match):
+                                if not pspace_dict[pspace_dict[row_match]["adjacencies"]["southern_adjacency"]]["visited"]:
+                                    east_level = pspace_dict[row_match]["east_level"]
+                                    south_level = pspace_dict[row_match]["south_level"]
+                                    row_match = pspace_dict[row_match]["adjacencies"]["southern_adjacency"]
+                                    pspace_dict[row_match]["east_level"] = east_level
+                                    pspace_dict[row_match]["south_level"] = south_level + 1
+                                    pspace_dict[row_match]["visited"] = True
+                                    trace.append(row_match)
+                                    traverse_neighbors(row_match)
                                 else:
                                     return
 
-                            def south_level_prop_east(row_match):
-                                if "eastern_adjacency" in pspace[row_match]["adjacencies"]:
-                                    south_level = pspace[row_match]["south_level"]
-                                    row_match = pspace[row_match]["adjacencies"]["eastern_adjacency"]
-                                    pspace[row_match]["south_level"] = south_level
-                                    south_level_prop_east(row_match)
+                            def traverse_north(row_match):
+                                if not pspace_dict[pspace_dict[row_match]["adjacencies"]["northern_adjacency"]]["visited"]:
+                                    east_level = pspace_dict[row_match]["east_level"]
+                                    south_level = pspace_dict[row_match]["south_level"]
+                                    row_match = pspace_dict[row_match]["adjacencies"]["northern_adjacency"]
+                                    pspace_dict[row_match]["east_level"] = east_level
+                                    pspace_dict[row_match]["south_level"] = south_level - 1
+                                    pspace_dict[row_match]["visited"] = True
+                                    trace.append(row_match)
+                                    traverse_neighbors(row_match)
                                 else:
                                     return
 
-                            def increase_east_level(row_match):
-                                if "eastern_adjacency" in pspace[row_match]["adjacencies"]:
-                                    east_level = pspace[row_match]["east_level"]
-                                    row_match = pspace[row_match]["adjacencies"]["eastern_adjacency"]
-                                    pspace[row_match]["east_level"] = east_level + 1
-                                    east_level_prop_north(row_match)
-                                    east_level_prop_south(row_match)
-                                    increase_east_level(row_match)
+                            def traverse_south_east(row_match):
+                                if not pspace_dict[pspace_dict[row_match]["adjacencies"]["south_east_adjacency"]]["visited"]:
+                                    south_level = pspace_dict[row_match]["south_level"]
+                                    east_level = pspace_dict[row_match]["east_level"]
+                                    row_match = pspace_dict[row_match]["adjacencies"]["south_east_adjacency"]
+                                    pspace_dict[row_match]["east_level"] = east_level + 1
+                                    pspace_dict[row_match]["south_level"] = south_level + 1
+                                    pspace_dict[row_match]["visited"] = True
+                                    trace.append(row_match)
+                                    traverse_neighbors(row_match)
                                 else:
                                     return
 
-                            def increase_south_level(row_match):
-                                if "southern_adjacency" in pspace[row_match]["adjacencies"]:
-                                    south_level = pspace[row_match]["south_level"]
-                                    row_match =  pspace[row_match]["adjacencies"]["southern_adjacency"]
-                                    pspace[row_match]["south_level"] = south_level + 1
-                                    south_level_prop_west(row_match)
-                                    south_level_prop_east(row_match)
-                                    increase_south_level(row_match)
+                            def traverse_south_west(row_match):
+                                if not pspace_dict[pspace_dict[row_match]["adjacencies"]["south_west_adjacency"]]["visited"]:
+                                    south_level = pspace_dict[row_match]["south_level"]
+                                    east_level = pspace_dict[row_match]["east_level"]
+                                    row_match = pspace_dict[row_match]["adjacencies"]["south_west_adjacency"]
+                                    pspace_dict[row_match]["east_level"] = east_level - 1
+                                    pspace_dict[row_match]["south_level"] = south_level + 1
+                                    pspace_dict[row_match]["visited"] = True
+                                    trace.append(row_match)
+                                    traverse_neighbors(row_match)
                                 else:
                                     return
 
-                            print("Row {}, Col {}, Pspace_dict {}, west_poles {}, north_polses {}".format(row, col, pspace_dict, west_poles, north_poles))
+                            def traverse_north_west(row_match):
+                                if not pspace_dict[pspace_dict[row_match]["adjacencies"]["north_west_adjacency"]]["visited"]:
+                                    south_level = pspace_dict[row_match]["south_level"]
+                                    east_level = pspace_dict[row_match]["east_level"]
+                                    row_match = pspace_dict[row_match]["adjacencies"]["north_west_adjacency"]
+                                    pspace_dict[row_match]["east_level"] = east_level - 1
+                                    pspace_dict[row_match]["south_level"] = south_level - 1
+                                    pspace_dict[row_match]["visited"] = True
+                                    trace.append(row_match)
+                                    traverse_neighbors(row_match)
+                                else:
+                                    return
+
+                            def traverse_north_east(row_match):
+                                if not pspace_dict[pspace_dict[row_match]["adjacencies"]["north_east_adjacency"]]["visited"]:
+                                    south_level = pspace_dict[row_match]["south_level"]
+                                    east_level = pspace_dict[row_match]["east_level"]
+                                    row_match = pspace_dict[row_match]["adjacencies"]["north_east_adjacency"]
+                                    pspace_dict[row_match]["east_level"] = east_level + 1
+                                    pspace_dict[row_match]["south_level"] = south_level - 1
+                                    pspace_dict[row_match]["visited"] = True
+                                    trace.append(row_match)
+                                    traverse_neighbors(row_match)
+                                else:
+                                    return
+
+                            random_row = np.random.choice(list(cols_to_rows[col].keys()))
+
+                            pspace_dict[random_row]["visited"] = True # Choose random_row as starting point
+                            trace.append(random_row)
+                            traverse_neighbors(random_row)
+
+                            print("Random row {}, trace {}".format(random_row, trace))
+
+                            print("Row {}, Col {}, Pspace_dict {}".format(row, col, pspace_dict))
 
                         considered_col_list.append(col)
         return detections_list, parking_spaces_in_cam, ios, iov, iou
