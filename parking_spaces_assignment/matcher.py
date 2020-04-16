@@ -13,7 +13,7 @@ class Matcher(object):
     def __init__(self,
                  checkpoint_name="mask_rcnn_cars_and_vehicles_0008.h5",
                  parking_ground="parking_ground_SA",
-                 active_cams=["cam_1"],
+                 active_cams=["cam_2"],
                  shape=(720, 1280),
                  config_json_path=os.path.join(ROOT_DIR, "parking_spaces_data/parking_spaces_unified_id_segmen_in_cameras.json")):
         self.parking_ground = parking_ground
@@ -29,7 +29,7 @@ class Matcher(object):
         self.detector = VehicleDetector(checkpoint_name=checkpoint_name)
         self.parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
 
-    def frame_match(self, frame, cam="cam_1"):
+    def frame_match(self, frame, cam="cam_2", threshold=0.3):
 
         assert cam in self.active_cams
 
@@ -58,7 +58,7 @@ class Matcher(object):
         for i in range(num_cols):
             cols_i = ios[:, i]
             sorted_ind = np.argsort(cols_i)[::-1]
-            sorted_ind_above_thresh = sorted_ind[cols_i[sorted_ind] > 0.2]
+            sorted_ind_above_thresh = sorted_ind[cols_i[sorted_ind] > threshold]
             if len(sorted_ind_above_thresh.tolist()) > 0:
                 cols_to_rows[i] = dict(zip(sorted_ind_above_thresh.tolist(), cols_i[sorted_ind_above_thresh].tolist()))
             print("column (vehicle) {} sorted_ind_above_thresh: {}".format(i, dict(zip(list(map(lambda x: row_to_unified_id[x], sorted_ind_above_thresh)), cols_i[sorted_ind_above_thresh].tolist()))))
@@ -68,7 +68,7 @@ class Matcher(object):
         for j in range(num_rows):
             rows_j = ios[j, :]
             sorted_ind = np.argsort(rows_j)[::-1]
-            sorted_ind_above_thresh = sorted_ind[rows_j[sorted_ind] > 0.2]
+            sorted_ind_above_thresh = sorted_ind[rows_j[sorted_ind] > threshold]
             if len(sorted_ind_above_thresh.tolist()) > 0:
                 rows_to_cols[j] = dict(zip(sorted_ind_above_thresh.tolist(), rows_j[sorted_ind_above_thresh].tolist()))
             print("row (parking space) {}-{} sorted_ind_above_thresh: {}".format(j, row_to_unified_id[j], dict(zip(sorted_ind_above_thresh.tolist(), rows_j[sorted_ind_above_thresh].tolist()))))
@@ -116,7 +116,7 @@ class Matcher(object):
                     if col not in considered_col_list:
                         if len(cols_to_rows[col]) == 1:
                             assert row in cols_to_rows[col]
-                            rows_status_dict[row] = "available"
+                            rows_status_dict[row] = "filled"
                             print("Row {} and col {} is matched".format(row, col))
                         else:
                             assert row in cols_to_rows[col]
@@ -131,6 +131,7 @@ class Matcher(object):
                                 adjacencies = dict(filter(lambda x: unified_id_to_row[x[1]] in cols_to_rows[col], adjacencies.items()))
                                 adjacencies = {k: unified_id_to_row[v] for k, v in adjacencies.items()}
                                 row_match_dict["adjacencies"] = adjacencies
+                                row_match_dict["ios"] = cols_to_rows[col][row_match]
                                 row_match_dict["reversed_considered_orients"] = pspace.reversed_considered_orients[cam] if cam in pspace.reversed_considered_orients else {}
                                 pspace_dict[row_match] = row_match_dict
 
@@ -268,16 +269,153 @@ class Matcher(object):
                             random_row = np.random.choice(list(cols_to_rows[col].keys()))
 
                             pspace_dict[random_row]["visited"] = True # Choose random_row as starting point
-                            trace.append(random_row)
-                            traverse_neighbors(random_row)
+                            trace.append(random_row) # Initialize track
+                            traverse_neighbors(random_row) # Assign value to east_level and south_level
 
                             print("Random row {}, trace {}".format(random_row, trace))
+
+                            pspace_dict = dict(sorted(pspace_dict.items(), key=lambda s: s[1]["east_level"]))
+                            convert_considered_orient_dict = {"east": "western_adjacency",
+                                                              "south": "northern_adjacency",
+                                                              "north": "southern_adjacency",
+                                                              "west": "eastern_adjacency",
+                                                              "south_east": "north_west_adjacency",
+                                                              "south_west": "north_east_adjacency",
+                                                              "north_east": "south_west_adjacency",
+                                                              "north_west": "south_east_adjacency"}
+                            reversed_considered_orients = {}
+                            for row_match in pspace_dict:
+                                orients = pspace_dict[row_match]["reversed_considered_orients"]
+                                for orient in orients:
+                                    #if convert_considered_orient_dict[orient] in pspace_dict[row_match]["adjacencies"]:
+                                    if orient not in reversed_considered_orients:
+                                        reversed_considered_orients[orient] = []
+                                    reversed_considered_orients[orient].append(row_match)
+
+                            print("Reversed_considered_orients {}".format(reversed_considered_orients))
+
+                            #for orient in reversed_considered_orients:
+                            #    if orient == "east":
+                            #        west_pole = reversed_considered_orients[orient][0]
+                            #        if "western_adjacency" in pspace_dict[west_pole]["adjacencies"]:
+                            #            west_pole = pspace_dict[west_pole]["adjacencies"]["western_adjacency"]
+                            #    if orient == "west":
+                            #        east_pole = reversed_considered_orients[orient][-1]
+                            #        if "eastern_adjacency" in pspace_dict[east_pole]["adjacencies"]:
+                            #            east_pole = pspace_dict[east_pole]["adjacencies"]["eastern_adjacency"]
+                            #    if orient == "south":
+                            #        north_pole = reversed_considered_orients[orient][0]
+                            #        argmin
+                            #def consider_east():
+                            #    east_list = {k: pspace_dict[k] for k in reversed_considered_orients["east"] if pspace_dict[k]["adjacencies"][convert_considered_orient_dict["east"] in pspace_dict]}
+                            #    print("east_list {}".format(east_list))
+                            #    east_list = list(sorted(east_list.keys(), key=lambda s: pspace_dict[s]["east_level"]))
+                            #    print("east_list {}".format(east_list))
+                            #if "east" in reversed_considered_orients:
+                            #    consider_east()
+                            considered_east_west_row_list = []
+                            max_east = False
+                            if "north_east" in reversed_considered_orients or "east" in reversed_considered_orients \
+                                  or "south_east" in reversed_considered_orients:
+                                min_east_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
+                                considered_rows = list(dict(filter(lambda x: x[1]["east_level"] == min_east_level, pspace_dict.items())).keys())
+                                considered_east_west_row_list.extend(considered_rows)
+                                print("min_east_level {}, consider_rows {}, considered_east_west_row_list {}, max_east {}".format(min_east_level, considered_rows, considered_east_west_row_list, max_east))
+
+                            elif "north_west"  in reversed_considered_orients or "west" in reversed_considered_orients \
+                                    or "south_west" in reversed_considered_orients:
+                                max_east_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
+                                considered_rows = list(dict(filter(lambda x: x[1]["east_level"] == max_east_level, pspace_dict.items())).keys())
+                                considered_east_west_row_list.extend(considered_rows)
+                                max_east = True
+                                print("max_east_level {}, consider_rows {}, considered_east_west_row_list {}, max_east {}".format(max_east_level, considered_rows, considered_east_west_row_list, max_east))
+
+                            considered_south_north_row_list = []
+                            max_south = True
+                            if "north" in reversed_considered_orients or "north_west" in reversed_considered_orients \
+                                    or "north_east" in reversed_considered_orients:
+                                max_south_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
+                                considered_rows = list(dict(filter(lambda x: x[1]["south_level"] == max_south_level, pspace_dict.items())).keys())
+                                considered_south_north_row_list.extend(considered_rows)
+                                print("max_south_level {}, considered_rows {}, considered_south_north_row_list{}, max_south {}".format(max_south_level, considered_rows, considered_south_north_row_list, max_south))
+
+                            elif "south" in reversed_considered_orients or "south_west" in reversed_considered_orients \
+                                    or "south_east" in reversed_considered_orients:
+                                min_south_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
+                                considered_rows = list(dict(filter(lambda x: x[1]["south_level"] == min_south_level, pspace_dict.items())).keys())
+                                considered_south_north_row_list.extend(considered_rows)
+                                max_south = False
+                                print("min_south_level {}, considered_rows {}, considered_south_north_row_list{}, max_south {}".format(min_south_level, considered_rows, considered_south_north_row_list, max_south))
+
+                            considered_row = list(set(considered_east_west_row_list).intersection(considered_south_north_row_list))
+
+                            if len(considered_row) == 0:
+                                if len(considered_east_west_row_list) > 0 or len(considered_south_north_row_list) > 0: # Parking space does not belong to any reversed considered orients
+                                    chosen_row = max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["ios"])
+                                    rows_status_dict[chosen_row] = "filled"
+                                    for row_match in pspace_dict:
+                                        if row_match != chosen_row:
+                                            if pspace_dict[row_match]["ios"] > 0.75:
+                                                rows_status_dict[row_match] = "unknown"
+                                            else:
+                                                rows_status_dict[row_match] = "available"
+                                else:
+                                    for row_match in pspace_dict:
+                                        if pspace_dict[row_match]["ios"] > 0.65:
+                                            rows_status_dict[row_match] = "filled"
+                            else:
+                                assert len(considered_row) == 1
+                                considered_row = considered_row[0]
+                                filled_list = []
+                                rows_status_dict[considered_row] = "filled"
+                                filled_list.append(considered_row)
+                                if max_south:
+                                    if "northern_adjacency" in pspace_dict[considered_row]["adjacencies"]:
+                                        north_of_considered_row = pspace_dict[considered_row]["adjacencies"]["northern_adjacency"]
+                                        if pspace_dict[north_of_considered_row]["ios"] > 0.6: # and detections_list[col].class_id == 1 # "truck"
+                                            rows_status_dict[north_of_considered_row] = "filled"
+                                            filled_list.append(north_of_considered_row)
+                                else:
+                                    if "southern_adjacency" in pspace_dict[considered_row]["adjacencies"]:
+                                        south_of_considered_row = pspace_dict[considered_row]["adjacencies"]["southern_adjacency"]
+                                        if pspace_dict[south_of_considered_row]["ios"] > 0.6: # and detections_list[col].class_id == 1 # "truck"
+                                            rows_status_dict[south_of_considered_row] = "filled"
+                                            filled_list.append(south_of_considered_row)
+                                for row_match in pspace_dict:
+                                    if row_match not in filled_list:
+                                        if pspace_dict[row_match]["ios"] > 0.7:
+                                            rows_status_dict[row_match] = "unknown"
+                                        else:
+                                            rows_status_dict[row_match] = "available"
 
                             print("Row {}, Col {}, Pspace_dict {}".format(row, col, pspace_dict))
 
                         considered_col_list.append(col)
-        return detections_list, parking_spaces_in_cam, ios, iov, iou
+        unified_id_status_dict = {row_to_unified_id[k]:v for k, v in rows_status_dict.items()}
+
+        color_mask = np.zeros_like(frame, dtype=np.uint8)
+        for row in rows_status_dict:
+           if rows_status_dict[row] == "filled":
+               color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 0, 255], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
+           elif rows_status_dict[row] == "unknown":
+               color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 255], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
+           else:
+               color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
+        for detection_mask in detection_masks:
+           color_mask = np.where(detection_mask[:, :, np.newaxis], np.array([255, 0, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
+
+        frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.4, color_mask, 0.6, 0), frame)
+
+        return detections_list, parking_spaces_in_cam, ios, iov, iou, frame
 
 matcher = Matcher()
-image = cv2.imread(os.path.join(ROOT_DIR, "test_object_detection_models/images/201909_20190914_1_2019-09-14_01-00-00_8990.jpg"))
-vehicles, parking_spaces, ios, iov, iou = matcher.frame_match(image)
+image_path = "test_object_detection_models/images/201909_20190914_2_2019-09-14_05-00-00_8987.jpg"
+image = cv2.imread(os.path.join(ROOT_DIR, image_path))
+vehicles, parking_spaces, ios, iov, iou, frame = matcher.frame_match(image)
+
+cv2.imshow("", frame)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+demo_images_dir = r"F:\Parking_Spaces_Recommendation_Data\demo_images"
+results_path = os.path.join(demo_images_dir, os.path.basename(image_path).split(".")[0] + ".jpg")
+cv2.imwrite(results_path, frame)
