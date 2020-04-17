@@ -1,11 +1,9 @@
 import sys
 import os
 import numpy as np
-import cv2
 from mrcnn import config
-from mrcnn import utils
 from mrcnn.model import MaskRCNN
-from parking_spaces_assignment.vehicle_detection import VehicleDetection
+from vehicle_tracking.vehicle_detection import VehicleDetection
 
 
 class MaskRCNNConfig(config.Config):

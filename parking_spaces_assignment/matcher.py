@@ -2,7 +2,7 @@ import sys
 import os
 import numpy as np
 import cv2
-from parking_spaces_assignment.vehicle_detector import VehicleDetector
+from vehicle_tracking.vehicle_detector import VehicleDetector
 from parking_spaces_assignment.parking_space import ParkingSpacesInitializer
 
 ROOT_DIR = os.path.abspath("..")
