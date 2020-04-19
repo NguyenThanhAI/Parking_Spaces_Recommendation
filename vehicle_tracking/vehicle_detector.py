@@ -45,7 +45,9 @@ class VehicleDetector(object):
 
         for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
             if score >= 0.0 and class_id in [1]:
-                y_min, x_min, y_max, x_max = roi
+                rr, cc = np.where(mask)
+                y_min, y_max = np.min(rr), np.max(rr)
+                x_min, x_max = np.min(cc), np.max(cc)
                 bbox = [x_min, y_min, x_max, y_max]
                 detections_list.append(VehicleDetection(score, bbox, mask, class_id, det_id, parking_ground, cam))
         return detections_list
