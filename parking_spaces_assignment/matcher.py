@@ -1,9 +1,11 @@
 import sys
 import os
+from tqdm import tqdm
 import numpy as np
 import cv2
 from vehicle_tracking.vehicle_detector import VehicleDetector
 from parking_spaces_assignment.parking_space import ParkingSpacesInitializer
+from vehicle_tracking.vehicle_tracker import VehicleTracker
 
 ROOT_DIR = os.path.abspath("..")
 sys.path.append(ROOT_DIR)
@@ -29,28 +31,35 @@ class Matcher(object):
         self.detector = VehicleDetector(checkpoint_name=checkpoint_name)
         self.parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
 
-    def frame_match(self, frame, cam="cam_2", threshold=0.3):
+    def frame_match(self, frame, cam="cam_2", threshold=0.3, is_tracking=False, tracker=None):
 
         assert cam in self.active_cams
 
-        detections_list = self.detector(frame=frame, parking_ground=self.parking_ground, cam=cam)
+        vehicles_list = self.detector(frame=frame, parking_ground=self.parking_ground, cam=cam)
+
+        if is_tracking:
+            assert tracker, "vehicles tracker cannot be None"
+            tracker.step(vehicle_detections=vehicles_list)
+            vehicles_list = tracker.get_result()
 
         parking_spaces_in_cam = list(filter(lambda x: cam in list(x.positions.keys()), self.parking_spaces_list))
-
-        col_to_det_id = dict(zip(list(range(len(detections_list))), list(map(lambda x: x.detection_id, detections_list))))
+        if not is_tracking:
+            col_to_veh_id = dict(zip(list(range(len(vehicles_list))), list(map(lambda x: x.detection_id, vehicles_list))))
+        else:
+            col_to_veh_id = dict(zip(list(range(len(vehicles_list))), list(map(lambda x: x.track_id, vehicles_list))))
 
         row_to_unified_id = dict(zip(list(range(len(parking_spaces_in_cam))), list(map(lambda x: x.unified_id, parking_spaces_in_cam))))
         unified_id_to_row = {v: k for k, v in row_to_unified_id.items()}
-        print(col_to_det_id, row_to_unified_id)
+        print(col_to_veh_id, row_to_unified_id)
 
-        detection_masks = np.stack(list(map(lambda x: x.mask, detections_list)), axis=0)
+        vehicle_masks = np.stack(list(map(lambda x: x.mask, vehicles_list)), axis=0)
         parking_spaces_in_cam_mask = np.stack(list(map(lambda x: x.positions_mask[cam], parking_spaces_in_cam)), axis=0)
 
-        intersection = np.logical_and(parking_spaces_in_cam_mask[:, np.newaxis, :, :], detection_masks[np.newaxis, :, :, :])
+        intersection = np.logical_and(parking_spaces_in_cam_mask[:, np.newaxis, :, :], vehicle_masks[np.newaxis, :, :, :])
         intersection = np.count_nonzero(intersection, axis=(2, 3)).astype(np.float32)
         ios = intersection / np.count_nonzero(parking_spaces_in_cam_mask, axis=(1, 2))[:, np.newaxis]
-        iov = intersection / np.count_nonzero(detection_masks, axis=(1, 2))[np.newaxis, :]
-        union = np.logical_or(parking_spaces_in_cam_mask[:, np.newaxis, :, :], detection_masks[np.newaxis, :, :, :])
+        iov = intersection / np.count_nonzero(vehicle_masks, axis=(1, 2))[np.newaxis, :]
+        union = np.logical_or(parking_spaces_in_cam_mask[:, np.newaxis, :, :], vehicle_masks[np.newaxis, :, :, :])
         union = np.count_nonzero(union, axis=(2, 3))
         iou = intersection / union
         num_cols = ios.shape[1]
@@ -90,8 +99,8 @@ class Matcher(object):
         #        color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 255], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
         #    else:
         #        color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
-        #for detection_mask in detection_masks:
-        #    color_mask = np.where(detection_mask[:, :, np.newaxis], np.array([255, 0, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
+        #for vehicle_mask in vehicle_masks:
+        #    color_mask = np.where(vehicle_mask[:, :, np.newaxis], np.array([255, 0, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
 #
         #frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.4, color_mask, 0.6, 0), frame)
 #
@@ -372,13 +381,13 @@ class Matcher(object):
                                 if max_south:
                                     if "northern_adjacency" in pspace_dict[considered_row]["adjacencies"]:
                                         north_of_considered_row = pspace_dict[considered_row]["adjacencies"]["northern_adjacency"]
-                                        if pspace_dict[north_of_considered_row]["ios"] > 0.6: # and detections_list[col].class_id == 1 # "truck"
+                                        if pspace_dict[north_of_considered_row]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                             rows_status_dict[north_of_considered_row] = "filled"
                                             filled_list.append(north_of_considered_row)
                                 else:
                                     if "southern_adjacency" in pspace_dict[considered_row]["adjacencies"]:
                                         south_of_considered_row = pspace_dict[considered_row]["adjacencies"]["southern_adjacency"]
-                                        if pspace_dict[south_of_considered_row]["ios"] > 0.6: # and detections_list[col].class_id == 1 # "truck"
+                                        if pspace_dict[south_of_considered_row]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                             rows_status_dict[south_of_considered_row] = "filled"
                                             filled_list.append(south_of_considered_row)
                                 for row_match in pspace_dict:
@@ -401,21 +410,103 @@ class Matcher(object):
                color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 255], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
            else:
                color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
-        for detection_mask in detection_masks:
-           color_mask = np.where(detection_mask[:, :, np.newaxis], np.array([255, 0, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
+        for vehicle_mask in vehicle_masks:
+           color_mask = np.where(vehicle_mask[:, :, np.newaxis], np.array([255, 0, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
 
         frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.4, color_mask, 0.6, 0), frame)
 
-        return detections_list, parking_spaces_in_cam, ios, iov, iou, frame
+        return vehicles_list, parking_spaces_in_cam, ios, iov, iou, frame
 
-matcher = Matcher()
-image_path = "test_object_detection_models/images/201909_20190914_2_2019-09-14_05-00-00_8987.jpg"
-image = cv2.imread(os.path.join(ROOT_DIR, image_path))
-vehicles, parking_spaces, ios, iov, iou, frame = matcher.frame_match(image)
+    def image_match(self, image_path, save_dir, cam="cam_1", threshold=0.3, is_tracking=False, is_showimage=True):
+        if is_tracking:
+            tracker = VehicleTracker(detection_vehicle_thresh=0.2,
+                                     inactive_steps_before_removed=10,
+                                     reid_iou_threshold=0.3,
+                                     max_traject_steps=50,
+                                     parking_ground=self.parking_ground,
+                                     cam=cam)
+        else:
+            tracker = None
+        image = cv2.imread(image_path)
+        vehicles, parking_spaces, ios, iov, iou, frame = self.frame_match(frame=image, cam=cam, threshold=threshold, is_tracking=is_tracking, tracker=tracker)
+        if is_showimage:
+            cv2.imshow("", frame)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
-cv2.imshow("", frame)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-demo_images_dir = r"F:\Parking_Spaces_Recommendation_Data\demo_images"
-results_path = os.path.join(demo_images_dir, os.path.basename(image_path).split(".")[0] + ".jpg")
-cv2.imwrite(results_path, frame)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir, exist_ok=True)
+
+        results_path = os.path.join(save_dir, os.path.basename(image_path).split(".")[0] + ".jpg")
+        cv2.imwrite(results_path, frame)
+
+    def video_match(self, video_source, is_savevideo=False, save_dir=None, cam="cam_1", threshold=0.3, is_tracking=True, is_showframe=True):
+        if is_tracking:
+            tracker = VehicleTracker(detection_vehicle_thresh=0.2,
+                                     inactive_steps_before_removed=10,
+                                     reid_iou_threshold=0.3,
+                                     max_traject_steps=50,
+                                     parking_ground=self.parking_ground,
+                                     cam=cam)
+        else:
+            tracker = None
+
+        cap = cv2.VideoCapture(video_source)
+
+        length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        if is_savevideo:
+            assert save_dir, "When save video, save_dir cannot be None"
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            fps = int(cap.get(cv2.CAP_PROP_FPS))
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            if video_source.endswith((".mp4", ".avi")):
+                video_name = os.path.basename(video_source)
+            else:
+                video_name = "save_webcam.mp4"
+
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir, exist_ok=True)
+            output = cv2.VideoWriter(os.path.join(save_dir, video_name), fourcc, fps, (width, height))
+
+        stopped = False
+
+        for i in tqdm(range(length)):
+            if not stopped:
+                ret, frame = cap.read()
+
+                if not ret:
+                    stopped = True
+                    continue
+
+                vehicles, parking_spaces, ios, iov, iou, frame = self.frame_match(frame=frame,
+                                                                                  cam=cam,
+                                                                                  threshold=threshold,
+                                                                                  is_tracking=is_tracking,
+                                                                                  tracker=tracker)
+                if is_savevideo:
+                    output.write(frame)
+                if is_showframe:
+                    cv2.imshow("", frame)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    stopped = True
+            else:
+                if is_savevideo:
+                    output.release()
+                    print("Save video and exit")
+                else:
+                    print("Exit")
+                cv2.destroyAllWindows()
+                break
+
+
+#matcher = Matcher()
+#image_path = "../test_object_detection_models/images/201909_20190914_2_2019-09-14_05-00-00_8987.jpg"
+#demo_images_dir = r"F:\Parking_Spaces_Recommendation_Data\demo_images"
+#
+#matcher.image_match(image_path=image_path,
+#                    save_dir=demo_images_dir,
+#                    cam="cam_2",
+#                    threshold=0.3,
+#                    is_tracking=True)

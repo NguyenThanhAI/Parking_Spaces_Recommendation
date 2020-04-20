@@ -14,7 +14,7 @@ class VehicleTracker:
                  reid_iou_threshold,
                  max_traject_steps,
                  parking_ground,
-                 cam):
+                 cam="cam_1"):
 
         #self.vehicle_detector = vehicle_detector
         self.detection_vehicle_thresh = detection_vehicle_thresh
@@ -140,10 +140,10 @@ class VehicleTracker:
                 matched_track_idx.append(r)
                 matched_detection_idx.append(c)
                 t = self.inactive_tracks[r]
-                t.reset_trajectory()
                 t.bbox = vehicle_detections[c].bbox
                 t.score = vehicle_detections[c].score
                 t.mask = vehicle_detections[c].mask
+                t.reset_trajectory()
                 t.inactive_steps = 0
                 t.birth_time.append(time.time())
                 self.active_tracks.append(t)

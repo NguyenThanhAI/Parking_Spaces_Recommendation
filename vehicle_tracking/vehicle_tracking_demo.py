@@ -16,7 +16,7 @@ def get_args():
 
     parser.add_argument("--video_source", type=str, default=r"G:\04_前沢SA_上\201911\20191130\カメラ1\2019-11-30_10-00-00.mp4", help="Path to demo video")
     parser.add_argument("--video_output_dir", type=str, default=r"F:\\", help="Path to output video")
-    parser.add_argument("--is_showframe", type=str, default=True, help="Show result or not")
+    parser.add_argument("--is_showframe", type=bool, default=True, help="Show result or not")
     parser.add_argument("--detection_vehicle_thresh", type=float, default=0.2)
     parser.add_argument("--inactive_steps_before_removed", type=int, default=10)
     parser.add_argument("--reid_iou_threshold", type=float, default=0.3)
@@ -35,8 +35,7 @@ if __name__ == '__main__':
                              inactive_steps_before_removed=args.inactive_steps_before_removed,
                              reid_iou_threshold=args.reid_iou_threshold,
                              max_traject_steps=args.max_traject_steps,
-                             parking_ground="parking_ground_SA",
-                             cam="cam_1")
+                             parking_ground="parking_ground_SA")
 
     if not os.path.exists(args.video_output_dir):
         os.makedirs(args.video_output_dir)
@@ -50,7 +49,7 @@ if __name__ == '__main__':
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    output = cv2.VideoWriter(os.path.join(args.video_output_dir, video_name), fourcc, fps, (height, width))
+    output = cv2.VideoWriter(os.path.join(args.video_output_dir, video_name), fourcc, fps, (width, height))
     stopped = False
     for i in tqdm(range(length)):
         if not stopped:
@@ -89,8 +88,8 @@ if __name__ == '__main__':
             output.write(frame)
             if args.is_showframe:
                 cv2.imshow("", frame)
-            if cv2.waitKey(1) == ord("q"):
-                stopped = False
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                stopped = True
         else:
             output.release()
             cv2.destroyAllWindows()

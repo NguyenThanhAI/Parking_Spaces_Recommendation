@@ -3,10 +3,25 @@
 + ```unified_id_to_polygon_in_cams.py``` create json file ```parking_spaces_unified_id_segmen_in_cameras.json``` with format:
 ```
 {
-    "unified_id": {
+    "unified_id": {"positions": {
                     "cam_1": [[x1, y1, ...., xn, yn]]
                     "cam_2": ...
                     ...
+                    },
+                    "reversed_considered_orients": {"cam_1": ["west", ...],
+                                                    "cam_2": ["north_west", ...],
+                                                    .....
+                                                    },
+                    "adjacencies": {
+                        "eastern_adjacency": 40,
+                        "western_adjacency": null,
+                        "southern_adjacency": null,
+                        "northern_adjacency": 70,
+                        "south_east_adjacency": null,
+                        "south_west_adjacency": null,
+                        "north_west_adjacency": null,
+                        "north_east_adjacency": 69
+                    }
                 }
     ...
 }
