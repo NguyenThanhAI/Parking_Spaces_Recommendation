@@ -4,6 +4,8 @@ from scipy.optimize import linear_sum_assignment
 import cv2
 from vehicle_tracking.vehicle_track import VehicleTrack
 from vehicle_tracking.utils import iou_mat
+from code_timing_profiling.profiling import profile
+from code_timing_profiling.timing import timethis
 
 
 class VehicleTracker:
@@ -105,7 +107,7 @@ class VehicleTracker:
         matched_track_indx = []
 
         for r, c in zip(row_ind, col_ind):
-            if iou_matrix[r, c] >= self.detection_vehicle_thresh and self.active_tracks[r].class_id == vehicle_detections[c].class_id:
+            if iou_matrix[r, c] >= self.reid_iou_threshold and self.active_tracks[r].class_id == vehicle_detections[c].class_id:
                 matched_track_indx.append(r)
                 matched_detection_indx.append(c)
                 t = self.active_tracks[r]
@@ -128,7 +130,7 @@ class VehicleTracker:
         detections_bboxes = [detection.bbox for detection in vehicle_detections]
 
         iou_matrix = iou_mat(inactivate_tracks_bboxes, detections_bboxes)
-        iou_matrix = np.where(iou_matrix > self.detection_vehicle_thresh, iou_matrix, 0)
+        iou_matrix = np.where(iou_matrix > self.reid_iou_threshold, iou_matrix, 0)
 
         row_ind, col_ind = linear_sum_assignment(iou_matrix, maximize=True)
 
@@ -136,7 +138,7 @@ class VehicleTracker:
         matched_track_idx = []
 
         for r, c in zip(row_ind, col_ind):
-            if iou_matrix[r, c] >= self.detection_vehicle_thresh and self.active_tracks[r].class_id == vehicle_detections[c].class_id:
+            if iou_matrix[r, c] >= self.reid_iou_threshold and self.inactive_tracks[r].class_id == vehicle_detections[c].class_id: # Huhu đáng ra phải là self.inactive_tracks[r].class_id nhưng viết nhầm thành self.active_tracks[r].class_id
                 matched_track_idx.append(r)
                 matched_detection_idx.append(c)
                 t = self.inactive_tracks[r]
@@ -173,6 +175,7 @@ class VehicleTracker:
 
             self.motion_step(t)
 
+    @timethis
     def step(self, vehicle_detections):
         for t in self.active_tracks:
             if len(t.traject_pos) > 1:
@@ -187,48 +190,48 @@ class VehicleTracker:
 
             if len(unmatched_detections) > 0:
                 if len(self.inactive_tracks) > 0: # Phải sửa từ active thành inactive
-                    print("1")
+                    #print("1")
                     unmatched_detections = self.match_reid_iou_inactive(vehicle_detections=unmatched_detections)
                 else:
-                    print("2")
+                    #print("2")
                     pass
             else:
-                print("3")
+                #print("3")
                 pass
 
             if len(unmatched_active_tracks) > 0:
-                print("4")
+                #print("4")
                 self.tracks_to_inactive(unmatched_active_tracks)
             else:
-                print("5")
+                #print("5")
                 pass
 
             if len(unmatched_detections) > 0:
-                print("6")
+                #print("6")
                 self.add_new_tracks(vehicle_detections_list=unmatched_detections)
             else:
-                print("7")
+                #print("7")
                 pass
 
         elif len(self.active_tracks) > 0 and len(vehicle_detections) == 0:
-            print("8")
+            #print("8")
             self.tracks_to_inactive(self.active_tracks)
 
         elif len(self.active_tracks) == 0 and len(vehicle_detections) > 0:
             if len(self.inactive_tracks) > 0:
-                print("9")
+                #print("9")
                 unmatched_detections = self.match_reid_iou_inactive(vehicle_detections=vehicle_detections)
                 if len(unmatched_detections) > 0:
-                    print("10")
+                    #print("10")
                     self.add_new_tracks(vehicle_detections_list=unmatched_detections)
                 else:
-                    print("11")
+                    #print("11")
                     pass
             else:
-                print("12")
+                #print("12")
                 self.add_new_tracks(vehicle_detections_list=vehicle_detections)
         else:
-            print("13")
+            #print("13")
             pass
 
         remove_inactive = []

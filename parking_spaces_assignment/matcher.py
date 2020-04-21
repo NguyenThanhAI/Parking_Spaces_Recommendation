@@ -6,6 +6,9 @@ import cv2
 from vehicle_tracking.vehicle_detector import VehicleDetector
 from parking_spaces_assignment.parking_space import ParkingSpacesInitializer
 from vehicle_tracking.vehicle_tracker import VehicleTracker
+import time
+from code_timing_profiling.profiling import profile
+from code_timing_profiling.timing import timethis
 
 ROOT_DIR = os.path.abspath("..")
 sys.path.append(ROOT_DIR)
@@ -17,7 +20,8 @@ class Matcher(object):
                  parking_ground="parking_ground_SA",
                  active_cams=["cam_2"],
                  shape=(720, 1280),
-                 config_json_path=os.path.join(ROOT_DIR, "parking_spaces_data/parking_spaces_unified_id_segmen_in_cameras.json")):
+                 config_json_path=os.path.join(ROOT_DIR, "parking_spaces_data/parking_spaces_unified_id_segmen_in_cameras.json"),
+                 detection_vehicle_thresh=0.4):
         self.parking_ground = parking_ground
         self.active_cams = active_cams
         self.parking_space_initializer = ParkingSpacesInitializer(active_cams=self.active_cams,
@@ -28,9 +32,10 @@ class Matcher(object):
         #for cam in self.active_cams:
         #    self.detectors_list.append(VehicleDetector(checkpoint_name=checkpoint_name,
         #                                               cam=cam))
-        self.detector = VehicleDetector(checkpoint_name=checkpoint_name)
+        self.detector = VehicleDetector(checkpoint_name=checkpoint_name, detection_vehicle_thresh=detection_vehicle_thresh)
         self.parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
 
+    #@profile
     def frame_match(self, frame, cam="cam_2", threshold=0.3, is_tracking=False, tracker=None):
 
         assert cam in self.active_cams
@@ -41,7 +46,7 @@ class Matcher(object):
             assert tracker, "vehicles tracker cannot be None"
             tracker.step(vehicle_detections=vehicles_list)
             vehicles_list = tracker.get_result()
-
+        start = time.time()
         parking_spaces_in_cam = list(filter(lambda x: cam in list(x.positions.keys()), self.parking_spaces_list))
         if not is_tracking:
             col_to_veh_id = dict(zip(list(range(len(vehicles_list))), list(map(lambda x: x.detection_id, vehicles_list))))
@@ -50,7 +55,7 @@ class Matcher(object):
 
         row_to_unified_id = dict(zip(list(range(len(parking_spaces_in_cam))), list(map(lambda x: x.unified_id, parking_spaces_in_cam))))
         unified_id_to_row = {v: k for k, v in row_to_unified_id.items()}
-        print(col_to_veh_id, row_to_unified_id)
+        #print(col_to_veh_id, row_to_unified_id)
 
         vehicle_masks = np.stack(list(map(lambda x: x.mask, vehicles_list)), axis=0)
         parking_spaces_in_cam_mask = np.stack(list(map(lambda x: x.positions_mask[cam], parking_spaces_in_cam)), axis=0)
@@ -58,10 +63,10 @@ class Matcher(object):
         intersection = np.logical_and(parking_spaces_in_cam_mask[:, np.newaxis, :, :], vehicle_masks[np.newaxis, :, :, :])
         intersection = np.count_nonzero(intersection, axis=(2, 3)).astype(np.float32)
         ios = intersection / np.count_nonzero(parking_spaces_in_cam_mask, axis=(1, 2))[:, np.newaxis]
-        iov = intersection / np.count_nonzero(vehicle_masks, axis=(1, 2))[np.newaxis, :]
-        union = np.logical_or(parking_spaces_in_cam_mask[:, np.newaxis, :, :], vehicle_masks[np.newaxis, :, :, :])
-        union = np.count_nonzero(union, axis=(2, 3))
-        iou = intersection / union
+        #iov = intersection / np.count_nonzero(vehicle_masks, axis=(1, 2))[np.newaxis, :]
+        #union = np.logical_or(parking_spaces_in_cam_mask[:, np.newaxis, :, :], vehicle_masks[np.newaxis, :, :, :])
+        #union = np.count_nonzero(union, axis=(2, 3))
+        #iou = intersection / union
         num_cols = ios.shape[1]
         cols_to_rows = {}
         for i in range(num_cols):
@@ -70,8 +75,8 @@ class Matcher(object):
             sorted_ind_above_thresh = sorted_ind[cols_i[sorted_ind] > threshold]
             if len(sorted_ind_above_thresh.tolist()) > 0:
                 cols_to_rows[i] = dict(zip(sorted_ind_above_thresh.tolist(), cols_i[sorted_ind_above_thresh].tolist()))
-            print("column (vehicle) {} sorted_ind_above_thresh: {}".format(i, dict(zip(list(map(lambda x: row_to_unified_id[x], sorted_ind_above_thresh)), cols_i[sorted_ind_above_thresh].tolist()))))
-        print("Dictionary cols to rows: {}".format(cols_to_rows))
+            #print("column (vehicle) {} sorted_ind_above_thresh: {}".format(i, dict(zip(list(map(lambda x: row_to_unified_id[x], sorted_ind_above_thresh)), cols_i[sorted_ind_above_thresh].tolist()))))
+        #print("Dictionary cols to rows: {}".format(cols_to_rows))
         num_rows = ios.shape[0]
         rows_to_cols = {}
         for j in range(num_rows):
@@ -80,9 +85,10 @@ class Matcher(object):
             sorted_ind_above_thresh = sorted_ind[rows_j[sorted_ind] > threshold]
             if len(sorted_ind_above_thresh.tolist()) > 0:
                 rows_to_cols[j] = dict(zip(sorted_ind_above_thresh.tolist(), rows_j[sorted_ind_above_thresh].tolist()))
-            print("row (parking space) {}-{} sorted_ind_above_thresh: {}".format(j, row_to_unified_id[j], dict(zip(sorted_ind_above_thresh.tolist(), rows_j[sorted_ind_above_thresh].tolist()))))
-        print("Dictionary rows to cols: {}".format(rows_to_cols))
-
+            #print("row (parking space) {}-{} sorted_ind_above_thresh: {}".format(j, row_to_unified_id[j], dict(zip(sorted_ind_above_thresh.tolist(), rows_j[sorted_ind_above_thresh].tolist()))))
+        #print("Dictionary rows to cols: {}".format(rows_to_cols))
+        end = time.time()
+        print("This block consumes {} seconds".format(end - start))
         rows_status_dict = dict(zip(list(row_to_unified_id.keys()), ["unknown"]*len(list(row_to_unified_id.keys()))))
         #for row in rows_status_dict:
         #    if row in rows_to_cols:
@@ -115,7 +121,7 @@ class Matcher(object):
         #        if file.endswith((".jpg", ".png")):
         #            k += 1
         #cv2.imwrite(os.path.join(demo_images_dir, str(k) + ".jpg"), frame)
-
+        start = time.time()
         considered_col_list = []
         for row in rows_status_dict:
             if row not in rows_to_cols:
@@ -126,7 +132,7 @@ class Matcher(object):
                         if len(cols_to_rows[col]) == 1:
                             assert row in cols_to_rows[col]
                             rows_status_dict[row] = "filled"
-                            print("Row {} and col {} is matched".format(row, col))
+                            #print("Row {} and col {} is matched".format(row, col))
                         else:
                             assert row in cols_to_rows[col]
                             pspace_dict = {}  # Dictionary of dictionary, each dictionary represents and parking space with information east level, south level and adjacencies against orient
@@ -281,7 +287,7 @@ class Matcher(object):
                             trace.append(random_row) # Initialize track
                             traverse_neighbors(random_row) # Assign value to east_level and south_level
 
-                            print("Random row {}, trace {}".format(random_row, trace))
+                            #print("Random row {}, trace {}".format(random_row, trace))
 
                             pspace_dict = dict(sorted(pspace_dict.items(), key=lambda s: s[1]["east_level"]))
                             convert_considered_orient_dict = {"east": "western_adjacency",
@@ -301,7 +307,7 @@ class Matcher(object):
                                         reversed_considered_orients[orient] = []
                                     reversed_considered_orients[orient].append(row_match)
 
-                            print("Reversed_considered_orients {}".format(reversed_considered_orients))
+                            #print("Reversed_considered_orients {}".format(reversed_considered_orients))
 
                             #for orient in reversed_considered_orients:
                             #    if orient == "east":
@@ -329,7 +335,7 @@ class Matcher(object):
                                 min_east_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
                                 considered_rows = list(dict(filter(lambda x: x[1]["east_level"] == min_east_level, pspace_dict.items())).keys())
                                 considered_east_west_row_list.extend(considered_rows)
-                                print("min_east_level {}, consider_rows {}, considered_east_west_row_list {}, max_east {}".format(min_east_level, considered_rows, considered_east_west_row_list, max_east))
+                                #print("min_east_level {}, consider_rows {}, considered_east_west_row_list {}, max_east {}".format(min_east_level, considered_rows, considered_east_west_row_list, max_east))
 
                             elif "north_west"  in reversed_considered_orients or "west" in reversed_considered_orients \
                                     or "south_west" in reversed_considered_orients:
@@ -337,7 +343,7 @@ class Matcher(object):
                                 considered_rows = list(dict(filter(lambda x: x[1]["east_level"] == max_east_level, pspace_dict.items())).keys())
                                 considered_east_west_row_list.extend(considered_rows)
                                 max_east = True
-                                print("max_east_level {}, consider_rows {}, considered_east_west_row_list {}, max_east {}".format(max_east_level, considered_rows, considered_east_west_row_list, max_east))
+                                #print("max_east_level {}, consider_rows {}, considered_east_west_row_list {}, max_east {}".format(max_east_level, considered_rows, considered_east_west_row_list, max_east))
 
                             considered_south_north_row_list = []
                             max_south = True
@@ -346,7 +352,7 @@ class Matcher(object):
                                 max_south_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
                                 considered_rows = list(dict(filter(lambda x: x[1]["south_level"] == max_south_level, pspace_dict.items())).keys())
                                 considered_south_north_row_list.extend(considered_rows)
-                                print("max_south_level {}, considered_rows {}, considered_south_north_row_list{}, max_south {}".format(max_south_level, considered_rows, considered_south_north_row_list, max_south))
+                                #print("max_south_level {}, considered_rows {}, considered_south_north_row_list{}, max_south {}".format(max_south_level, considered_rows, considered_south_north_row_list, max_south))
 
                             elif "south" in reversed_considered_orients or "south_west" in reversed_considered_orients \
                                     or "south_east" in reversed_considered_orients:
@@ -354,7 +360,7 @@ class Matcher(object):
                                 considered_rows = list(dict(filter(lambda x: x[1]["south_level"] == min_south_level, pspace_dict.items())).keys())
                                 considered_south_north_row_list.extend(considered_rows)
                                 max_south = False
-                                print("min_south_level {}, considered_rows {}, considered_south_north_row_list{}, max_south {}".format(min_south_level, considered_rows, considered_south_north_row_list, max_south))
+                                #print("min_south_level {}, considered_rows {}, considered_south_north_row_list{}, max_south {}".format(min_south_level, considered_rows, considered_south_north_row_list, max_south))
 
                             considered_row = list(set(considered_east_west_row_list).intersection(considered_south_north_row_list))
 
@@ -397,11 +403,13 @@ class Matcher(object):
                                         else:
                                             rows_status_dict[row_match] = "available"
 
-                            print("Row {}, Col {}, Pspace_dict {}".format(row, col, pspace_dict))
+                            #print("Row {}, Col {}, Pspace_dict {}".format(row, col, pspace_dict))
 
                         considered_col_list.append(col)
         unified_id_status_dict = {row_to_unified_id[k]:v for k, v in rows_status_dict.items()}
-
+        end = time.time()
+        print("This block consumes {} seconds".format(end - start))
+        start = time.time()
         color_mask = np.zeros_like(frame, dtype=np.uint8)
         for row in rows_status_dict:
            if rows_status_dict[row] == "filled":
@@ -414,8 +422,9 @@ class Matcher(object):
            color_mask = np.where(vehicle_mask[:, :, np.newaxis], np.array([255, 0, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
 
         frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.4, color_mask, 0.6, 0), frame)
-
-        return vehicles_list, parking_spaces_in_cam, ios, iov, iou, frame
+        end = time.time()
+        print("This block consumes {} seconds".format(end - start))
+        return vehicles_list, parking_spaces_in_cam, ios, frame
 
     def image_match(self, image_path, save_dir, cam="cam_1", threshold=0.3, is_tracking=False, is_showimage=True):
         if is_tracking:
@@ -428,7 +437,7 @@ class Matcher(object):
         else:
             tracker = None
         image = cv2.imread(image_path)
-        vehicles, parking_spaces, ios, iov, iou, frame = self.frame_match(frame=image, cam=cam, threshold=threshold, is_tracking=is_tracking, tracker=tracker)
+        vehicles, parking_spaces, ios, frame = self.frame_match(frame=image, cam=cam, threshold=threshold, is_tracking=is_tracking, tracker=tracker)
         if is_showimage:
             cv2.imshow("", frame)
             cv2.waitKey(0)
@@ -480,11 +489,11 @@ class Matcher(object):
                     stopped = True
                     continue
 
-                vehicles, parking_spaces, ios, iov, iou, frame = self.frame_match(frame=frame,
-                                                                                  cam=cam,
-                                                                                  threshold=threshold,
-                                                                                  is_tracking=is_tracking,
-                                                                                  tracker=tracker)
+                vehicles, parking_spaces, ios, frame = self.frame_match(frame=frame,
+                                                                        cam=cam,
+                                                                        threshold=threshold,
+                                                                        is_tracking=is_tracking,
+                                                                        tracker=tracker)
                 if is_savevideo:
                     output.write(frame)
                 if is_showframe:

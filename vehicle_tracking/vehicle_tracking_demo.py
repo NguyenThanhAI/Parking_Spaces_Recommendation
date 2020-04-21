@@ -17,7 +17,7 @@ def get_args():
     parser.add_argument("--video_source", type=str, default=r"G:\04_前沢SA_上\201911\20191130\カメラ1\2019-11-30_10-00-00.mp4", help="Path to demo video")
     parser.add_argument("--video_output_dir", type=str, default=r"F:\\", help="Path to output video")
     parser.add_argument("--is_showframe", type=bool, default=True, help="Show result or not")
-    parser.add_argument("--detection_vehicle_thresh", type=float, default=0.2)
+    parser.add_argument("--detection_vehicle_thresh", type=float, default=0.4)
     parser.add_argument("--inactive_steps_before_removed", type=int, default=10)
     parser.add_argument("--reid_iou_threshold", type=float, default=0.3)
     parser.add_argument("--max_traject_steps", type=int, default=50)
@@ -30,7 +30,7 @@ def get_args():
 if __name__ == '__main__':
     args = get_args()
 
-    detector = VehicleDetector()
+    detector = VehicleDetector(detection_vehicle_thresh=args.detection_vehicle_thresh)
     tracker = VehicleTracker(detection_vehicle_thresh=args.detection_vehicle_thresh,
                              inactive_steps_before_removed=args.inactive_steps_before_removed,
                              reid_iou_threshold=args.reid_iou_threshold,
