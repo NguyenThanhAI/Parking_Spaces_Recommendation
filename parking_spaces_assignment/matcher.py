@@ -63,10 +63,6 @@ class Matcher(object):
         intersection = np.logical_and(parking_spaces_in_cam_mask[:, np.newaxis, :, :], vehicle_masks[np.newaxis, :, :, :])
         intersection = np.count_nonzero(intersection, axis=(2, 3)).astype(np.float32)
         ios = intersection / np.count_nonzero(parking_spaces_in_cam_mask, axis=(1, 2))[:, np.newaxis]
-        #iov = intersection / np.count_nonzero(vehicle_masks, axis=(1, 2))[np.newaxis, :]
-        #union = np.logical_or(parking_spaces_in_cam_mask[:, np.newaxis, :, :], vehicle_masks[np.newaxis, :, :, :])
-        #union = np.count_nonzero(union, axis=(2, 3))
-        #iou = intersection / union
         num_cols = ios.shape[1]
         cols_to_rows = {}
         for i in range(num_cols):
@@ -90,37 +86,6 @@ class Matcher(object):
         end = time.time()
         print("This block consumes {} seconds".format(end - start))
         rows_status_dict = dict(zip(list(row_to_unified_id.keys()), ["unknown"]*len(list(row_to_unified_id.keys()))))
-        #for row in rows_status_dict:
-        #    if row in rows_to_cols:
-        #        rows_status_dict[row] = "filled"
-        #    else:
-        #        rows_status_dict[row] = "available"
-        #unified_id_status_dict = {row_to_unified_id[k]:v for k, v in rows_status_dict.items()}
-#
-        #color_mask = np.zeros_like(frame, dtype=np.uint8)
-        #for row in rows_status_dict:
-        #    if rows_status_dict[row] == "filled":
-        #        color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 0, 255], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
-        #    elif rows_status_dict[row] == "unknown":
-        #        color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 255], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
-        #    else:
-        #        color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
-        #for vehicle_mask in vehicle_masks:
-        #    color_mask = np.where(vehicle_mask[:, :, np.newaxis], np.array([255, 0, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
-#
-        #frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.4, color_mask, 0.6, 0), frame)
-#
-        #cv2.imshow("", frame)
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
-#
-        #k = 0
-        #demo_images_dir = r"F:\Parking_Spaces_Recommendation_Data\demo_images"
-        #for dirs, _, files in os.walk(demo_images_dir):
-        #    for file in files:
-        #        if file.endswith((".jpg", ".png")):
-        #            k += 1
-        #cv2.imwrite(os.path.join(demo_images_dir, str(k) + ".jpg"), frame)
         start = time.time()
         considered_col_list = []
         for row in rows_status_dict:
@@ -290,14 +255,6 @@ class Matcher(object):
                             #print("Random row {}, trace {}".format(random_row, trace))
 
                             pspace_dict = dict(sorted(pspace_dict.items(), key=lambda s: s[1]["east_level"]))
-                            convert_considered_orient_dict = {"east": "western_adjacency",
-                                                              "south": "northern_adjacency",
-                                                              "north": "southern_adjacency",
-                                                              "west": "eastern_adjacency",
-                                                              "south_east": "north_west_adjacency",
-                                                              "south_west": "north_east_adjacency",
-                                                              "north_east": "south_west_adjacency",
-                                                              "north_west": "south_east_adjacency"}
                             reversed_considered_orients = {}
                             for row_match in pspace_dict:
                                 orients = pspace_dict[row_match]["reversed_considered_orients"]
@@ -309,25 +266,6 @@ class Matcher(object):
 
                             #print("Reversed_considered_orients {}".format(reversed_considered_orients))
 
-                            #for orient in reversed_considered_orients:
-                            #    if orient == "east":
-                            #        west_pole = reversed_considered_orients[orient][0]
-                            #        if "western_adjacency" in pspace_dict[west_pole]["adjacencies"]:
-                            #            west_pole = pspace_dict[west_pole]["adjacencies"]["western_adjacency"]
-                            #    if orient == "west":
-                            #        east_pole = reversed_considered_orients[orient][-1]
-                            #        if "eastern_adjacency" in pspace_dict[east_pole]["adjacencies"]:
-                            #            east_pole = pspace_dict[east_pole]["adjacencies"]["eastern_adjacency"]
-                            #    if orient == "south":
-                            #        north_pole = reversed_considered_orients[orient][0]
-                            #        argmin
-                            #def consider_east():
-                            #    east_list = {k: pspace_dict[k] for k in reversed_considered_orients["east"] if pspace_dict[k]["adjacencies"][convert_considered_orient_dict["east"] in pspace_dict]}
-                            #    print("east_list {}".format(east_list))
-                            #    east_list = list(sorted(east_list.keys(), key=lambda s: pspace_dict[s]["east_level"]))
-                            #    print("east_list {}".format(east_list))
-                            #if "east" in reversed_considered_orients:
-                            #    consider_east()
                             considered_east_west_row_list = []
                             max_east = False
                             if "north_east" in reversed_considered_orients or "east" in reversed_considered_orients \

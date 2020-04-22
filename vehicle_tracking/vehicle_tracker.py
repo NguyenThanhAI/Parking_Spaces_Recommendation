@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import time
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -16,7 +17,8 @@ class VehicleTracker:
                  reid_iou_threshold,
                  max_traject_steps,
                  parking_ground,
-                 cam="cam_1"):
+                 cam="cam_1",
+                 shape=(1280, 720)):
 
         #self.vehicle_detector = vehicle_detector
         self.detection_vehicle_thresh = detection_vehicle_thresh
@@ -29,6 +31,9 @@ class VehicleTracker:
         self.max_traject_steps = max_traject_steps
         self.parking_ground = parking_ground
         self.cam = cam
+        self.shape = shape
+        self.positions_mask = -1 * np.ones(shape=self.shape, dtype=np.int16)
+        self.square_of_mask = OrderedDict() # Number of pixel (square) of each track id mask
 
         self.active_tracks = []
         self.inactive_tracks = []
@@ -57,7 +62,7 @@ class VehicleTracker:
         for i in range(num_new):
             self.active_tracks.append(VehicleTrack(score=vehicle_detections_list[i].score,
                                                    bbox=vehicle_detections_list[i].bbox,
-                                                   mask=vehicle_detections_list[i].mask,
+                                                   positions=vehicle_detections_list[i].positions,
                                                    class_id=vehicle_detections_list[i].class_id,
                                                    track_id=self.track_num + i,
                                                    inactive_steps_before_removed=self.inactive_steps_before_removed,
@@ -80,12 +85,12 @@ class VehicleTracker:
             scores = []
         return scores
 
-    def get_active_masks(self):
+    def get_active_positions(self):
         if len(self.active_tracks) >= 1:
-            masks = [t.mask for t in self.active_tracks]
+            positions = [t.positions for t in self.active_tracks]
         else:
-            masks = []
-        return masks
+            positions = []
+        return positions
 
     def get_inactive_boxes(self):
         if len(self.inactive_tracks) >= 1:
@@ -113,7 +118,7 @@ class VehicleTracker:
                 t = self.active_tracks[r]
                 t.bbox = vehicle_detections[c].bbox
                 t.score = vehicle_detections[c].score
-                t.mask = vehicle_detections[c].mask
+                t.positions = vehicle_detections[c].positions
                 t.time_stamp.append(time.time())
         unmatched_tracks = [self.active_tracks[i] for i in range(len(self.active_tracks)) if i not in matched_track_indx]
         unmatched_detections = [vehicle_detections[j] for j in range(len(vehicle_detections)) if j not in matched_track_indx]
@@ -144,7 +149,7 @@ class VehicleTracker:
                 t = self.inactive_tracks[r]
                 t.bbox = vehicle_detections[c].bbox
                 t.score = vehicle_detections[c].score
-                t.mask = vehicle_detections[c].mask
+                t.positions = vehicle_detections[c].positions
                 t.reset_trajectory()
                 t.inactive_steps = 0
                 t.birth_time.append(time.time())
@@ -243,5 +248,19 @@ class VehicleTracker:
         for track in remove_inactive:
             self.inactive_tracks.remove(track)
 
+        self.compute_positions_mask_and_square_mask_of_active_tracks()
+
     def get_result(self):
         return self.active_tracks
+
+    def compute_positions_mask_and_square_mask_of_active_tracks(self):
+        self.positions_mask = -1 * np.ones(shape=self.shape, dtype=np.int16)
+        self.square_of_mask = OrderedDict()
+
+        for t in self.active_tracks:
+            rr, cc = t.positions
+            self.positions_mask[rr, cc] = t.track_id
+            self.square_of_mask[t.track_id] = rr.shape[0]
+
+    def get_dict_convert_col_to_track_id(self):
+        return dict(zip(list(range(len(self.square_of_mask.keys()))), list(self.square_of_mask.keys())))

@@ -5,10 +5,10 @@ import numpy as np
 
 class VehicleTrack(object):
 
-    def __init__(self, score, bbox, mask, class_id, track_id, inactive_steps_before_removed, max_traject_steps, parking_ground, cam):
+    def __init__(self, score, bbox, positions, class_id, track_id, inactive_steps_before_removed, max_traject_steps, parking_ground, cam):
         self.score = score
-        self.bbox = bbox  # y_min, x_min, y_max, x_max
-        self.mask = mask
+        self.bbox = bbox  # x_min, y_min, x_max, y_max
+        self.positions = positions # Tập hợp các điểm [y1, y2, ..., yn], [x1, x2, ..., xn] nằm trong vehicle mask
         self.class_id = class_id
         self.track_id = track_id
         self.inactive_steps = 0
