@@ -74,20 +74,20 @@ class VehicleDetector(object):
         return dict(zip(list(range(len(self.square_of_mask[cam].keys()))), list(self.square_of_mask[cam].keys())))
 
 
-detector = VehicleDetector()
-image = cv2.imread(os.path.join(ROOT_DIR, "test_object_detection_models/images/car-park.jpg"))
-vehicles =  detector(image)
-#print(detector.positions_mask)
-color_dict = {-1: 0}
-for i in range(len(vehicles)):
-    color_dict[i] = np.random.randint(100, 256, dtype=np.uint8)
-mask = detector.positions_mask["cam_1"]
-mask = np.vectorize(color_dict.get)(mask)
-mask = np.tile(mask[:, :, np.newaxis], (1, 1, 3)).astype(np.uint8)
-
-cv2.imshow("Anh", image)
-cv2.waitKey(0)
-cv2.imshow("Mask", mask)
-cv2.waitKey()
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+#detector = VehicleDetector()
+#image = cv2.imread(os.path.join(ROOT_DIR, "test_object_detection_models/images/car-park.jpg"))
+#vehicles =  detector(image)
+##print(detector.positions_mask)
+#color_dict = {-1: 0}
+#for i in range(len(vehicles)):
+#    color_dict[i] = np.random.randint(100, 256, dtype=np.uint8)
+#mask = detector.positions_mask["cam_1"]
+#mask = np.vectorize(color_dict.get)(mask)
+#mask = np.tile(mask[:, :, np.newaxis], (1, 1, 3)).astype(np.uint8)
+#
+#cv2.imshow("Anh", image)
+#cv2.waitKey(0)
+#cv2.imshow("Mask", mask)
+#cv2.waitKey()
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()

@@ -18,7 +18,7 @@ class VehicleTracker:
                  max_traject_steps,
                  parking_ground,
                  cam="cam_1",
-                 shape=(1280, 720)):
+                 shape=(720, 1280)):
 
         #self.vehicle_detector = vehicle_detector
         self.detection_vehicle_thresh = detection_vehicle_thresh

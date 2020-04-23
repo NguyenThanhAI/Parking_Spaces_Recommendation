@@ -15,22 +15,24 @@ Nền của array này là -1. Mask ứng với parking sace id i, những đi�
 * Tạo ra dictionary map từ unified_id sang instance của parking_space
 * Tạo ra dictionary map từ vehicle_id (detection_id nếu không track, track_id nếu sử dụng track),
 sang instance của vehicle_detection (nếu không sử dụng track) hoặc vehicle_track (nếu sử dụng track)
+* Lấy positions_mask của parking_space từ parkingspaceinitializer._positions_map[cam] và positions_mask của vehicle từ vehicle_detector.positions_mask[cam] (nếu không sử dụng track) hoặc
+vehicle_tracker.positions_mask (nếu sử dụng track)
 * So sánh kích thước của 2 dictionary tạo ở 2 bước trên, dictionary nào có kích thước nhỏ hơn,
 ta sẽ sử dụng vòng lặp for trên dictionary đó
-* Tạo hai dictionary unified_id_to_vehicle_id và vehicle_id_to_unified_id chứa thông tin ios (intersection over space) {unified_id1: {vehicle_id1: ..., vehicle_id2: ..., ...}, unified_id2: ...}, {vehicle_id1: {unified_id1:..., unified_id2:...,...}, vehicle_id2:...}
-* Giả sử chọn vòng lặp for theo các key của dictionary của unified sang instance của parking_space:
+* Tạo hai dictionary unified_id_to_vehicle_id_ios và vehicle_id_to_unified_id_ios chứa thông tin ios (intersection over space) {unified_id1: {vehicle_id1: ..., vehicle_id2: ..., ...}, unified_id2: ...}, {vehicle_id1: {unified_id1:..., unified_id2:...,...}, vehicle_id2:...}
+* Giả sử chọn vòng lặp for theo các key của dictionary của unified_id sang instance của parking_space:
     * Lấy crop của parkingspaceinitialzer.postions_mask[cam][unified_id] từ bbox của unified_id tương ứng
     * Lấy phần crop ở trên áp lên positions_mask của vehicle_detector (nếu không sử dụng track) hoặc vehicle_tracker (nếu sử dụng track)
     * Tìm số lượng giao của unified_id với các vehicle_id trong vùng crop trên và lưu vào 2 dictionary unified_id_to_vehicle_id và vehicle_id_to_unified_id nếu ios thỏa mãn > threshold đặt trước, nếu không thì bỏ qua
 * Tạo một unified_id_status_dict = {unified_id: "unknown", ....} tất cả các unified_id có trạng thái ban đầu là unknown
-* Đặt một considered_vehicle_id_list = [] chứ các vehicle_id đã được xét với các unified_id
+* Đặt một considered_vehicle_id_list = [] chứa các vehicle_id đã được xét với các unified_id
 * Duyệt từng unified_id trên unified_id_status_dict:
     * Nếu unified_id không là tồn tại là key trong unified_id_to_vehicle_id thì chuyển trạng thái của unified_id trong
     unified_id_status_dict là "available"
-    * unified_id không là tồn tại là key trong unified_id_to_vehicle_id:
+    * unified_id là tồn tại là key trong unified_id_to_vehicle_id:
         * Xét từng vehicle_id có ios giao trong unified_id_to_vehicle_id[unified_id]:
             * Nếu vehicle_id này không nằm trong considered_vehicle_id_list = [] thì xét tiếp, ngược lại đã ở trong rồi thì bỏ qua chuyển sang vehicle_id tiếp theo:
-                * Xét vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét này chỉ có đúng một unified_id đang xét:
+                * Nếu vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét này chỉ có đúng một unified_id đang xét:
                     * assert unified_id in vehicle_id_to_unified_id[vehicle_id] (xác nhận lại)
                     * vehicle_id này và unified_id đang xét được match với nhau
                     * unified_id_status_dict[unified_id] = "filled"

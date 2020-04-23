@@ -74,5 +74,5 @@ class ParkingSpacesInitializer(object):
         return dict(zip(list(range(len(self.square_of_mask[cam].keys()))), list(self.square_of_mask[cam].keys())))
 
 
-initializer = ParkingSpacesInitializer(active_cams=["cam_1", "cam_2"])
-parking_spaces_list  = initializer.initialize_parking_spaces()
+#initializer = ParkingSpacesInitializer(active_cams=["cam_1", "cam_2"])
+#parking_spaces_list  = initializer.initialize_parking_spaces()
