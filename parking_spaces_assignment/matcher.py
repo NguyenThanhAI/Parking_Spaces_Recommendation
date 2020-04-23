@@ -146,242 +146,178 @@ class Matcher(object):
                                 pspace = unified_id_to_ps[uid_match]
                                 adjacencies = dict(filter(lambda x: x[1] is not None, pspace.adjacencies.items()))
                                 adjacencies = dict(filter(lambda x: x[1] in vehicle_id_to_unified_id_ios[vehicle_id], adjacencies.items()))
-                                #adjacencies = {k: unified_id_to_row[v] for k, v in adjacencies.items()}
                                 uid_match_dict["adjacencies"] = adjacencies
                                 uid_match_dict["ios"] = vehicle_id_to_unified_id_ios[vehicle_id][uid_match]
                                 uid_match_dict["reversed_considered_orients"] = pspace.reversed_considered_orients[cam] if cam in pspace.reversed_considered_orients else {}
                                 pspace_dict[uid_match] = uid_match_dict
 
                             trace = []
-        #                    def traverse_neighbors(uid_match):
-        #                        #pspace[uid_match]["visited"] = True
-        #                        if "eastern_adjacency" in pspace_dict[uid_match]["adjacencies"]:
-        #                            traverse_east(uid_match)
+                            def traverse_neighbors(uid_match):
+                                #pspace[uid_match]["visited"] = True
+                                if "eastern_adjacency" in pspace_dict[uid_match]["adjacencies"]:
+                                    traverse_orient(uid_match, orient="east")
+                                if "western_adjacency" in pspace_dict[uid_match]["adjacencies"]:
+                                    traverse_orient(uid_match, orient="west")
+                                if "southern_adjacency" in pspace_dict[uid_match]["adjacencies"]:
+                                    traverse_orient(uid_match, orient="south")
+                                if "northern_adjacency" in pspace_dict[uid_match]["adjacencies"]:
+                                    traverse_orient(uid_match, orient="north")
+                                if "south_east_adjacency" in pspace_dict[uid_match]["adjacencies"]:
+                                    traverse_orient(uid_match, orient="south_east")
+                                if "south_west_adjacency" in pspace_dict[uid_match]["adjacencies"]:
+                                    traverse_orient(uid_match, orient="south_west")
+                                if "north_west_adjacency" in pspace_dict[uid_match]["adjacencies"]:
+                                    traverse_orient(uid_match, orient="north_west")
+                                if "north_east_adjacency" in pspace_dict[uid_match]["adjacencies"]:
+                                    traverse_orient(uid_match, orient="north_east")
 
-        #                        if "western_adjacency" in pspace_dict[uid_match]["adjacencies"]:
-        #                            traverse_west(uid_match)
+                            def traverse_orient(uid_match, orient):
+                                if orient == "east":
+                                    adjacency = "eastern_adjacency"
+                                elif orient == "west":
+                                    adjacency = "western_adjacency"
+                                elif orient == "south":
+                                    adjacency = "southern_adjacency"
+                                elif orient == "north":
+                                    adjacency = "northern_adjacency"
+                                elif orient == "south_east":
+                                    adjacency = "south_east_adjacency"
+                                elif orient == "south_west":
+                                    adjacency = "south_west_adjacency"
+                                elif orient == "north_west":
+                                    adjacency = "north_west_adjacency"
+                                else:
+                                    adjacency = "north_east_adjacency"
 
-        #                        if "southern_adjacency" in pspace_dict[uid_match]["adjacencies"]:
-        #                            traverse_south(uid_match)
+                                if not pspace_dict[pspace_dict[uid_match]["adjacencies"][adjacency]]["visited"]:
+                                    east_level = pspace_dict[uid_match]["east_level"]
+                                    south_level = pspace_dict[uid_match]["south_level"]
+                                    uid_match = pspace_dict[uid_match]["adjacencies"][adjacency]
+                                    if orient == "east":
+                                        pspace_dict[uid_match]["east_level"] = east_level + 1
+                                        pspace_dict[uid_match]["south_level"] = south_level
+                                    elif orient == "west":
+                                        pspace_dict[uid_match]["east_level"] = east_level - 1
+                                        pspace_dict[uid_match]["south_level"] = south_level
+                                    elif orient == "south":
+                                        pspace_dict[uid_match]["east_level"] = east_level
+                                        pspace_dict[uid_match]["south_level"] = south_level + 1
+                                    elif orient == "north":
+                                        pspace_dict[uid_match]["east_level"] = east_level
+                                        pspace_dict[uid_match]["south_level"] = south_level - 1
+                                    elif orient == "south_east":
+                                        pspace_dict[uid_match]["east_level"] = east_level + 1
+                                        pspace_dict[uid_match]["south_level"] = south_level + 1
+                                    elif orient == "south_west":
+                                        pspace_dict[uid_match]["east_level"] = east_level - 1
+                                        pspace_dict[uid_match]["south_level"] = south_level + 1
+                                    elif orient == "north_west":
+                                        pspace_dict[uid_match]["east_level"] = east_level - 1
+                                        pspace_dict[uid_match]["south_level"] = south_level - 1
+                                    else:
+                                        pspace_dict[uid_match]["east_level"] = east_level + 1
+                                        pspace_dict[uid_match]["south_level"] = south_level - 1
+                                    pspace_dict[uid_match]["visited"] = True
+                                    trace.append(uid_match)
+                                    traverse_neighbors(uid_match)
+                                else:
+                                    return
 
-        #                        if "northern_adjacency" in pspace_dict[uid_match]["adjacencies"]:
-        #                            traverse_north(uid_match)
+                            random_uid = np.random.choice(list(vehicle_id_to_unified_id_ios[vehicle_id].keys()))
 
-        #                        if "south_east_adjacency" in pspace_dict[uid_match]["adjacencies"]:
-        #                            traverse_south_east(uid_match)
+                            pspace_dict[random_uid]["visited"] = True # Choose random_uid as starting point
+                            trace.append(random_uid) # Initialize track
+                            traverse_neighbors(random_uid) # Assign value to east_level and south_level
 
-        #                        if "south_west_adjacency" in pspace_dict[uid_match]["adjacencies"]:
-        #                            traverse_south_west(uid_match)
+                            print("Random unified_id {}, trace {}".format(random_uid, trace))
 
-        #                        if "north_west_adjacency" in pspace_dict[uid_match]["adjacencies"]:
-        #                            traverse_north_west(uid_match)
+                            reversed_considered_orients = {}
+                            for uid_match in pspace_dict:
+                                orients = pspace_dict[uid_match]["reversed_considered_orients"]
+                                for orient in orients:
+                                    if orient not in reversed_considered_orients:
+                                        reversed_considered_orients[orient] = []
+                                    reversed_considered_orients[orient].append(uid_match)
+                            print("Reversed_considered_orients {}".format(reversed_considered_orients))
 
-        #                        if "north_east_adjacency" in pspace_dict[uid_match]["adjacencies"]:
-        #                            traverse_north_east(uid_match)
+                            considered_east_west_uid_list = []
+                            max_east = False
+                            if "north_east" in reversed_considered_orients or "east" in reversed_considered_orients \
+                                  or "south_east" in reversed_considered_orients:
+                                min_east_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
+                                considered_uid = list(dict(filter(lambda x: x[1]["east_level"] == min_east_level, pspace_dict.items())).keys())
+                                considered_east_west_uid_list.extend(considered_uid)
+                                print("min_east_level {}, consider_uid {}, considered_east_west_uid_list {}, max_east {}".format(min_east_level, considered_uid, considered_east_west_uid_list, max_east))
 
-        #                    def traverse_east(uid_match):
-        #                        if not pspace_dict[pspace_dict[uid_match]["adjacencies"]["eastern_adjacency"]]["visited"]:
-        #                            east_level = pspace_dict[uid_match]["east_level"]
-        #                            south_level = pspace_dict[uid_match]["south_level"]
-        #                            uid_match = pspace_dict[uid_match]["adjacencies"]["eastern_adjacency"]
-        #                            pspace_dict[uid_match]["east_level"] = east_level + 1
-        #                            pspace_dict[uid_match]["south_level"] = south_level
-        #                            pspace_dict[uid_match]["visited"] = True
-        #                            trace.append(uid_match)
-        #                            traverse_neighbors(uid_match)
-        #                        else:
-        #                            return
+                            elif "north_west"  in reversed_considered_orients or "west" in reversed_considered_orients \
+                                    or "south_west" in reversed_considered_orients:
+                                max_east_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
+                                considered_uid = list(dict(filter(lambda x: x[1]["east_level"] == max_east_level, pspace_dict.items())).keys())
+                                considered_east_west_uid_list.extend(considered_uid)
+                                max_east = True
+                                print("max_east_level {}, consider_uid {}, considered_east_west_uid_list {}, max_east {}".format(max_east_level, considered_uid, considered_east_west_uid_list, max_east))
 
-        #                    def traverse_west(uid_match):
-        #                        if not pspace_dict[pspace_dict[uid_match]["adjacencies"]["western_adjacency"]]["visited"]:
-        #                            east_level = pspace_dict[uid_match]["east_level"]
-        #                            south_level = pspace_dict[uid_match]["south_level"]
-        #                            uid_match = pspace_dict[uid_match]["adjacencies"]["western_adjacency"]
-        #                            pspace_dict[uid_match]["east_level"] = east_level - 1
-        #                            pspace_dict[uid_match]["south_level"] = south_level
-        #                            pspace_dict[uid_match]["visited"] = True
-        #                            trace.append(uid_match)
-        #                            traverse_neighbors(uid_match)
-        #                        else:
-        #                            return
+                            considered_south_north_uid_list = []
+                            max_south = True
+                            if "north" in reversed_considered_orients or "north_west" in reversed_considered_orients \
+                                    or "north_east" in reversed_considered_orients:
+                                max_south_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
+                                considered_uid = list(dict(filter(lambda x: x[1]["south_level"] == max_south_level, pspace_dict.items())).keys())
+                                considered_south_north_uid_list.extend(considered_uid)
+                                print("max_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(max_south_level, considered_uid, considered_south_north_uid_list, max_south))
 
-        #                    def traverse_south(uid_match):
-        #                        if not pspace_dict[pspace_dict[uid_match]["adjacencies"]["southern_adjacency"]]["visited"]:
-        #                            east_level = pspace_dict[uid_match]["east_level"]
-        #                            south_level = pspace_dict[uid_match]["south_level"]
-        #                            uid_match = pspace_dict[uid_match]["adjacencies"]["southern_adjacency"]
-        #                            pspace_dict[uid_match]["east_level"] = east_level
-        #                            pspace_dict[uid_match]["south_level"] = south_level + 1
-        #                            pspace_dict[uid_match]["visited"] = True
-        #                            trace.append(uid_match)
-        #                            traverse_neighbors(uid_match)
-        #                        else:
-        #                            return
+                            elif "south" in reversed_considered_orients or "south_west" in reversed_considered_orients \
+                                    or "south_east" in reversed_considered_orients:
+                                min_south_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
+                                considered_uid = list(dict(filter(lambda x: x[1]["south_level"] == min_south_level, pspace_dict.items())).keys())
+                                considered_south_north_uid_list.extend(considered_uid)
+                                max_south = False
+                                print("min_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(min_south_level, considered_uid, considered_south_north_uid_list, max_south))
 
-        #                    def traverse_north(uid_match):
-        #                        if not pspace_dict[pspace_dict[uid_match]["adjacencies"]["northern_adjacency"]]["visited"]:
-        #                            east_level = pspace_dict[uid_match]["east_level"]
-        #                            south_level = pspace_dict[uid_match]["south_level"]
-        #                            uid_match = pspace_dict[uid_match]["adjacencies"]["northern_adjacency"]
-        #                            pspace_dict[uid_match]["east_level"] = east_level
-        #                            pspace_dict[uid_match]["south_level"] = south_level - 1
-        #                            pspace_dict[uid_match]["visited"] = True
-        #                            trace.append(uid_match)
-        #                            traverse_neighbors(uid_match)
-        #                        else:
-        #                            return
+                            considered_uid = list(set(considered_east_west_uid_list).intersection(considered_south_north_uid_list))
 
-        #                    def traverse_south_east(uid_match):
-        #                        if not pspace_dict[pspace_dict[uid_match]["adjacencies"]["south_east_adjacency"]]["visited"]:
-        #                            south_level = pspace_dict[uid_match]["south_level"]
-        #                            east_level = pspace_dict[uid_match]["east_level"]
-        #                            uid_match = pspace_dict[uid_match]["adjacencies"]["south_east_adjacency"]
-        #                            pspace_dict[uid_match]["east_level"] = east_level + 1
-        #                            pspace_dict[uid_match]["south_level"] = south_level + 1
-        #                            pspace_dict[uid_match]["visited"] = True
-        #                            trace.append(uid_match)
-        #                            traverse_neighbors(uid_match)
-        #                        else:
-        #                            return
+                            if len(considered_uid) == 0:
+                                if len(considered_east_west_uid_list) > 0 or len(considered_south_north_uid_list) > 0: # Parking space does not belong to any reversed considered orients
+                                    chosen_uid = max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["ios"])
+                                    unified_id_status_dict[chosen_uid] = "filled"
+                                    for uid_match in pspace_dict:
+                                        if uid_match != chosen_uid:
+                                            if pspace_dict[uid_match]["ios"] > 0.75:
+                                                unified_id_status_dict[uid_match] = "unknown"
+                                            else:
+                                                unified_id_status_dict[uid_match] = "available"
+                                else:
+                                    for uid_match in pspace_dict:
+                                        if pspace_dict[uid_match]["ios"] > 0.65:
+                                            unified_id_status_dict[uid_match] = "filled"
+                            else:
+                                assert len(considered_uid) == 1
+                                considered_uid = considered_uid[0]
+                                filled_list = []
+                                unified_id_status_dict[considered_uid] = "filled"
+                                filled_list.append(considered_uid)
+                                if max_south:
+                                    if "northern_adjacency" in pspace_dict[considered_uid]["adjacencies"]:
+                                        north_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["northern_adjacency"]
+                                        if pspace_dict[north_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
+                                            unified_id_status_dict[north_of_considered_uid] = "filled"
+                                            filled_list.append(north_of_considered_uid)
+                                else:
+                                    if "southern_adjacency" in pspace_dict[considered_uid]["adjacencies"]:
+                                        south_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["southern_adjacency"]
+                                        if pspace_dict[south_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
+                                            unified_id_status_dict[south_of_considered_uid] = "filled"
+                                            filled_list.append(south_of_considered_uid)
+                                for uid_match in pspace_dict:
+                                    if uid_match not in filled_list:
+                                        if pspace_dict[uid_match]["ios"] > 0.7:
+                                            unified_id_status_dict[uid_match] = "unknown"
+                                        else:
+                                            unified_id_status_dict[uid_match] = "available"
 
-        #                    def traverse_south_west(uid_match):
-        #                        if not pspace_dict[pspace_dict[uid_match]["adjacencies"]["south_west_adjacency"]]["visited"]:
-        #                            south_level = pspace_dict[uid_match]["south_level"]
-        #                            east_level = pspace_dict[uid_match]["east_level"]
-        #                            uid_match = pspace_dict[uid_match]["adjacencies"]["south_west_adjacency"]
-        #                            pspace_dict[uid_match]["east_level"] = east_level - 1
-        #                            pspace_dict[uid_match]["south_level"] = south_level + 1
-        #                            pspace_dict[uid_match]["visited"] = True
-        #                            trace.append(uid_match)
-        #                            traverse_neighbors(uid_match)
-        #                        else:
-        #                            return
+                            print("Unified id {}, vehicle id {}, Pspace_dict {}".format(unified_id, vehicle_id, pspace_dict))
 
-        #                    def traverse_north_west(uid_match):
-        #                        if not pspace_dict[pspace_dict[uid_match]["adjacencies"]["north_west_adjacency"]]["visited"]:
-        #                            south_level = pspace_dict[uid_match]["south_level"]
-        #                            east_level = pspace_dict[uid_match]["east_level"]
-        #                            uid_match = pspace_dict[uid_match]["adjacencies"]["north_west_adjacency"]
-        #                            pspace_dict[uid_match]["east_level"] = east_level - 1
-        #                            pspace_dict[uid_match]["south_level"] = south_level - 1
-        #                            pspace_dict[uid_match]["visited"] = True
-        #                            trace.append(uid_match)
-        #                            traverse_neighbors(uid_match)
-        #                        else:
-        #                            return
-
-        #                    def traverse_north_east(uid_match):
-        #                        if not pspace_dict[pspace_dict[uid_match]["adjacencies"]["north_east_adjacency"]]["visited"]:
-        #                            south_level = pspace_dict[uid_match]["south_level"]
-        #                            east_level = pspace_dict[uid_match]["east_level"]
-        #                            uid_match = pspace_dict[uid_match]["adjacencies"]["north_east_adjacency"]
-        #                            pspace_dict[uid_match]["east_level"] = east_level + 1
-        #                            pspace_dict[uid_match]["south_level"] = south_level - 1
-        #                            pspace_dict[uid_match]["visited"] = True
-        #                            trace.append(uid_match)
-        #                            traverse_neighbors(uid_match)
-        #                        else:
-        #                            return
-
-        #                    random_row = np.random.choice(list(cols_to_rows[col].keys()))
-
-        #                    pspace_dict[random_row]["visited"] = True # Choose random_row as starting point
-        #                    trace.append(random_row) # Initialize track
-        #                    traverse_neighbors(random_row) # Assign value to east_level and south_level
-
-        #                    #print("Random row {}, trace {}".format(random_row, trace))
-
-        #                    pspace_dict = dict(sorted(pspace_dict.items(), key=lambda s: s[1]["east_level"]))
-        #                    reversed_considered_orients = {}
-        #                    for uid_match in pspace_dict:
-        #                        orients = pspace_dict[uid_match]["reversed_considered_orients"]
-        #                        for orient in orients:
-        #                            #if convert_considered_orient_dict[orient] in pspace_dict[uid_match]["adjacencies"]:
-        #                            if orient not in reversed_considered_orients:
-        #                                reversed_considered_orients[orient] = []
-        #                            reversed_considered_orients[orient].append(uid_match)
-
-        #                    #print("Reversed_considered_orients {}".format(reversed_considered_orients))
-
-        #                    considered_east_west_row_list = []
-        #                    max_east = False
-        #                    if "north_east" in reversed_considered_orients or "east" in reversed_considered_orients \
-        #                          or "south_east" in reversed_considered_orients:
-        #                        min_east_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
-        #                        considered_rows = list(dict(filter(lambda x: x[1]["east_level"] == min_east_level, pspace_dict.items())).keys())
-        #                        considered_east_west_row_list.extend(considered_rows)
-        #                        #print("min_east_level {}, consider_rows {}, considered_east_west_row_list {}, max_east {}".format(min_east_level, considered_rows, considered_east_west_row_list, max_east))
-
-        #                    elif "north_west"  in reversed_considered_orients or "west" in reversed_considered_orients \
-        #                            or "south_west" in reversed_considered_orients:
-        #                        max_east_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
-        #                        considered_rows = list(dict(filter(lambda x: x[1]["east_level"] == max_east_level, pspace_dict.items())).keys())
-        #                        considered_east_west_row_list.extend(considered_rows)
-        #                        max_east = True
-        #                        #print("max_east_level {}, consider_rows {}, considered_east_west_row_list {}, max_east {}".format(max_east_level, considered_rows, considered_east_west_row_list, max_east))
-
-        #                    considered_south_north_row_list = []
-        #                    max_south = True
-        #                    if "north" in reversed_considered_orients or "north_west" in reversed_considered_orients \
-        #                            or "north_east" in reversed_considered_orients:
-        #                        max_south_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
-        #                        considered_rows = list(dict(filter(lambda x: x[1]["south_level"] == max_south_level, pspace_dict.items())).keys())
-        #                        considered_south_north_row_list.extend(considered_rows)
-        #                        #print("max_south_level {}, considered_rows {}, considered_south_north_row_list{}, max_south {}".format(max_south_level, considered_rows, considered_south_north_row_list, max_south))
-
-        #                    elif "south" in reversed_considered_orients or "south_west" in reversed_considered_orients \
-        #                            or "south_east" in reversed_considered_orients:
-        #                        min_south_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
-        #                        considered_rows = list(dict(filter(lambda x: x[1]["south_level"] == min_south_level, pspace_dict.items())).keys())
-        #                        considered_south_north_row_list.extend(considered_rows)
-        #                        max_south = False
-        #                        #print("min_south_level {}, considered_rows {}, considered_south_north_row_list{}, max_south {}".format(min_south_level, considered_rows, considered_south_north_row_list, max_south))
-
-        #                    considered_row = list(set(considered_east_west_row_list).intersection(considered_south_north_row_list))
-
-        #                    if len(considered_row) == 0:
-        #                        if len(considered_east_west_row_list) > 0 or len(considered_south_north_row_list) > 0: # Parking space does not belong to any reversed considered orients
-        #                            chosen_row = max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["ios"])
-        #                            rows_status_dict[chosen_row] = "filled"
-        #                            for uid_match in pspace_dict:
-        #                                if uid_match != chosen_row:
-        #                                    if pspace_dict[uid_match]["ios"] > 0.75:
-        #                                        rows_status_dict[uid_match] = "unknown"
-        #                                    else:
-        #                                        rows_status_dict[uid_match] = "available"
-        #                        else:
-        #                            for uid_match in pspace_dict:
-        #                                if pspace_dict[uid_match]["ios"] > 0.65:
-        #                                    rows_status_dict[uid_match] = "filled"
-        #                    else:
-        #                        assert len(considered_row) == 1
-        #                        considered_row = considered_row[0]
-        #                        filled_list = []
-        #                        rows_status_dict[considered_row] = "filled"
-        #                        filled_list.append(considered_row)
-        #                        if max_south:
-        #                            if "northern_adjacency" in pspace_dict[considered_row]["adjacencies"]:
-        #                                north_of_considered_row = pspace_dict[considered_row]["adjacencies"]["northern_adjacency"]
-        #                                if pspace_dict[north_of_considered_row]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
-        #                                    rows_status_dict[north_of_considered_row] = "filled"
-        #                                    filled_list.append(north_of_considered_row)
-        #                        else:
-        #                            if "southern_adjacency" in pspace_dict[considered_row]["adjacencies"]:
-        #                                south_of_considered_row = pspace_dict[considered_row]["adjacencies"]["southern_adjacency"]
-        #                                if pspace_dict[south_of_considered_row]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
-        #                                    rows_status_dict[south_of_considered_row] = "filled"
-        #                                    filled_list.append(south_of_considered_row)
-        #                        for uid_match in pspace_dict:
-        #                            if uid_match not in filled_list:
-        #                                if pspace_dict[uid_match]["ios"] > 0.7:
-        #                                    rows_status_dict[uid_match] = "unknown"
-        #                                else:
-        #                                    rows_status_dict[uid_match] = "available"
-
-        #                    #print("Row {}, Col {}, Pspace_dict {}".format(row, col, pspace_dict))
-
-        #                considered_col_list.append(col)
-        #unified_id_status_dict = {row_to_unified_id[k]:v for k, v in rows_status_dict.items()}
+                        considered_vehicle_id_list.append(vehicle_id)
         end = time.time()
         print("This block consumes {} seconds".format(end - start))
         #start = time.time()
