@@ -152,7 +152,7 @@ class Matcher(object):
                                 pspace_dict[uid_match] = uid_match_dict
 
                             trace = []
-                            def traverse_neighbors(uid_match):
+                            def traverse_neighbors(uid_match): # Sử dụng đệ quy tương hỗ để tính south_level, east_level của từng unified_id
                                 #pspace[uid_match]["visited"] = True
                                 if "eastern_adjacency" in pspace_dict[uid_match]["adjacencies"]:
                                     traverse_orient(uid_match, orient="east")
@@ -231,7 +231,7 @@ class Matcher(object):
 
                             print("Random unified_id {}, trace {}".format(random_uid, trace))
 
-                            reversed_considered_orients = {}
+                            reversed_considered_orients = {} # Tạo reversed_considered_orients = {"orients": [unified_id1, unified_id2, ...], ....}
                             for uid_match in pspace_dict:
                                 orients = pspace_dict[uid_match]["reversed_considered_orients"]
                                 for orient in orients:
@@ -239,18 +239,18 @@ class Matcher(object):
                                         reversed_considered_orients[orient] = []
                                     reversed_considered_orients[orient].append(uid_match)
                             print("Reversed_considered_orients {}".format(reversed_considered_orients))
-
+                            # Xét các hướng nếu trong reversed_considered_orients có
                             considered_east_west_uid_list = []
                             max_east = False
                             if "north_east" in reversed_considered_orients or "east" in reversed_considered_orients \
-                                  or "south_east" in reversed_considered_orients:
+                                  or "south_east" in reversed_considered_orients: # Tây Nam, Tây Bắc, Tây thì ưu tiên chọn điểm đỗ ở cực Đông
                                 min_east_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
                                 considered_uid = list(dict(filter(lambda x: x[1]["east_level"] == min_east_level, pspace_dict.items())).keys())
                                 considered_east_west_uid_list.extend(considered_uid)
                                 print("min_east_level {}, consider_uid {}, considered_east_west_uid_list {}, max_east {}".format(min_east_level, considered_uid, considered_east_west_uid_list, max_east))
 
                             elif "north_west"  in reversed_considered_orients or "west" in reversed_considered_orients \
-                                    or "south_west" in reversed_considered_orients:
+                                    or "south_west" in reversed_considered_orients: # Đông Nam, Đông Bắc, Đông thì ưu tiên chọn điểm đỗ ở cực Tây
                                 max_east_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
                                 considered_uid = list(dict(filter(lambda x: x[1]["east_level"] == max_east_level, pspace_dict.items())).keys())
                                 considered_east_west_uid_list.extend(considered_uid)
@@ -260,82 +260,80 @@ class Matcher(object):
                             considered_south_north_uid_list = []
                             max_south = True
                             if "north" in reversed_considered_orients or "north_west" in reversed_considered_orients \
-                                    or "north_east" in reversed_considered_orients:
+                                    or "north_east" in reversed_considered_orients: # Tây Bắc, Bắc, Đông Bắc thì ưu tiên chọn điểm đỗ ở cực Nam
                                 max_south_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
                                 considered_uid = list(dict(filter(lambda x: x[1]["south_level"] == max_south_level, pspace_dict.items())).keys())
                                 considered_south_north_uid_list.extend(considered_uid)
                                 print("max_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(max_south_level, considered_uid, considered_south_north_uid_list, max_south))
 
                             elif "south" in reversed_considered_orients or "south_west" in reversed_considered_orients \
-                                    or "south_east" in reversed_considered_orients:
+                                    or "south_east" in reversed_considered_orients: # Tây Nam, Nam, Đông Nam thì ưu tiên chọn điểm đỗ ở cực Bắc
                                 min_south_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
                                 considered_uid = list(dict(filter(lambda x: x[1]["south_level"] == min_south_level, pspace_dict.items())).keys())
                                 considered_south_north_uid_list.extend(considered_uid)
                                 max_south = False
                                 print("min_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(min_south_level, considered_uid, considered_south_north_uid_list, max_south))
 
-                            considered_uid = list(set(considered_east_west_uid_list).intersection(considered_south_north_uid_list))
+                            considered_uid = list(set(considered_east_west_uid_list).intersection(considered_south_north_uid_list)) # Gộp các trường hợp trên trên lại
 
-                            if len(considered_uid) == 0:
-                                if len(considered_east_west_uid_list) > 0 or len(considered_south_north_uid_list) > 0: # Parking space does not belong to any reversed considered orients
-                                    chosen_uid = max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["ios"])
+                            if len(considered_uid) == 0: # Nếu hợp của hai trường hợp trên là rỗng
+                                if len(considered_east_west_uid_list) > 0 or len(considered_south_north_uid_list) > 0: # Parking space does not belong to any reversed considered orients, Nếu 1 trong hai trường hợp không rỗng
+                                    chosen_uid = max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["ios"]) # Chọn unified_id ứng với ios lớn nhất là "filled"
                                     unified_id_status_dict[chosen_uid] = "filled"
                                     for uid_match in pspace_dict:
                                         if uid_match != chosen_uid:
-                                            if pspace_dict[uid_match]["ios"] > 0.75:
+                                            if pspace_dict[uid_match]["ios"] > 0.75: # Các unified_id còn lại cái nào ios lớn hơn 0.75 đặt là "unknown" ngược lại là "available
                                                 unified_id_status_dict[uid_match] = "unknown"
                                             else:
                                                 unified_id_status_dict[uid_match] = "available"
-                                else:
+                                else: # Nếu cả hai trường hợp trên đều rỗng: Cứ unified_id nào có ios trên 0.65 thì trạng thái là "filled"
                                     for uid_match in pspace_dict:
                                         if pspace_dict[uid_match]["ios"] > 0.65:
                                             unified_id_status_dict[uid_match] = "filled"
-                            else:
-                                assert len(considered_uid) == 1
+                            else: # Nếu hợp của hai trường hợp trên không rỗng
+                                assert len(considered_uid) == 1 # Xác nhận chỉ có một điểm đỗ (bug ở chỗ này
                                 considered_uid = considered_uid[0]
                                 filled_list = []
-                                unified_id_status_dict[considered_uid] = "filled"
-                                filled_list.append(considered_uid)
-                                if max_south:
-                                    if "northern_adjacency" in pspace_dict[considered_uid]["adjacencies"]:
+                                unified_id_status_dict[considered_uid] = "filled" # Điểm đỗ này được chọn là "filled"
+                                filled_list.append(considered_uid) # Khởi tạo filled_list = []. filled_list thêm điểm đỗ vừa rồi
+                                if max_south: # Nếu là max_south (ưu tiên south_level cao nhất)
+                                    if "northern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lân cận phía Bắc và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
                                         north_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["northern_adjacency"]
                                         if pspace_dict[north_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                             unified_id_status_dict[north_of_considered_uid] = "filled"
                                             filled_list.append(north_of_considered_uid)
-                                else:
-                                    if "southern_adjacency" in pspace_dict[considered_uid]["adjacencies"]:
+                                else: # Nếu là min_south (ưu tiên south_level thấp nhất)
+                                    if "southern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lần cận phía Nam và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
                                         south_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["southern_adjacency"]
                                         if pspace_dict[south_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                             unified_id_status_dict[south_of_considered_uid] = "filled"
-                                            filled_list.append(south_of_considered_uid)
-                                for uid_match in pspace_dict:
+                                            filled_list.append(south_of_considered_uid) # filled_list thêm điểm trên vào
+                                for uid_match in pspace_dict: # Xét các điểm đỗ còn lại (not in filled_list):
                                     if uid_match not in filled_list:
-                                        if pspace_dict[uid_match]["ios"] > 0.7:
+                                        if pspace_dict[uid_match]["ios"] > 0.7: # Nếu ios > 0.7 thì điểm đỗ này được điền là "unknown
                                             unified_id_status_dict[uid_match] = "unknown"
-                                        else:
+                                        else: # Nếu không thì điểm đỗ này là "available"
                                             unified_id_status_dict[uid_match] = "available"
 
                             print("Unified id {}, vehicle id {}, Pspace_dict {}".format(unified_id, vehicle_id, pspace_dict))
 
-                        considered_vehicle_id_list.append(vehicle_id)
+                        considered_vehicle_id_list.append(vehicle_id) # considered_vehicle_id_list thêm vehicle_id
+        print("Unified id status: {}".format(unified_id_status_dict))
         end = time.time()
         print("This block consumes {} seconds".format(end - start))
-        #start = time.time()
-        #color_mask = np.zeros_like(frame, dtype=np.uint8)
-        #for row in rows_status_dict:
-        #   if rows_status_dict[row] == "filled":
-        #       color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 0, 255], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
-        #   elif rows_status_dict[row] == "unknown":
-        #       color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 255], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
-        #   else:
-        #       color_mask = np.where(parking_spaces_in_cam_mask[row][:, :, np.newaxis], np.array([0, 255, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
-        #for vehicle_mask in vehicle_masks:
-        #   color_mask = np.where(vehicle_mask[:, :, np.newaxis], np.array([255, 0, 0], dtype=np.uint8)[np.newaxis, np.newaxis, :], color_mask)
+        start = time.time()
+        # Visualize ảnh sử dụng các mask
+        status_color_dict = {"filled": (0, 0, 255), "unknown": (0, 255, 255), "available": (0, 255, 0)}
+        unified_id_to_color = {k: status_color_dict[v] for k, v in unified_id_status_dict.items()}
+        color_mask = np.zeros_like(frame, dtype=np.uint8)
+        for uid, color in unified_id_to_color.items():
+            color_mask[parking_spaces_in_cam_mask == uid] = color
+        color_mask[vehicle_masks >= 0] = (255, 0, 0)
 
-        #frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.4, color_mask, 0.6, 0), frame)
-        #end = time.time()
-        #print("This block consumes {} seconds".format(end - start))
-        #return vehicles_list, parking_spaces_in_cam, ios, frame
+        frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.4, color_mask, 0.6, 0), frame)
+        end = time.time()
+        print("This block consumes {} seconds".format(end - start))
+        return unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame
 
     def image_match(self, image_path, save_dir, cam="cam_1", threshold=0.3, is_tracking=False, is_showimage=True):
         if is_tracking:
@@ -348,7 +346,7 @@ class Matcher(object):
         else:
             tracker = None
         image = cv2.imread(image_path)
-        vehicles, parking_spaces, ios, frame = self.frame_match(frame=image, cam=cam, threshold=threshold, is_tracking=is_tracking, tracker=tracker)
+        unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame = self.frame_match(frame=image, cam=cam, threshold=threshold, is_tracking=is_tracking, tracker=tracker)
         if is_showimage:
             cv2.imshow("", frame)
             cv2.waitKey(0)
@@ -400,11 +398,11 @@ class Matcher(object):
                     stopped = True
                     continue
 
-                vehicles, parking_spaces, ios, frame = self.frame_match(frame=frame,
-                                                                        cam=cam,
-                                                                        threshold=threshold,
-                                                                        is_tracking=is_tracking,
-                                                                        tracker=tracker)
+                unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame = self.frame_match(frame=frame,
+                                                                                                          cam=cam,
+                                                                                                          threshold=threshold,
+                                                                                                          is_tracking=is_tracking,
+                                                                                                          tracker=tracker)
                 if is_savevideo:
                     output.write(frame)
                 if is_showframe:
@@ -419,6 +417,8 @@ class Matcher(object):
                     print("Exit")
                 cv2.destroyAllWindows()
                 break
+        output.release()
+        print("Done")
 
 
 matcher = Matcher()
