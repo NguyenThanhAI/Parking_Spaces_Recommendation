@@ -410,29 +410,27 @@ class Matcher(object):
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     stopped = True
             else:
-                if is_savevideo:
-                    output.release()
-                    print("Save video and exit")
-                else:
-                    print("Exit")
                 cv2.destroyAllWindows()
                 break
-        output.release()
+        if is_savevideo:
+            output.release()
+            print("Save video")
         print("Done")
 
 
-matcher = Matcher()
-tracker = VehicleTracker(detection_vehicle_thresh=0.2,
-                         inactive_steps_before_removed=10,
-                         reid_iou_threshold=0.3,
-                         max_traject_steps=50,
-                         parking_ground="parking_ground_SA",
-                         cam="cam_2")
-image_path = "../test_object_detection_models/images/201909_20190914_2_2019-09-14_05-00-00_8987.jpg"
-demo_images_dir = r"F:\Parking_Spaces_Recommendation_Data\demo_images"
-image = cv2.imread(image_path)
-matcher.frame_match(frame=image,
-                    cam="cam_2",
-                    threshold=0.3,
-                    is_tracking=True,
-                    tracker=tracker)
+#matcher = Matcher()
+#tracker = VehicleTracker(detection_vehicle_thresh=0.2,
+#                         inactive_steps_before_removed=10,
+#                         reid_iou_threshold=0.3,
+#                         max_traject_steps=50,
+#                         parking_ground="parking_ground_SA",
+#                         cam="cam_2")
+#image_path = "../test_object_detection_models/images/201909_20190914_2_2019-09-14_05-00-00_8987.jpg"
+#demo_images_dir = r"E:\demo_images"
+#image = cv2.imread(image_path)
+#matcher.image_match(image_path=image_path,
+#                    save_dir=demo_images_dir,
+#                    cam="cam_2",
+#                    threshold=0.3,
+#                    is_tracking=True,
+#                    is_showimage=True)
