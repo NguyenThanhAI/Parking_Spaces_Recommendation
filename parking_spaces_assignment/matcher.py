@@ -6,7 +6,7 @@ import cv2
 from vehicle_tracking.vehicle_detector import VehicleDetector
 from parking_spaces_assignment.parking_space import ParkingSpacesInitializer
 from vehicle_tracking.vehicle_tracker import VehicleTracker
-from parking_spaces_assignment.utils import find_unique_values_and_frequency
+from parking_spaces_assignment.utils import find_unique_values_and_frequency, write_information
 import time
 from code_timing_profiling.profiling import profile
 from code_timing_profiling.timing import timethis
@@ -39,9 +39,9 @@ class Matcher(object):
     #@profile
     def frame_match(self, frame, cam="cam_2", threshold=0.3, is_tracking=False, tracker=None):
 
-        assert cam in self.active_cams
-
-        vehicles_list = self.detector(frame=frame, parking_ground=self.parking_ground, cam=cam) # Phát hiện vehicle detection dưới dạng list các instance vehicle_detection
+        assert cam in self.active_cams, "{} must be in {} of Matcher".format(cam, self.active_cams)
+        input_frame = frame[:, :, ::-1]
+        vehicles_list = self.detector(frame=input_frame, parking_ground=self.parking_ground, cam=cam) # Phát hiện vehicle detection dưới dạng list các instance vehicle_detection
 
         if is_tracking: # Nếu có sử dụng tracking
             assert tracker, "vehicles tracker cannot be None"
@@ -71,7 +71,7 @@ class Matcher(object):
                 cropped_ps_mask = parking_spaces_in_cam_mask[y_min:y_max + 1, x_min:x_max + 1] # Crop parking space positions mask
                 cropped_vh_mask = vehicle_masks[y_min:y_max + 1, x_min:x_max + 1] # Crop vehicle positions mask
                 cropped_mask = np.stack((cropped_ps_mask, cropped_vh_mask), axis=2)
-                print("unified_id", unified_id, cropped_mask.shape)
+                #print("unified_id", unified_id, cropped_mask.shape)
                 inter_dict = find_unique_values_and_frequency(cropped_mask=cropped_mask, id=unified_id, use_unified_id=True)
                 for ps_veh in inter_dict:
                     uid, vid = ps_veh
@@ -98,7 +98,7 @@ class Matcher(object):
                 cropped_ps_mask = parking_spaces_in_cam_mask[y_min:y_max + 1, x_min:x_max + 1]  # Crop parking space positions mask
                 cropped_vh_mask = vehicle_masks[y_min:y_max + 1, x_min:x_max + 1]  # Crop vehicle positions mask
                 cropped_mask = np.stack((cropped_ps_mask, cropped_vh_mask), axis=2)
-                print("vehicle_id", vehicle_id, cropped_mask.shape)
+                #print("vehicle_id", vehicle_id, cropped_mask.shape)
                 inter_dict = find_unique_values_and_frequency(cropped_mask=cropped_mask, id=vehicle_id, use_unified_id=False)
                 for ps_veh in inter_dict:
                     uid, vid = ps_veh
@@ -119,8 +119,8 @@ class Matcher(object):
                             vehicle_id_to_unified_id_ios[vid][uid] = inter / self.parking_space_initializer.square_of_mask[cam][uid]
                         else:
                             assert vehicle_id_to_unified_id_ios[vid][uid] == (inter / self.parking_space_initializer.square_of_mask[cam][uid]), "ios of 2 times is not equal"
-        print(unified_id_to_vehicle_id_ios)
-        print(vehicle_id_to_unified_id_ios)
+        #print(unified_id_to_vehicle_id_ios)
+        #print(vehicle_id_to_unified_id_ios)
         end = time.time()
         print("This block consumes {} seconds".format(end - start))
         unified_id_status_dict = dict(zip(list(unified_id_to_ps.keys()), ["unknown"]*len(list(unified_id_to_ps.keys())))) # Tạo một unified_id_status_dict = {unified_id: "unknown", ....} tất cả các unified_id có trạng thái ban đầu là unknown
@@ -135,7 +135,7 @@ class Matcher(object):
                         assert unified_id in vehicle_id_to_unified_id_ios[vehicle_id], "Parking space id {} must be in vehicle to parking space ios {}".format(unified_id, vehicle_id)
                         if len(vehicle_id_to_unified_id_ios[vehicle_id]) == 1: # Nếu vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét này chỉ có đúng một unified_id đang xét
                             unified_id_status_dict[unified_id] = "filled"
-                            print("Parking space unified id {} and vehicle id {} is matched".format(unified_id, vehicle_id))
+                            #print("Parking space unified id {} and vehicle id {} is matched".format(unified_id, vehicle_id))
                         else: # Nếu vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét nhiều hơn một unified_id
                             pspace_dict = {}  # Dictionary of dictionary, each dictionary represents and parking space with information east level, south level and adjacencies against orient
                             for uid_match in vehicle_id_to_unified_id_ios[vehicle_id]: # Xét từng unified_id này, tạo một pspace_dict lưu trữ các thông tin: south_level, east_level, visited, adjacencies, ios, reversed_considered_orients (tất nhiên phải tương ứng với cam)
@@ -229,7 +229,7 @@ class Matcher(object):
                             trace.append(random_uid) # Initialize track
                             traverse_neighbors(random_uid) # Assign value to east_level and south_level
 
-                            print("Random unified_id {}, trace {}".format(random_uid, trace))
+                            #print("Random unified_id {}, trace {}".format(random_uid, trace))
 
                             reversed_considered_orients = {} # Tạo reversed_considered_orients = {"orients": [unified_id1, unified_id2, ...], ....}
                             for uid_match in pspace_dict:
@@ -331,6 +331,9 @@ class Matcher(object):
         color_mask[vehicle_masks >= 0] = (255, 0, 0)
 
         frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.4, color_mask, 0.6, 0), frame)
+        num_available_ps = len(list(filter(lambda x: unified_id_status_dict[x] == "available", unified_id_to_ps.keys())))
+        num_vehicles = len(vehicle_id_to_vehicle.keys())
+        write_information(frame=frame, num_vehicles=num_vehicles, num_available_ps=num_available_ps)
         end = time.time()
         print("This block consumes {} seconds".format(end - start))
         return unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame
