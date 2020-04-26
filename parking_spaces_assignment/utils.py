@@ -7,7 +7,7 @@ def find_unique_values_and_frequency(cropped_mask, id, use_unified_id=True):
 
     cropped_mask = np.reshape(cropped_mask, newshape=(-1, 2))
     unique_values, counts = np.unique(cropped_mask, return_counts=True, axis=0)
-    print(unique_values, counts)
+    #print (unique_values, counts)
     results = {}
     for i, unique_value in enumerate(unique_values):
         if np.less(unique_value, 0).any():

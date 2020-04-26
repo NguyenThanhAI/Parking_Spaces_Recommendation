@@ -238,7 +238,7 @@ class Matcher(object):
                                     if orient not in reversed_considered_orients:
                                         reversed_considered_orients[orient] = []
                                     reversed_considered_orients[orient].append(uid_match)
-                            print("Reversed_considered_orients {}".format(reversed_considered_orients))
+                            #print("Reversed_considered_orients {}".format(reversed_considered_orients))
                             # Xét các hướng nếu trong reversed_considered_orients có
                             considered_east_west_uid_list = []
                             max_east = False
@@ -247,7 +247,7 @@ class Matcher(object):
                                 min_east_level = pspace_dict[min(pspace_dict.keys(), key=lambda x: pspace_dict[x]["east_level"])]["east_level"]
                                 considered_uid = list(dict(filter(lambda x: x[1]["east_level"] == min_east_level, pspace_dict.items())).keys())
                                 considered_east_west_uid_list.extend(considered_uid)
-                                print("min_east_level {}, consider_uid {}, considered_east_west_uid_list {}, max_east {}".format(min_east_level, considered_uid, considered_east_west_uid_list, max_east))
+                                #print("min_east_level {}, consider_uid {}, considered_east_west_uid_list {}, max_east {}".format(min_east_level, considered_uid, considered_east_west_uid_list, max_east))
 
                             elif "north_west"  in reversed_considered_orients or "west" in reversed_considered_orients \
                                     or "south_west" in reversed_considered_orients: # Đông Nam, Đông Bắc, Đông thì ưu tiên chọn điểm đỗ ở cực Tây
@@ -255,7 +255,7 @@ class Matcher(object):
                                 considered_uid = list(dict(filter(lambda x: x[1]["east_level"] == max_east_level, pspace_dict.items())).keys())
                                 considered_east_west_uid_list.extend(considered_uid)
                                 max_east = True
-                                print("max_east_level {}, consider_uid {}, considered_east_west_uid_list {}, max_east {}".format(max_east_level, considered_uid, considered_east_west_uid_list, max_east))
+                                #print("max_east_level {}, consider_uid {}, considered_east_west_uid_list {}, max_east {}".format(max_east_level, considered_uid, considered_east_west_uid_list, max_east))
 
                             considered_south_north_uid_list = []
                             max_south = True
@@ -264,7 +264,7 @@ class Matcher(object):
                                 max_south_level = pspace_dict[max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["south_level"])]["south_level"]
                                 considered_uid = list(dict(filter(lambda x: x[1]["south_level"] == max_south_level, pspace_dict.items())).keys())
                                 considered_south_north_uid_list.extend(considered_uid)
-                                print("max_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(max_south_level, considered_uid, considered_south_north_uid_list, max_south))
+                                #print("max_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(max_south_level, considered_uid, considered_south_north_uid_list, max_south))
 
                             elif "south" in reversed_considered_orients or "south_west" in reversed_considered_orients \
                                     or "south_east" in reversed_considered_orients: # Tây Nam, Nam, Đông Nam thì ưu tiên chọn điểm đỗ ở cực Bắc
@@ -272,7 +272,7 @@ class Matcher(object):
                                 considered_uid = list(dict(filter(lambda x: x[1]["south_level"] == min_south_level, pspace_dict.items())).keys())
                                 considered_south_north_uid_list.extend(considered_uid)
                                 max_south = False
-                                print("min_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(min_south_level, considered_uid, considered_south_north_uid_list, max_south))
+                                #print("min_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(min_south_level, considered_uid, considered_south_north_uid_list, max_south))
 
                             considered_uid = list(set(considered_east_west_uid_list).intersection(considered_south_north_uid_list)) # Gộp các trường hợp trên trên lại
 
@@ -291,34 +291,50 @@ class Matcher(object):
                                         if pspace_dict[uid_match]["ios"] > 0.65:
                                             unified_id_status_dict[uid_match] = "filled"
                             else: # Nếu hợp của hai trường hợp trên không rỗng
-                                assert len(considered_uid) == 1 # Xác nhận chỉ có một điểm đỗ (bug ở chỗ này
-                                considered_uid = considered_uid[0]
-                                filled_list = []
-                                unified_id_status_dict[considered_uid] = "filled" # Điểm đỗ này được chọn là "filled"
-                                filled_list.append(considered_uid) # Khởi tạo filled_list = []. filled_list thêm điểm đỗ vừa rồi
-                                if max_south: # Nếu là max_south (ưu tiên south_level cao nhất)
-                                    if "northern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lân cận phía Bắc và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
-                                        north_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["northern_adjacency"]
-                                        if pspace_dict[north_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
-                                            unified_id_status_dict[north_of_considered_uid] = "filled"
-                                            filled_list.append(north_of_considered_uid)
-                                else: # Nếu là min_south (ưu tiên south_level thấp nhất)
-                                    if "southern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lần cận phía Nam và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
-                                        south_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["southern_adjacency"]
-                                        if pspace_dict[south_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
-                                            unified_id_status_dict[south_of_considered_uid] = "filled"
-                                            filled_list.append(south_of_considered_uid) # filled_list thêm điểm trên vào
-                                for uid_match in pspace_dict: # Xét các điểm đỗ còn lại (not in filled_list):
-                                    if uid_match not in filled_list:
-                                        if pspace_dict[uid_match]["ios"] > 0.7: # Nếu ios > 0.7 thì điểm đỗ này được điền là "unknown
-                                            unified_id_status_dict[uid_match] = "unknown"
-                                        else: # Nếu không thì điểm đỗ này là "available"
-                                            unified_id_status_dict[uid_match] = "available"
+                                try:
+                                    assert len(considered_uid) == 1 # Xác nhận chỉ có một điểm đỗ (bug ở chỗ này
+                                    considered_uid = considered_uid[0]
+                                    filled_list = []
+                                    unified_id_status_dict[considered_uid] = "filled" # Điểm đỗ này được chọn là "filled"
+                                    filled_list.append(considered_uid) # Khởi tạo filled_list = []. filled_list thêm điểm đỗ vừa rồi
+                                    if max_south: # Nếu là max_south (ưu tiên south_level cao nhất)
+                                        if "northern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lân cận phía Bắc và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
+                                            north_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["northern_adjacency"]
+                                            if pspace_dict[north_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
+                                                unified_id_status_dict[north_of_considered_uid] = "filled"
+                                                filled_list.append(north_of_considered_uid)
+                                    else: # Nếu là min_south (ưu tiên south_level thấp nhất)
+                                        if "southern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lần cận phía Nam và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
+                                            south_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["southern_adjacency"]
+                                            if pspace_dict[south_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
+                                                unified_id_status_dict[south_of_considered_uid] = "filled"
+                                                filled_list.append(south_of_considered_uid) # filled_list thêm điểm trên vào
+                                    for uid_match in pspace_dict: # Xét các điểm đỗ còn lại (not in filled_list):
+                                        if uid_match not in filled_list:
+                                            if pspace_dict[uid_match]["ios"] > 0.7: # Nếu ios > 0.7 thì điểm đỗ này được điền là "unknown
+                                                unified_id_status_dict[uid_match] = "unknown"
+                                            else: # Nếu không thì điểm đỗ này là "available"
+                                                unified_id_status_dict[uid_match] = "available"
+                                except:
+                                    print("consider_uid len is greater than one {}".format(considered_uid))
+                                    print("Reversed_considered_orients {}".format(reversed_considered_orients))
+                                    if not max_east:
+                                        print("min_east_level {}, consider_uid {}, considered_east_west_uid_list {}, max_east {}".format(min_east_level, considered_uid, considered_east_west_uid_list, max_east))
+                                    else:
+                                        print("max_east_level {}, consider_uid {}, considered_east_west_uid_list {}, max_east {}".format(max_east_level, considered_uid, considered_east_west_uid_list, max_east))
+                                    if max_south:
+                                        print("max_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(max_south_level, considered_uid, considered_south_north_uid_list, max_south))
+                                    else:
+                                        print("min_south_level {}, considered_uid {}, considered_south_north_uid_list{}, max_south {}".format(min_south_level, considered_uid, considered_south_north_uid_list, max_south))
+                                    print("Unified id {}, vehicle id {}, Pspace_dict {}".format(unified_id, vehicle_id, pspace_dict))
+                                    for uid_match in pspace_dict:
+                                        if pspace_dict[uid_match]["ios"] > 0.5:
+                                            unified_id_status_dict[uid_match] = "filled"
 
-                            print("Unified id {}, vehicle id {}, Pspace_dict {}".format(unified_id, vehicle_id, pspace_dict))
+                            #print("Unified id {}, vehicle id {}, Pspace_dict {}".format(unified_id, vehicle_id, pspace_dict))
 
                         considered_vehicle_id_list.append(vehicle_id) # considered_vehicle_id_list thêm vehicle_id
-        print("Unified id status: {}".format(unified_id_status_dict))
+        #print("Unified id status: {}".format(unified_id_status_dict))
         end = time.time()
         print("This block consumes {} seconds".format(end - start))
         start = time.time()
