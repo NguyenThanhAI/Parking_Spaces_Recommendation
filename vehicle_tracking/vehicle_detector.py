@@ -67,7 +67,13 @@ class VehicleDetector(object):
                 x_min, x_max = np.min(cc), np.max(cc)
                 bbox = [x_min, y_min, x_max, y_max]
                 positions = np.array([rr, cc]) # Tập hợp các điểm [y1, y2, ..., yn], [x1, x2, ..., xn] nằm trong vehicle mask
-                detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, parking_ground, cam))
+                if parking_ground == "parking_ground_SA" and cam == "cam_1": # Thêm điều kiện nếu là sân đỗ SA và camera là camera 1 thêm điều kiện để vùng nằm trên đường thẳng 9x + 10y - 5760 (góc trên bên trái màn hình), các xe được phát hiện trong vùng này sẽ bị bỏ qua
+                    if 81 * x_max + 96 * y_max - 62208 >= 0:
+                        detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, parking_ground, cam))
+                    else:
+                        self.positions_mask[cam][rr, cc] = -1
+                else:
+                    detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, parking_ground, cam))
         return detections_list
 
     def get_dict_convert_col_to_det_id(self, cam):

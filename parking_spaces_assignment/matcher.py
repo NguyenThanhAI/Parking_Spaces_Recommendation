@@ -40,8 +40,8 @@ class Matcher(object):
     def frame_match(self, frame, cam="cam_2", threshold=0.3, is_tracking=False, tracker=None):
 
         assert cam in self.active_cams, "{} must be in {} of Matcher".format(cam, self.active_cams)
-        input_frame = frame[:, :, ::-1]
-        vehicles_list = self.detector(frame=input_frame, parking_ground=self.parking_ground, cam=cam) # Phát hiện vehicle detection dưới dạng list các instance vehicle_detection
+
+        vehicles_list = self.detector(frame=frame, parking_ground=self.parking_ground, cam=cam) # Phát hiện vehicle detection dưới dạng list các instance vehicle_detection
 
         if is_tracking: # Nếu có sử dụng tracking
             assert tracker, "vehicles tracker cannot be None"
@@ -123,7 +123,7 @@ class Matcher(object):
         #print(vehicle_id_to_unified_id_ios)
         end = time.time()
         print("This block consumes {} seconds".format(end - start))
-        unified_id_status_dict = dict(zip(list(unified_id_to_ps.keys()), ["unknown"]*len(list(unified_id_to_ps.keys())))) # Tạo một unified_id_status_dict = {unified_id: "unknown", ....} tất cả các unified_id có trạng thái ban đầu là unknown
+        unified_id_status_dict = dict(zip(list(unified_id_to_ps.keys()), ["available"]*len(list(unified_id_to_ps.keys())))) # Tạo một unified_id_status_dict = {unified_id: "unknown", ....} tất cả các unified_id có trạng thái ban đầu là unknown # Từ filled thành unknown
         start = time.time()
         considered_vehicle_id_list = [] # Đặt một considered_vehicle_id_list = [] chứa các vehicle_id đã được xét với các unified_id
         for unified_id in unified_id_status_dict: # Duyệt từng unified_id trên unified_id_status_dict:
@@ -284,8 +284,8 @@ class Matcher(object):
                                         if uid_match != chosen_uid:
                                             if pspace_dict[uid_match]["ios"] > 0.75: # Các unified_id còn lại cái nào ios lớn hơn 0.75 đặt là "unknown" ngược lại là "available
                                                 unified_id_status_dict[uid_match] = "unknown"
-                                            else:
-                                                unified_id_status_dict[uid_match] = "available"
+                                            #else: # Nên sửa thành từ chuyển sang available thành giữ nguyên trạng thái vì rất có thể trạng thái đang filled
+                                            #    unified_id_status_dict[uid_match] = "available"
                                 else: # Nếu cả hai trường hợp trên đều rỗng: Cứ unified_id nào có ios trên 0.65 thì trạng thái là "filled"
                                     for uid_match in pspace_dict:
                                         if pspace_dict[uid_match]["ios"] > 0.65:
@@ -313,8 +313,8 @@ class Matcher(object):
                                         if uid_match not in filled_list:
                                             if pspace_dict[uid_match]["ios"] > 0.7: # Nếu ios > 0.7 thì điểm đỗ này được điền là "unknown
                                                 unified_id_status_dict[uid_match] = "unknown"
-                                            else: # Nếu không thì điểm đỗ này là "available"
-                                                unified_id_status_dict[uid_match] = "available"
+                                            #else: # Nếu không thì điểm đỗ này là "available" # Nên sửa thành từ chuyển sang available thành giữ nguyên trạng thái vì rất có thể trạng thái đang filled
+                                            #    unified_id_status_dict[uid_match] = "available"
                                 except:
                                     print("consider_uid len is greater than one {}".format(considered_uid))
                                     print("Reversed_considered_orients {}".format(reversed_considered_orients))
