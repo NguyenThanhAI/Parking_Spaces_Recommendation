@@ -7,14 +7,15 @@ import json
 import numpy as np
 import cv2
 
-from parking_spaces_data.order_in_json_to_unified_id import order_in_json_to_unified_id
+from parking_spaces_data.sa_order_in_json_to_unified_id import sa_order_in_json_to_unified_id
+from parking_spaces_data.pa_order_in_json_to_unified_id import pa_order_in_json_to_unified_id
 
 
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset_dir", type=str, default=r"F:\Parking_Spaces_Recommendation_Data\parking_spaces", help="Directory contains images")
-    parser.add_argument("--label_file_path", type=str, default="parking_spaces_annotation.json", help="Path to parking spaces annotation file")
+    parser.add_argument("--dataset_dir", type=str, default=r"F:\Parking_Spaces_Recommendation_Data\PA_parking_spaces", help="Directory contains images")
+    parser.add_argument("--label_file_path", type=str, default="pa_parking_spaces_annotation.json", help="Path to parking spaces annotation file")
 
     args = parser.parse_args()
 
@@ -63,15 +64,17 @@ def parse_json_label(args, json_label):
             center_x, center_y = np.mean(segmentation, axis=0).astype(np.uint16)
             segmentation = segmentation.tolist()
             color = (np.random.randint(150, 255), np.random.randint(150, 255), np.random.randint(150, 255))
-            #for j, point in enumerate(segmentation):
-            #    x1, y1, = point
-            #    if j < len(segmentation) - 1:
-            #        x2, y2 = segmentation[j + 1]
-            #    else:
-            #        x2, y2 = segmentation[0]
-#
-            #    cv2.line(img, (x1, y1), (x2, y2), color=color, thickness=2)
-            cv2.putText(img, "{}".format(order_in_json_to_unified_id[id]), (center_x, center_y),
+            for j, point in enumerate(segmentation):
+                x1, y1, = point
+                if j < len(segmentation) - 1:
+                    x2, y2 = segmentation[j + 1]
+                else:
+                    x2, y2 = segmentation[0]
+
+                cv2.line(img, (x1, y1), (x2, y2), color=color, thickness=2)
+            #cv2.putText(img, "{}".format(sa_order_in_json_to_unified_id[id]), (center_x, center_y),
+            #            cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), thickness=1)
+            cv2.putText(img, "{}".format(id), (center_x, center_y),
                         cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), thickness=1)
         print("Space id list {} in the image id {}".format(space_id_list, image_id))
         cv2.imshow("Image id {}".format(image_id), img)

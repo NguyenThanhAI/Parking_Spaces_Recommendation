@@ -2,7 +2,8 @@ from collections import OrderedDict
 import json
 import numpy as np
 from skimage.draw import polygon
-from parking_spaces_data.order_in_json_to_unified_id import cam_to_unified_id
+from parking_spaces_data.sa_order_in_json_to_unified_id import sa_cam_to_unified_id
+from parking_spaces_data.pa_order_in_json_to_unified_id import pa_cam_to_unified_id
 
 
 class ParkingSpace(object):
@@ -40,6 +41,10 @@ class ParkingSpacesInitializer(object):
         self.unified_id_list = []
         self.positions_mask = OrderedDict()
         self.square_of_mask = OrderedDict() # Number of pixel (square) of each parking space unified id in correspondent camera
+        if self.parking_ground == "parking_ground_SA":
+            cam_to_unified_id = sa_cam_to_unified_id
+        else:
+            cam_to_unified_id = pa_cam_to_unified_id
         for cam in active_cams:
             self.unified_id_list.extend(cam_to_unified_id[cam])
             self.positions_mask[cam] = -1 * np.ones(shape=shape, dtype=np.int16)
@@ -53,9 +58,9 @@ class ParkingSpacesInitializer(object):
     def initialize_parking_spaces(self):
         parking_spaces_list = []
         for unified_id in self.unified_id_list:
-            positions = self.config_json[str(unified_id)]["positions"] # Sau khi sửa json sẽ phải thêm ["parking_ground_SA"] vào sau config_json
-            reversed_considered_orients = self.config_json[str(unified_id)]["reversed_considered_orients"]
-            adjacencies = self.config_json[str(unified_id)]["adjacencies"]
+            positions = self.config_json[self.parking_ground][str(unified_id)]["positions"] # Sau khi sửa json sẽ phải thêm ["parking_ground_SA"] vào sau config_json
+            reversed_considered_orients = self.config_json[self.parking_ground][str(unified_id)]["reversed_considered_orients"]
+            adjacencies = self.config_json[self.parking_ground][str(unified_id)]["adjacencies"]
             parking_spaces_list.append(ParkingSpace(unified_id=unified_id,
                                                     positions=positions,
                                                     reversed_considered_orients=reversed_considered_orients,
