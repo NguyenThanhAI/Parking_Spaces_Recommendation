@@ -441,7 +441,7 @@ class Matcher(object):
                                                                                                                                  threshold=threshold,
                                                                                                                                  is_tracking=is_tracking,
                                                                                                                                  tracker=tracker)
-                pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, frame_stride=1, fps=fps)
+                pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, num_frames=i, frame_stride=1, fps=fps)
                 pair_scheduler.verify()
                 pairs = pair_scheduler.get_pairs_instances()
                 print(vehicle_id_to_vehicle.keys())

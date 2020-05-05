@@ -11,15 +11,11 @@ class Pair(object):
         self.vehicle_id = vehicle_id
         self.birth_time = birth_time
         self.inactive_steps_before_removed = inactive_steps_before_removed
-        self.filled_period = []
+        self.filled_period = None
         self.inactive_steps = 0
 
     def delete(self, time):
-        self.filled_period.append((self.birth_time, time)) # (Birth_time, end_time), Khi bị xóa sẽ ghi lại khoảng thời gian tồn tại của pair này
-
-    def rebrand(self, birth_time):
-        self.birth_time = birth_time
-        self.inactive_steps = 0
+        self.filled_period = (self.birth_time, time) # (Birth_time, end_time), Khi bị xóa sẽ ghi lại khoảng thời gian tồn tại của pair này
 
     def __str__(self):
         return str(self.__class__) + ":" + str(self.__dict__)
@@ -36,9 +32,9 @@ class PairsScheduler(object):
         self.deleted_pairs = []
         self.pairs = [] # List của các pair instance
 
-    def update_time_from_frame_numbers(self, frame_stride=1, fps=24):
-        num_seconds = get_time_amount_from_frames_number(frame_stride=frame_stride, fps=fps)
-        self.time = self.time + timedelta(seconds=num_seconds)
+    def update_time_from_frame_numbers(self, num_frames, frame_stride=1, fps=24):
+        num_seconds = get_time_amount_from_frames_number(num_frames=num_frames, frame_stride=frame_stride, fps=fps)
+        self.time = self.start_time + timedelta(seconds=num_seconds)
 
     def update_time_from_system(self):
         self.time = datetime.now()
@@ -53,13 +49,12 @@ class PairsScheduler(object):
         return active_list, inactive_list, deleted_list
 
     @timethis
-    def step(self, uid_veh_list, frame_stride=1, fps=24):
-        self.update_time_from_frame_numbers(frame_stride, fps) # Cập nhật self.time
+    def step(self, uid_veh_list, num_frames, frame_stride=1, fps=24):
+        self.update_time_from_frame_numbers(num_frames, frame_stride, fps) # Cập nhật self.time
         active_list, inactive_list, deleted_list = self.get_list_uid_veh_list()
         inactive_to_active = [] # Những pair đang ở inactive list và ở bước này xuất hiện trong match pair giữa unified id và vehicle id
         active_this_step = [] # Những pair đang ở trong active list và bước này cũng xuất hiện trong match pair giữa unified id và vehicle id
         #active_to_inactive = [] # Những pair đang ở trong active list và bước này không xuất hiện trong match pair giữa unified id và vehicle id
-        deleted_to_active = []
         brand_new = []
         for uid_veh_id in uid_veh_list: # Xét từng uid_veh_id từ kết quả matcher trả về
             #existed = False
@@ -70,16 +65,12 @@ class PairsScheduler(object):
             if uid_veh_id in inactive_list: # Nếu uid_veh_id nằm trong inactive_list nghĩa là cặp này bước trước đang inactive bước này sẽ được active
                 inactive_to_active.append(uid_veh_id)
                 continue
-            if uid_veh_id in deleted_list: # Nếu uid_veh_id nằm trong deleted_list cặp này đã ở quá khứ nhưng giờ được rebrand và trở thành active
-                deleted_to_active.append(uid_veh_id)
-                continue
             brand_new.append(uid_veh_id) # Những uid_veh_id còn lại được tạo một cặp hoàn toàn mới
 
         active_to_inactive = [uid_veh_id for uid_veh_id in active_list if uid_veh_id not in active_this_step] # Những cặp active ở bước trước nhưng bước này không nằm trong list các cặp matcher trả về sẽ trở thành inactive ở bước này
         inactive_list = [uid_veh_id for uid_veh_id in inactive_list if uid_veh_id not in inactive_to_active] # Những inactive ở bước này bằng list inactive  loại bỏ đi những cặp trở thành active ở bước này
-        deleted_list = [uid_veh_id for uid_veh_id in deleted_list if uid_veh_id not in deleted_to_active] # # Những cặp bị deleted ở bước này bằng list các cặp ở trạng thái đang bị xóa loại bỏ đi những cặp trở thành active ở bước này
 
-        active_list = active_this_step + brand_new + inactive_to_active + deleted_to_active # Tổng hợp lại, những cặp active ở bước này là hợp của những cặp ở trong active list sẵn và vẫn active ở bước này, những cặp mới hoàn toàn, đang là inactive thành active và đang deleted được rebrand
+        active_list = active_this_step + brand_new + inactive_to_active # Tổng hợp lại, những cặp active ở bước này là hợp của những cặp ở trong active list sẵn và vẫn active ở bước này, những cặp mới hoàn toàn, đang là inactive thành active và đang deleted được rebrand
         inactive_list = inactive_list + active_to_inactive # Những cặp inactive ở bước này là hợp của những cặp inactive vẫn inactive ở bước này và những cặp active ở bước trước thành inactive ở bước này
 
         for uid_veh_id in inactive_to_active: # Những cặp ở trong inactive bước trước, bước này thành active, số bước inactive được đưa về 0
@@ -87,13 +78,6 @@ class PairsScheduler(object):
             assert len(pair) == 1
             pair = pair[0]
             pair.inactive_steps = 0
-
-        for uid_veh_id in deleted_to_active: # Những cặp ở trong deleted và bước này thành active sẽ được rebrand với birth time
-            # Các pair được rebrand
-            pair = list(filter(lambda x: x.unified_id == uid_veh_id[0] and x.vehicle_id == uid_veh_id[1], self.pairs))
-            assert len(pair) == 1
-            pair = pair[0]
-            pair.rebrand(birth_time=self.time)
 
         # Xét các pair trong inactive_list
         # Xem số inactive_step của từng pair lớn hơn ngưỡng thì thêm end_time, filled_period và chuyển sang delete_list
