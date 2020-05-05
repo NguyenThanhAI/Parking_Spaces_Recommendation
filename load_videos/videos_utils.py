@@ -1,5 +1,6 @@
 import os
-from datetime import datetime
+import re
+from datetime import datetime, timedelta
 from threading import Thread
 import numpy as np
 import cv2
@@ -167,3 +168,28 @@ def threadBoth(source=0):
         frame = putIterationsPerSec(frame, cps.countsPerSec())
         video_shower.frame = frame
         cps.increment()
+
+
+def get_time_amount_from_frames_number(num_frames=1, frame_stride=1, fps=24):
+    num_seconds = int(num_frames / fps) * frame_stride
+
+    return num_seconds
+
+
+def get_start_time_from_video_name(source):
+    filename = os.path.basename(source)
+    assert filename.endswith((".mp4", ".avi"))
+
+    filename = filename.split(".")[0]
+
+    days, hours = filename.split("_")[:2]
+
+    year, month, day = days.split("-")
+
+    hour, minute, second = hours.split("-")
+
+    return datetime(year=int(year), month=int(month), day=int(day), hour=int(hour), minute=int(minute), second=int(second))
+
+#date = datetime(year=2020, month=12, day=31, hour=23, minute=56, second=30)
+#
+#date = date + timedelta(seconds=-20000000)
