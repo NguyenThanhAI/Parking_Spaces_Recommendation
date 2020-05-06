@@ -1,3 +1,5 @@
+import os
+import pickle
 from datetime import datetime, timedelta
 from load_videos.videos_utils import get_time_amount_from_frames_number, get_start_time_from_video_name
 from code_timing_profiling.profiling import profile
@@ -6,16 +8,17 @@ from code_timing_profiling.timing import timethis
 
 class Pair(object):
 
-    def __init__(self, unified_id, vehicle_id, birth_time, inactive_steps_before_removed=10000):
+    def __init__(self, unified_id, vehicle_id, class_id, birth_time, inactive_steps_before_removed=10000):
         self.unified_id = unified_id
         self.vehicle_id = vehicle_id
+        self.class_id = class_id
         self.birth_time = birth_time
         self.inactive_steps_before_removed = inactive_steps_before_removed
-        self.filled_period = None
+        self.end_time = None
         self.inactive_steps = 0
 
     def delete(self, time):
-        self.filled_period = (self.birth_time, time) # (Birth_time, end_time), Khi bị xóa sẽ ghi lại khoảng thời gian tồn tại của pair này
+        self.end_time = time # (Birth_time, end_time), Khi bị xóa sẽ ghi lại khoảng thời gian tồn tại của pair này
 
     def __str__(self):
         return str(self.__class__) + ":" + str(self.__dict__)
@@ -74,7 +77,7 @@ class PairsScheduler(object):
         inactive_list = inactive_list + active_to_inactive # Những cặp inactive ở bước này là hợp của những cặp inactive vẫn inactive ở bước này và những cặp active ở bước trước thành inactive ở bước này
 
         for uid_veh_id in inactive_to_active: # Những cặp ở trong inactive bước trước, bước này thành active, số bước inactive được đưa về 0
-            pair = list(filter(lambda x: x.unified_id == uid_veh_id[0] and x.vehicle_id == uid_veh_id[1], self.pairs))
+            pair = list(filter(lambda x: x.unified_id == uid_veh_id[0] and x.vehicle_id == uid_veh_id[1] and x.class_id == uid_veh_id[2], self.pairs))
             assert len(pair) == 1
             pair = pair[0]
             pair.inactive_steps = 0
@@ -83,7 +86,7 @@ class PairsScheduler(object):
         # Xem số inactive_step của từng pair lớn hơn ngưỡng thì thêm end_time, filled_period và chuyển sang delete_list
         inactive_to_deleted = [] # List các cặp đang inactive sẽ trở thành deleted do vượt quá số bước là inactive liên tiếp
         for uid_veh_id in inactive_list: # Duyệt từng phần tử của inactive list
-            pair = list(filter(lambda x: x.unified_id == uid_veh_id[0] and x.vehicle_id == uid_veh_id[1], self.pairs)) # Gọi pair instance ứng với uid_veh_id
+            pair = list(filter(lambda x: x.unified_id == uid_veh_id[0] and x.vehicle_id == uid_veh_id[1] and x.class_id == uid_veh_id[2], self.pairs)) # Gọi pair instance ứng với uid_veh_id
             assert len(pair) == 1
             pair = pair[0]
             pair.inactive_steps += 1 # Tăng inactive step liên tiếp thêm 1
@@ -103,7 +106,7 @@ class PairsScheduler(object):
         self.deleted_pairs = deleted_list # Cập nhật lại self.deleted_pairs
 
         for uid_veh_id in brand_new: # Xét từng phần tử trong các cặp hoàn toàn mới
-            self.pairs.append(Pair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], birth_time=self.time, inactive_steps_before_removed=self.inactive_steps_before_removed)) # Thêm các pair instance tương ứng với các uid_veh_id tương ứng vào self.pairs (list các pair instance)
+            self.pairs.append(Pair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], class_id=uid_veh_id[2], birth_time=self.time, inactive_steps_before_removed=self.inactive_steps_before_removed)) # Thêm các pair instance tương ứng với các uid_veh_id tương ứng vào self.pairs (list các pair instance)
 
     def reset(self, time):
         self.start_time = time
@@ -127,8 +130,15 @@ class PairsScheduler(object):
         union = self.active_pairs + self.inactive_pairs + self.deleted_pairs
         assert len(union) == len(self.pairs)
         for uid_veh_id in union:
-            pair = list(filter(lambda x: x.unified_id == uid_veh_id[0] and x.vehicle_id == uid_veh_id[1], self.pairs))
+            pair = list(filter(lambda x: x.unified_id == uid_veh_id[0] and x.vehicle_id == uid_veh_id[1] and x.class_id == uid_veh_id[2], self.pairs))
             assert len(pair) == 1
 
     def get_pairs_instances(self):
         return self.pairs
+
+    def save_pairs_to_db(self, save_path=None, save_dir="../database"):
+        if not save_path:
+            save_path = self.start_time.strftime("%Y-%m-%d") + ".pkl"
+        save_path = os.path.join(save_dir, save_path)
+        with open(save_path, "wb") as f:
+            pickle.dump(self.pairs, f)
