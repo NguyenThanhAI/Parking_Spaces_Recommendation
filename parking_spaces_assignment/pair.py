@@ -75,6 +75,7 @@ class PairsScheduler(object):
 
         self.verify_dicts(active_this_step, brand_new, inactive_to_active)
         active_dict = {**active_this_step, **brand_new, **inactive_to_active} # Tổng hợp lại, những cặp active ở bước này là hợp của những cặp ở trong active list sẵn và vẫn active ở bước này, những cặp mới hoàn toàn, đang là inactive thành active và đang deleted được rebrand
+        assert len(list(set(inactive_dict.keys()).intersection(active_to_inactive.keys()))) == 0
         inactive_dict = {**inactive_dict, **active_to_inactive} # Những cặp inactive ở bước này là hợp của những cặp inactive vẫn inactive ở bước này và những cặp active ở bước trước thành inactive ở bước này
 
         # Xét các pair trong inactive_dict

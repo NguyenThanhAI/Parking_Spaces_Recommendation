@@ -41,7 +41,7 @@ class Matcher(object):
         self.parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
 
     #@profile
-    def frame_match(self, frame, cam="cam_2", threshold=0.3, is_tracking=False, tracker=None):
+    def frame_match(self, frame, cam="cam_2", threshold=0.1, is_tracking=False, tracker=None):
 
         assert cam in self.active_cams, "{} must be in {} of Matcher".format(cam, self.active_cams)
 
@@ -448,7 +448,7 @@ class Matcher(object):
                 print(uid_veh_id_match_list)
                 for pair in pairs:
                     print(pair)
-                for uid, uid_pairs in groupby(sorted(pairs, key=lambda y: y.unified_id), key=lambda x: x.unified_id):
+                for uid, uid_pairs in groupby(dict(sorted(pairs.items(), key=lambda y: y[1].unified_id)).items(), key=lambda x: x[1].unified_id):
                     #for uid_pair in uid_pairs:
                     print(uid, len(list(uid_pairs)))
 

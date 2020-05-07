@@ -1,5 +1,7 @@
 *.pb
 *.h5
+*.pkl
+*.csv
 
 # Editors
 .vscode/

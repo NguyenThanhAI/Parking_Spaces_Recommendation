@@ -5,17 +5,17 @@ import pandas as pd
 with open("2019-11-30.pkl", "rb") as f:
     pairs = pickle.load(f)
 
-veh_pairs = sorted(pairs, key=lambda x: x.vehicle_id)
+veh_pairs = dict(sorted(pairs.items(), key=lambda x: x[1].vehicle_id))
 
 for pair in veh_pairs:
-    print(pair)
+    print(veh_pairs[pair])
 
-uid_pairs = sorted(pairs, key=lambda x: x.unified_id)
+uid_pairs = dict(sorted(pairs.items(), key=lambda x: x[1].unified_id))
 
 for pair in uid_pairs:
-    print(pair)
+    print(uid_pairs[pair])
 
-data = list(map(lambda x: (x.unified_id, x.vehicle_id, x.birth_time.strftime("%Y-%m-%d %H:%M:%S"), x.end_time.strftime("%Y-%m-%d %H:%M:%S") if x.end_time else None), uid_pairs))
+data = list(map(lambda x: (x[1].unified_id, x[1].vehicle_id, x[1].birth_time.strftime("%Y-%m-%d %H:%M:%S"), x[1].end_time.strftime("%Y-%m-%d %H:%M:%S") if x[1].end_time else None), uid_pairs.items()))
 
 data = pd.DataFrame(data=data, index=None, columns=["Cell ID", "Vehicle ID", "Start time", "End time"])
 
