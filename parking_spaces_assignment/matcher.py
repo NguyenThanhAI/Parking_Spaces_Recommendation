@@ -140,7 +140,7 @@ class Matcher(object):
                         assert unified_id in vehicle_id_to_unified_id_ios[vehicle_id], "Parking space id {} must be in vehicle to parking space ios {}".format(unified_id, vehicle_id)
                         if len(vehicle_id_to_unified_id_ios[vehicle_id]) == 1: # Nếu vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét này chỉ có đúng một unified_id đang xét
                             unified_id_status_dict[unified_id] = "filled"
-                            uid_veh_id_match_list.append((unified_id, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id))
+                            uid_veh_id_match_list.append((unified_id, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
                             #print("Parking space unified id {} and vehicle id {} is matched".format(unified_id, vehicle_id))
                         else: # Nếu vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét nhiều hơn một unified_id
                             pspace_dict = {}  # Dictionary of dictionary, each dictionary represents and parking space with information east level, south level and adjacencies against orient
@@ -286,7 +286,7 @@ class Matcher(object):
                                 if len(considered_east_west_uid_list) > 0 or len(considered_south_north_uid_list) > 0: # Parking space does not belong to any reversed considered orients, Nếu 1 trong hai trường hợp không rỗng
                                     chosen_uid = max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["ios"]) # Chọn unified_id ứng với ios lớn nhất là "filled"
                                     unified_id_status_dict[chosen_uid] = "filled"
-                                    uid_veh_id_match_list.append((chosen_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id))
+                                    uid_veh_id_match_list.append((chosen_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
                                     for uid_match in pspace_dict:
                                         if uid_match != chosen_uid:
                                             if pspace_dict[uid_match]["ios"] > 0.75: # Các unified_id còn lại cái nào ios lớn hơn 0.75 đặt là "unknown" ngược lại là "available
@@ -297,28 +297,28 @@ class Matcher(object):
                                     for uid_match in pspace_dict:
                                         if pspace_dict[uid_match]["ios"] > 0.65:
                                             unified_id_status_dict[uid_match] = "filled"
-                                            uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id))
+                                            uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
                             else: # Nếu hợp của hai trường hợp trên không rỗng
                                 try:
                                     assert len(considered_uid) == 1 # Xác nhận chỉ có một điểm đỗ (bug ở chỗ này
                                     considered_uid = considered_uid[0]
                                     filled_list = []
                                     unified_id_status_dict[considered_uid] = "filled" # Điểm đỗ này được chọn là "filled"
-                                    uid_veh_id_match_list.append((considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id))
+                                    uid_veh_id_match_list.append((considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
                                     filled_list.append(considered_uid) # Khởi tạo filled_list = []. filled_list thêm điểm đỗ vừa rồi
                                     if max_south: # Nếu là max_south (ưu tiên south_level cao nhất)
                                         if "northern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lân cận phía Bắc và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
                                             north_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["northern_adjacency"]
                                             if pspace_dict[north_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                                 unified_id_status_dict[north_of_considered_uid] = "filled"
-                                                uid_veh_id_match_list.append((north_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id))
+                                                uid_veh_id_match_list.append((north_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
                                                 filled_list.append(north_of_considered_uid)
                                     else: # Nếu là min_south (ưu tiên south_level thấp nhất)
                                         if "southern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lần cận phía Nam và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
                                             south_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["southern_adjacency"]
                                             if pspace_dict[south_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                                 unified_id_status_dict[south_of_considered_uid] = "filled"
-                                                uid_veh_id_match_list.append((south_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id))
+                                                uid_veh_id_match_list.append((south_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
                                                 filled_list.append(south_of_considered_uid) # filled_list thêm điểm trên vào
                                     for uid_match in pspace_dict: # Xét các điểm đỗ còn lại (not in filled_list):
                                         if uid_match not in filled_list:
@@ -341,7 +341,7 @@ class Matcher(object):
                                     for uid_match in pspace_dict:
                                         if pspace_dict[uid_match]["ios"] > 0.5:
                                             unified_id_status_dict[uid_match] = "filled"
-                                            uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id))
+                                            uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
 
                             #print("Unified id {}, vehicle id {}, Pspace_dict {}".format(unified_id, vehicle_id, pspace_dict))
 

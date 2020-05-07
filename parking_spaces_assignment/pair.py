@@ -6,12 +6,28 @@ from code_timing_profiling.profiling import profile
 from code_timing_profiling.timing import timethis
 
 
-class Pair(object):
+class TentativePair(object):
 
-    def __init__(self, unified_id, vehicle_id, class_id, birth_time, inactive_steps_before_removed=10000):
+    def __init__(self, unified_id, vehicle_id, class_id, type_space, birth_time, tentative_steps_before_accepted=30):
         self.unified_id = unified_id
         self.vehicle_id = vehicle_id
         self.class_id = class_id
+        self.type_space = type_space
+        self.birth_time = birth_time
+        self.tentative_steps = 0
+        self.tentative_steps_before_accepted = tentative_steps_before_accepted
+
+    def __str__(self):
+        return str(self.__class__) + ":" + str(self.__dict__)
+
+
+class Pair(object):
+
+    def __init__(self, unified_id, vehicle_id, class_id, type_space, birth_time, inactive_steps_before_removed=10000):
+        self.unified_id = unified_id
+        self.vehicle_id = vehicle_id
+        self.class_id = class_id
+        self.type_space = type_space
         self.birth_time = birth_time
         self.inactive_steps_before_removed = inactive_steps_before_removed
         self.end_time = None
@@ -26,10 +42,12 @@ class Pair(object):
 
 class PairsScheduler(object):
 
-    def __init__(self, time, inactive_steps_before_removed=10000):
+    def __init__(self, time, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
         self.start_time = time
         self.time = time
+        self.tentative_steps_before_accepted = tentative_steps_before_accepted
         self.inactive_steps_before_removed = inactive_steps_before_removed
+        self.tentative_pairs = {}
         self.active_pairs = {} # Only pair of unified_id and vehicle_id
         self.inactive_pairs = {}
         self.deleted_pairs = {}
@@ -44,35 +62,49 @@ class PairsScheduler(object):
     def get_list_uid_veh_dict(self):
         #active_list = list(map(lambda x: (x.unified_id, x.vehicle_id), self.active_pairs))
         #inactive_list = list(map(lambda x: (x.unified_id, x.vehicle_id), self.inactive_pairs))
+        tentative_dict = self.tentative_pairs
         active_dict = self.active_pairs
         inactive_dict = self.inactive_pairs
         deleted_dict = self.deleted_pairs
 
-        return active_dict, inactive_dict, deleted_dict
+        return tentative_dict, active_dict, inactive_dict, deleted_dict
 
     @timethis
     def step(self, uid_veh_list, num_frames, frame_stride=1, fps=24):
         self.update_time_from_frame_numbers(num_frames, frame_stride, fps) # Cập nhật self.time
-        active_dict, inactive_dict, deleted_dict = self.get_list_uid_veh_dict()
+        tentative_dict, active_dict, inactive_dict, deleted_dict = self.get_list_uid_veh_dict()
         inactive_to_active = {} # Những pair đang ở inactive list và ở bước này xuất hiện trong match pair giữa unified id và vehicle id
         active_this_step = {} # Những pair đang ở trong active list và bước này cũng xuất hiện trong match pair giữa unified id và vehicle id
         #active_to_inactive = [] # Những pair đang ở trong active list và bước này không xuất hiện trong match pair giữa unified id và vehicle id
         brand_new = {}
+        new_tentatives = {}
         for uid_veh_id in uid_veh_list: # Xét từng uid_veh_id từ kết quả matcher trả về
             #existed = False
+            if uid_veh_id in tentative_dict:
+                tentative_dict[uid_veh_id].tentative_steps += 1
+                if tentative_dict[uid_veh_id].tentative_steps > tentative_dict[uid_veh_id].tentative_steps_before_accepted:
+                    brand_new[uid_veh_id] = Pair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], class_id=uid_veh_id[2], type_space=uid_veh_id[3], birth_time=tentative_dict[uid_veh_id].birth_time, inactive_steps_before_removed=self.inactive_steps_before_removed)
+                continue
+
             if uid_veh_id in active_dict: # Nếu uid_veh_id nằm trong active_dict nghĩa là cặp này đang active và tiếp tục bước này vẫn active
                 #existed = True
                 active_this_step[uid_veh_id] = active_dict[uid_veh_id]
                 continue
+
             if uid_veh_id in inactive_dict: # Nếu uid_veh_id nằm trong inactive_dict nghĩa là cặp này bước trước đang inactive bước này sẽ được active
                 inactive_to_active[uid_veh_id] = inactive_dict[uid_veh_id]
                 inactive_to_active[uid_veh_id].inactive_steps = 0 # Những cặp ở trong inactive bước trước, bước này thành active, số bước inactive được đưa về 0
                 continue
-            brand_new[uid_veh_id] = Pair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], class_id=uid_veh_id[2], birth_time=self.time, inactive_steps_before_removed=self.inactive_steps_before_removed) # Những uid_veh_id còn lại được tạo một cặp hoàn toàn mới
 
+            new_tentatives[uid_veh_id] = TentativePair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], class_id=uid_veh_id[2], type_space=uid_veh_id[3], birth_time=self.time, tentative_steps_before_accepted=self.tentative_steps_before_accepted)
+
+        tentative_dict = dict(filter(lambda x: x[0] not in brand_new, tentative_dict.items()))
+        assert len(list(set(tentative_dict.keys()).intersection(brand_new.keys()))) == 0
         active_to_inactive = dict(filter(lambda x: x[0] not in active_this_step, active_dict.items())) # Những cặp active ở bước trước nhưng bước này không nằm trong list các cặp matcher trả về sẽ trở thành inactive ở bước này
         inactive_dict = dict(filter(lambda x: x[0] not in inactive_to_active, inactive_dict.items())) # Những inactive ở bước này bằng list inactive  loại bỏ đi những cặp trở thành active ở bước này
 
+        assert len(list(set(tentative_dict.keys()).intersection(new_tentatives.keys()))) == 0
+        tentative_dict = {**tentative_dict, **new_tentatives}
         self.verify_dicts(active_this_step, brand_new, inactive_to_active)
         active_dict = {**active_this_step, **brand_new, **inactive_to_active} # Tổng hợp lại, những cặp active ở bước này là hợp của những cặp ở trong active list sẵn và vẫn active ở bước này, những cặp mới hoàn toàn, đang là inactive thành active và đang deleted được rebrand
         assert len(list(set(inactive_dict.keys()).intersection(active_to_inactive.keys()))) == 0
@@ -95,6 +127,7 @@ class PairsScheduler(object):
         inactive_dict = dict(filter(lambda x: x[0] not in inactive_to_deleted, inactive_dict.items())) # Cập nhật lại list inactive bằng cách list inactive loại bỏ đi các inactive thành deleted
         deleted_dict.update(inactive_to_deleted) # Cập list các cặp bị deleted bằng cách cộng thêm các cặp ở trong list các cặp từ inactive thành deleted
 
+        self.tentative_pairs = tentative_dict
         self.active_pairs = active_dict # Cập nhật lại self.active_pairs
         self.inactive_pairs = inactive_dict # Cập nhật lại self.inactive_pairs
         self.deleted_pairs = deleted_dict # Cập nhật lại self.deleted_pairs
@@ -102,6 +135,7 @@ class PairsScheduler(object):
     def reset(self, time):
         self.start_time = time
         self.time = time
+        self.tentative_pairs.clear()
         self.active_pairs.clear()  # Only pair of unified_id and vehicle_id
         self.inactive_pairs.clear()
         self.deleted_pairs.clear()
@@ -120,7 +154,7 @@ class PairsScheduler(object):
         union = {**self.active_pairs, **self.inactive_pairs, **self.deleted_pairs}
         assert len(union) == (len(self.active_pairs.keys()) + len(self.inactive_pairs.keys()) + len(self.deleted_pairs.keys()))
         for uid_veh_id in union:
-            assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2]
+            assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2] and union[uid_veh_id].type_space == uid_veh_id[3]
 
     @staticmethod
     def verify_dicts(*args):
@@ -135,7 +169,7 @@ class PairsScheduler(object):
         union = {**dict_1, **dict_2, **dict_3}
         assert len(union) == (len(dict_1.keys()) + len(dict_2.keys()) + len(dict_3.keys()))
         for uid_veh_id in union:
-            assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2]
+            assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2] and union[uid_veh_id].type_space == uid_veh_id[3]
 
     def get_pairs_instances(self):
         return {**self.active_pairs, **self.inactive_pairs}
