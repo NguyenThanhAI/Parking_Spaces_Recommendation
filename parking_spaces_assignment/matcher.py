@@ -140,7 +140,7 @@ class Matcher(object):
                         assert unified_id in vehicle_id_to_unified_id_ios[vehicle_id], "Parking space id {} must be in vehicle to parking space ios {}".format(unified_id, vehicle_id)
                         if len(vehicle_id_to_unified_id_ios[vehicle_id]) == 1: # Nếu vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét này chỉ có đúng một unified_id đang xét
                             unified_id_status_dict[unified_id] = "filled"
-                            uid_veh_id_match_list.append((unified_id, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
+                            uid_veh_id_match_list.append((unified_id, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small", self.parking_ground))
                             #print("Parking space unified id {} and vehicle id {} is matched".format(unified_id, vehicle_id))
                         else: # Nếu vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét nhiều hơn một unified_id
                             pspace_dict = {}  # Dictionary of dictionary, each dictionary represents and parking space with information east level, south level and adjacencies against orient
@@ -286,7 +286,7 @@ class Matcher(object):
                                 if len(considered_east_west_uid_list) > 0 or len(considered_south_north_uid_list) > 0: # Parking space does not belong to any reversed considered orients, Nếu 1 trong hai trường hợp không rỗng
                                     chosen_uid = max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["ios"]) # Chọn unified_id ứng với ios lớn nhất là "filled"
                                     unified_id_status_dict[chosen_uid] = "filled"
-                                    uid_veh_id_match_list.append((chosen_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
+                                    uid_veh_id_match_list.append((chosen_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small", self.parking_ground))
                                     for uid_match in pspace_dict:
                                         if uid_match != chosen_uid:
                                             if pspace_dict[uid_match]["ios"] > 0.75: # Các unified_id còn lại cái nào ios lớn hơn 0.75 đặt là "unknown" ngược lại là "available
@@ -297,28 +297,28 @@ class Matcher(object):
                                     for uid_match in pspace_dict:
                                         if pspace_dict[uid_match]["ios"] > 0.65:
                                             unified_id_status_dict[uid_match] = "filled"
-                                            uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
+                                            uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small", self.parking_ground))
                             else: # Nếu hợp của hai trường hợp trên không rỗng
                                 try:
                                     assert len(considered_uid) == 1 # Xác nhận chỉ có một điểm đỗ (bug ở chỗ này
                                     considered_uid = considered_uid[0]
                                     filled_list = []
                                     unified_id_status_dict[considered_uid] = "filled" # Điểm đỗ này được chọn là "filled"
-                                    uid_veh_id_match_list.append((considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
+                                    uid_veh_id_match_list.append((considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small", self.parking_ground))
                                     filled_list.append(considered_uid) # Khởi tạo filled_list = []. filled_list thêm điểm đỗ vừa rồi
                                     if max_south: # Nếu là max_south (ưu tiên south_level cao nhất)
                                         if "northern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lân cận phía Bắc và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
                                             north_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["northern_adjacency"]
                                             if pspace_dict[north_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                                 unified_id_status_dict[north_of_considered_uid] = "filled"
-                                                uid_veh_id_match_list.append((north_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
+                                                uid_veh_id_match_list.append((north_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small", self.parking_ground))
                                                 filled_list.append(north_of_considered_uid)
                                     else: # Nếu là min_south (ưu tiên south_level thấp nhất)
                                         if "southern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lần cận phía Nam và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
                                             south_of_considered_uid = pspace_dict[considered_uid]["adjacencies"]["southern_adjacency"]
                                             if pspace_dict[south_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                                 unified_id_status_dict[south_of_considered_uid] = "filled"
-                                                uid_veh_id_match_list.append((south_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
+                                                uid_veh_id_match_list.append((south_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small", self.parking_ground))
                                                 filled_list.append(south_of_considered_uid) # filled_list thêm điểm trên vào
                                     for uid_match in pspace_dict: # Xét các điểm đỗ còn lại (not in filled_list):
                                         if uid_match not in filled_list:
@@ -341,7 +341,7 @@ class Matcher(object):
                                     for uid_match in pspace_dict:
                                         if pspace_dict[uid_match]["ios"] > 0.5:
                                             unified_id_status_dict[uid_match] = "filled"
-                                            uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small"))
+                                            uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, "small", self.parking_ground))
 
                             #print("Unified id {}, vehicle id {}, Pspace_dict {}".format(unified_id, vehicle_id, pspace_dict))
 
@@ -389,7 +389,7 @@ class Matcher(object):
         results_path = os.path.join(save_dir, os.path.basename(image_path).split(".")[0] + ".jpg")
         cv2.imwrite(results_path, frame)
 
-    def video_match(self, video_source, is_savevideo=False, save_dir=None, cam="cam_1", threshold=0.3, is_tracking=True, is_showframe=True, inactive_steps_before_removed=1000):
+    def video_match(self, video_source, is_savevideo=False, save_dir=None, cam="cam_1", threshold=0.3, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=30, inactive_steps_before_removed=200):
         if is_tracking:
             tracker = VehicleTracker(detection_vehicle_thresh=0.2,
                                      inactive_steps_before_removed=inactive_steps_before_removed,
@@ -405,7 +405,7 @@ class Matcher(object):
         else:
             start_time = datetime.now()
 
-        pair_scheduler = PairsScheduler(time=start_time, inactive_steps_before_removed=inactive_steps_before_removed)
+        pair_scheduler = PairsScheduler(time=start_time, tentative_steps_before_accepted=tentative_steps_before_accepted, inactive_steps_before_removed=inactive_steps_before_removed)
 
         cap = cv2.VideoCapture(video_source)
 
@@ -444,13 +444,13 @@ class Matcher(object):
                 pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, num_frames=i, frame_stride=1, fps=fps)
                 pair_scheduler.verify()
                 pairs = pair_scheduler.get_pairs_instances()
-                print(vehicle_id_to_vehicle.keys())
-                print(uid_veh_id_match_list)
-                for pair in pairs:
-                    print(pair)
-                for uid, uid_pairs in groupby(dict(sorted(pairs.items(), key=lambda y: y[1].unified_id)).items(), key=lambda x: x[1].unified_id):
-                    #for uid_pair in uid_pairs:
-                    print(uid, len(list(uid_pairs)))
+                #print(vehicle_id_to_vehicle.keys())
+                #print(uid_veh_id_match_list)
+                #for pair in pairs:
+                #    print("pair:", pair)
+                #for uid, uid_pairs in groupby(dict(sorted(pairs.items(), key=lambda y: y[1].unified_id)).items(), key=lambda x: x[1].unified_id):
+                #    #for uid_pair in uid_pairs:
+                #    print(uid, len(list(uid_pairs)))
 
                 if is_savevideo:
                     output.write(frame)

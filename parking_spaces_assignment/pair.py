@@ -8,11 +8,12 @@ from code_timing_profiling.timing import timethis
 
 class TentativePair(object):
 
-    def __init__(self, unified_id, vehicle_id, class_id, type_space, birth_time, tentative_steps_before_accepted=30):
+    def __init__(self, unified_id, vehicle_id, class_id, type_space, parking_ground, birth_time, tentative_steps_before_accepted=30):
         self.unified_id = unified_id
         self.vehicle_id = vehicle_id
         self.class_id = class_id
         self.type_space = type_space
+        self.parking_ground = parking_ground
         self.birth_time = birth_time
         self.tentative_steps = 0
         self.tentative_steps_before_accepted = tentative_steps_before_accepted
@@ -23,11 +24,12 @@ class TentativePair(object):
 
 class Pair(object):
 
-    def __init__(self, unified_id, vehicle_id, class_id, type_space, birth_time, inactive_steps_before_removed=10000):
+    def __init__(self, unified_id, vehicle_id, class_id, type_space, parking_ground, birth_time, inactive_steps_before_removed=10000):
         self.unified_id = unified_id
         self.vehicle_id = vehicle_id
         self.class_id = class_id
         self.type_space = type_space
+        self.parking_ground = parking_ground
         self.birth_time = birth_time
         self.inactive_steps_before_removed = inactive_steps_before_removed
         self.end_time = None
@@ -83,7 +85,7 @@ class PairsScheduler(object):
             if uid_veh_id in tentative_dict:
                 tentative_dict[uid_veh_id].tentative_steps += 1
                 if tentative_dict[uid_veh_id].tentative_steps > tentative_dict[uid_veh_id].tentative_steps_before_accepted:
-                    brand_new[uid_veh_id] = Pair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], class_id=uid_veh_id[2], type_space=uid_veh_id[3], birth_time=tentative_dict[uid_veh_id].birth_time, inactive_steps_before_removed=self.inactive_steps_before_removed)
+                    brand_new[uid_veh_id] = Pair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], class_id=uid_veh_id[2], type_space=uid_veh_id[3], parking_ground=uid_veh_id[4], birth_time=tentative_dict[uid_veh_id].birth_time, inactive_steps_before_removed=self.inactive_steps_before_removed)
                 continue
 
             if uid_veh_id in active_dict: # Nếu uid_veh_id nằm trong active_dict nghĩa là cặp này đang active và tiếp tục bước này vẫn active
@@ -96,7 +98,10 @@ class PairsScheduler(object):
                 inactive_to_active[uid_veh_id].inactive_steps = 0 # Những cặp ở trong inactive bước trước, bước này thành active, số bước inactive được đưa về 0
                 continue
 
-            new_tentatives[uid_veh_id] = TentativePair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], class_id=uid_veh_id[2], type_space=uid_veh_id[3], birth_time=self.time, tentative_steps_before_accepted=self.tentative_steps_before_accepted)
+            if uid_veh_id in deleted_dict:
+                print("{} in deleted_dict".format(uid_veh_id))
+
+            new_tentatives[uid_veh_id] = TentativePair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], class_id=uid_veh_id[2], type_space=uid_veh_id[3], parking_ground=uid_veh_id[4], birth_time=self.time, tentative_steps_before_accepted=self.tentative_steps_before_accepted)
 
         tentative_dict = dict(filter(lambda x: x[0] not in brand_new, tentative_dict.items()))
         assert len(list(set(tentative_dict.keys()).intersection(brand_new.keys()))) == 0
@@ -114,7 +119,7 @@ class PairsScheduler(object):
         # Xem số inactive_step của từng pair lớn hơn ngưỡng thì thêm end_time, filled_period và chuyển sang delete_list
         inactive_to_deleted = {}
         for uid_veh_id in inactive_dict: # Duyệt từng phần tử của inactive list
-            assert inactive_dict[uid_veh_id].unified_id == uid_veh_id[0] and inactive_dict[uid_veh_id].vehicle_id == uid_veh_id[1] and inactive_dict[uid_veh_id].class_id == uid_veh_id[2] # Gọi pair instance ứng với uid_veh_id
+            assert inactive_dict[uid_veh_id].unified_id == uid_veh_id[0] and inactive_dict[uid_veh_id].vehicle_id == uid_veh_id[1] and inactive_dict[uid_veh_id].class_id == uid_veh_id[2] and inactive_dict[uid_veh_id].type_space == uid_veh_id[3] and inactive_dict[uid_veh_id].parking_ground == uid_veh_id[4] # Gọi pair instance ứng với uid_veh_id
             inactive_dict[uid_veh_id].inactive_steps += 1 # Tăng inactive step liên tiếp thêm 1
             if inactive_dict[uid_veh_id].inactive_steps > inactive_dict[uid_veh_id].inactive_steps_before_removed: # Nếu số bước liên tiếp là inactive của cặp này lớn hơn ngưỡng cho phép
                 num_seconds_inactive = get_time_amount_from_frames_number(num_frames=inactive_dict[uid_veh_id].inactive_steps, # Tính thời gian kể từ khi trở thành cặp inactive
@@ -151,10 +156,30 @@ class PairsScheduler(object):
         inter = list(inter.intersection(self.deleted_pairs.keys()))
         assert len(inter) == 0
 
+        try:
+            print("Tentative: {}".format(self.tentative_pairs.keys()))
+        except:
+            print("Tentative None")
+        try:
+            print("Active: {}".format(self.active_pairs.keys()))
+        except:
+            print("Active None")
+        try:
+            print("Inactive: {}".format(self.inactive_pairs.keys()))
+        except:
+            print("Inactive None")
+        try:
+            print("Deleted: {}".format(self.deleted_pairs.keys()))
+        except:
+            print("Delete None")
+        assert len(list(set(self.active_pairs.keys()).intersection(self.inactive_pairs.keys()))) == 0, print(self.active_pairs.keys(), self.inactive_pairs.keys())
+        assert len(list(set(self.active_pairs.keys()).intersection(self.deleted_pairs.keys()))) == 0, print(self.active_pairs.keys(), self.deleted_pairs.keys())
+        assert len(list(set(self.inactive_pairs.keys()).intersection(self.deleted_pairs.keys()))) == 0, print(self.inactive_pairs.keys(), self.deleted_pairs.keys())
+
         union = {**self.active_pairs, **self.inactive_pairs, **self.deleted_pairs}
-        assert len(union) == (len(self.active_pairs.keys()) + len(self.inactive_pairs.keys()) + len(self.deleted_pairs.keys()))
+        assert len(union) == (len(self.active_pairs.keys()) + len(self.inactive_pairs.keys()) + len(self.deleted_pairs.keys())), print(self.active_pairs.keys(), self.inactive_pairs.keys(), self.deleted_pairs.keys())
         for uid_veh_id in union:
-            assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2] and union[uid_veh_id].type_space == uid_veh_id[3]
+            assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2] and union[uid_veh_id].type_space == uid_veh_id[3] and union[uid_veh_id].parking_ground == uid_veh_id[4]
 
     @staticmethod
     def verify_dicts(*args):
@@ -169,7 +194,7 @@ class PairsScheduler(object):
         union = {**dict_1, **dict_2, **dict_3}
         assert len(union) == (len(dict_1.keys()) + len(dict_2.keys()) + len(dict_3.keys()))
         for uid_veh_id in union:
-            assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2] and union[uid_veh_id].type_space == uid_veh_id[3]
+            assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2] and union[uid_veh_id].type_space == uid_veh_id[3] and union[uid_veh_id].parking_ground == uid_veh_id[4]
 
     def get_pairs_instances(self):
         return {**self.active_pairs, **self.inactive_pairs}
