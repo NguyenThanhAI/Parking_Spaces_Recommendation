@@ -150,34 +150,18 @@ class PairsScheduler(object):
         # Hợp của ba list trên phải đủ trong self.pairs
         assert len(list(set(self.active_pairs.keys()))) == len(list(self.active_pairs.keys()))
         assert len(list(set(self.inactive_pairs.keys()))) == len(list(self.inactive_pairs.keys()))
-        assert len(list(set(self.deleted_pairs.keys()))) == len(list(self.deleted_pairs.keys()))
+        assert len(list(set(self.tentative_pairs.keys()))) == len(list(self.tentative_pairs.keys()))
 
         inter = set(self.active_pairs.keys()).intersection(self.inactive_pairs.keys())
-        inter = list(inter.intersection(self.deleted_pairs.keys()))
+        inter = list(inter.intersection(self.tentative_pairs.keys()))
         assert len(inter) == 0
 
-        try:
-            print("Tentative: {}".format(self.tentative_pairs.keys()))
-        except:
-            print("Tentative None")
-        try:
-            print("Active: {}".format(self.active_pairs.keys()))
-        except:
-            print("Active None")
-        try:
-            print("Inactive: {}".format(self.inactive_pairs.keys()))
-        except:
-            print("Inactive None")
-        try:
-            print("Deleted: {}".format(self.deleted_pairs.keys()))
-        except:
-            print("Delete None")
         assert len(list(set(self.active_pairs.keys()).intersection(self.inactive_pairs.keys()))) == 0, print(self.active_pairs.keys(), self.inactive_pairs.keys())
-        assert len(list(set(self.active_pairs.keys()).intersection(self.deleted_pairs.keys()))) == 0, print(self.active_pairs.keys(), self.deleted_pairs.keys())
-        assert len(list(set(self.inactive_pairs.keys()).intersection(self.deleted_pairs.keys()))) == 0, print(self.inactive_pairs.keys(), self.deleted_pairs.keys())
+        assert len(list(set(self.active_pairs.keys()).intersection(self.tentative_pairs.keys()))) == 0, print(self.active_pairs.keys(), self.tentative_pairs.keys())
+        assert len(list(set(self.inactive_pairs.keys()).intersection(self.tentative_pairs.keys()))) == 0, print(self.inactive_pairs.keys(), self.tentative_pairs.keys())
 
-        union = {**self.active_pairs, **self.inactive_pairs, **self.deleted_pairs}
-        assert len(union) == (len(self.active_pairs.keys()) + len(self.inactive_pairs.keys()) + len(self.deleted_pairs.keys())), print(self.active_pairs.keys(), self.inactive_pairs.keys(), self.deleted_pairs.keys())
+        union = {**self.active_pairs, **self.inactive_pairs, **self.tentative_pairs}
+        assert len(union) == (len(self.active_pairs.keys()) + len(self.inactive_pairs.keys()) + len(self.tentative_pairs.keys())), print(self.active_pairs.keys(), self.inactive_pairs.keys(), self.tentative_pairs.keys())
         for uid_veh_id in union:
             assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2] and union[uid_veh_id].type_space == uid_veh_id[3] and union[uid_veh_id].parking_ground == uid_veh_id[4]
 

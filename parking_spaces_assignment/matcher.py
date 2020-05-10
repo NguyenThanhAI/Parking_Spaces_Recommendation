@@ -389,10 +389,10 @@ class Matcher(object):
         results_path = os.path.join(save_dir, os.path.basename(image_path).split(".")[0] + ".jpg")
         cv2.imwrite(results_path, frame)
 
-    def video_match(self, video_source, is_savevideo=False, save_dir=None, cam="cam_1", threshold=0.3, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=30, inactive_steps_before_removed=200):
+    def video_match(self, video_source, is_savevideo=False, save_dir=None, cam="cam_1", threshold=0.3, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=30, tracking_inactive_steps_before_removed=200, pair_inactive_steps_before_removed=1000):
         if is_tracking:
             tracker = VehicleTracker(detection_vehicle_thresh=0.2,
-                                     inactive_steps_before_removed=inactive_steps_before_removed,
+                                     inactive_steps_before_removed=tracking_inactive_steps_before_removed,
                                      reid_iou_threshold=0.3,
                                      max_traject_steps=50,
                                      parking_ground=self.parking_ground,
@@ -405,7 +405,7 @@ class Matcher(object):
         else:
             start_time = datetime.now()
 
-        pair_scheduler = PairsScheduler(time=start_time, tentative_steps_before_accepted=tentative_steps_before_accepted, inactive_steps_before_removed=inactive_steps_before_removed)
+        pair_scheduler = PairsScheduler(time=start_time, tentative_steps_before_accepted=tentative_steps_before_accepted, inactive_steps_before_removed=pair_inactive_steps_before_removed)
 
         cap = cv2.VideoCapture(video_source)
 
