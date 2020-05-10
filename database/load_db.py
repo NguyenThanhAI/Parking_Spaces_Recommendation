@@ -1,22 +1,22 @@
-import pickle
-import pandas as pd
+import sys
+import os
+import time
+
+from database.sqldatabase import SQLiteDataBase
+
+ROOT_DIR = os.path.abspath("..")
+sys.path.append(ROOT_DIR)
 
 
-with open("2019-11-30.pkl", "rb") as f:
-    pairs = pickle.load(f)
+print(os.path.abspath("../database"))
+sqlite_database = SQLiteDataBase("../database")
 
-veh_pairs = dict(sorted(pairs.items(), key=lambda x: x[1].vehicle_id))
-
-for pair in veh_pairs:
-    print(veh_pairs[pair])
-
-uid_pairs = dict(sorted(pairs.items(), key=lambda x: x[1].unified_id))
-
-for pair in uid_pairs:
-    print(uid_pairs[pair])
-
-data = list(map(lambda x: (x[1].unified_id, x[1].vehicle_id, x[1].birth_time.strftime("%Y-%m-%d %H:%M:%S"), x[1].end_time.strftime("%Y-%m-%d %H:%M:%S") if x[1].end_time else None), uid_pairs.items()))
-
-data = pd.DataFrame(data=data, index=None, columns=["Cell ID", "Vehicle ID", "Start time", "End time"])
-
-data.to_csv("2019-11-30.csv")
+try:
+    while True:
+        records = sqlite_database.get_active_pairs()
+        print("=================================================================")
+        print(records)
+        print("=================================================================")
+        time.sleep(5)
+except KeyboardInterrupt:
+    print("Done and exit")

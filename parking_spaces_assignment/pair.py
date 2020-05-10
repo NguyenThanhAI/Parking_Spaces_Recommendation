@@ -1,7 +1,8 @@
 import os
 import pickle
 from datetime import datetime, timedelta
-from load_videos.videos_utils import get_time_amount_from_frames_number, get_start_time_from_video_name
+from load_videos.videos_utils import get_time_amount_from_frames_number
+from database.sqldatabase import SQLiteDataBase
 from code_timing_profiling.profiling import profile
 from code_timing_profiling.timing import timethis
 
@@ -44,9 +45,13 @@ class Pair(object):
 
 class PairsScheduler(object):
 
-    def __init__(self, time, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
+    def __init__(self, time, database_dir="../database", database_file=None, save_to_db_period=2, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
         self.start_time = time
         self.time = time
+        if not database_file:
+            database_file = self.start_time.strftime("%Y-%m-%d") + ".db"
+        self.database = SQLiteDataBase(database_dir=database_dir, database_file=database_file)
+        self.save_to_db_period = save_to_db_period
         self.tentative_steps_before_accepted = tentative_steps_before_accepted
         self.inactive_steps_before_removed = inactive_steps_before_removed
         self.tentative_pairs = {}
@@ -137,6 +142,10 @@ class PairsScheduler(object):
         self.inactive_pairs = inactive_dict # Cập nhật lại self.inactive_pairs
         self.deleted_pairs = deleted_dict # Cập nhật lại self.deleted_pairs
 
+        running_time = int((self.time - self.start_time).total_seconds())
+        if running_time > 0 and running_time % self.save_to_db_period == 0:
+            self.save_pairs_to_db()
+
     def reset(self, time):
         self.start_time = time
         self.time = time
@@ -183,19 +192,13 @@ class PairsScheduler(object):
     def get_pairs_instances(self):
         return {**self.active_pairs, **self.inactive_pairs}
 
-    def save_pairs_to_db(self, save_path=None, save_dir="../database"):
-        if not save_path:
-            save_path = self.start_time.strftime("%Y-%m-%d") + ".pkl"
-        save_path = os.path.join(save_dir, save_path)
-        pairs = {**self.active_pairs, **self.inactive_pairs, **self.deleted_pairs}
-        if not os.path.exists(save_path):
-            with open(save_path, "wb") as f:
-                pickle.dump(pairs, f)
-        else:
-            with open(save_path, "rb") as f:
-                db_pairs = pickle.load(f)
-            db_pairs.update(pairs)
-            with open(save_path, "wb") as f:
-                pickle.dump(db_pairs, f)
+    def convert_intances_to_list_of_tuple(self, pairs):
+        return list(map(lambda x: (x[1].unified_id, x[1].vehicle_id, x[1].class_id, x[1].type_space,
+                                   x[1].parking_ground, x[1].inactive_steps, x[1].start_time, x[1].end_time), pairs.items()))
+
+    def save_pairs_to_db(self):
+        pairs = {**self.active_pairs, **self.inactive_pairs, **self.deleted_pairs} # Các key ở active và deleted pairs có thể trùng nhau nên áp dụng phương thức dưới với từng dict mà không nên gộp cả 3 như này có thể bị mất instance
+        pairs_info = self.convert_intances_to_list_of_tuple(pairs)
+        self.database.add_pairs(pairs_info=pairs_info)
 
         self.deleted_pairs.clear()
