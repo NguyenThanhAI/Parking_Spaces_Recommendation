@@ -60,6 +60,7 @@ class SQLiteDataBase(object):
     def add_parking_spaces(self, cells_info):
         cursor = self.conn.cursor()
         cursor.executemany("INSERT INTO PARKING_SPACES VALUES (?, ?, ?, ?)", cells_info)
+        self.conn.commit()
 
     def get_active_pairs(self):
         cursor = self.conn.cursor()

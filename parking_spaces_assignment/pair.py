@@ -76,7 +76,7 @@ class PairsScheduler(object):
 
         return tentative_dict, active_dict, inactive_dict, deleted_dict
 
-    @timethis
+    #@timethis
     def step(self, uid_veh_list, num_frames, frame_stride=1, fps=24):
         self.update_time_from_frame_numbers(num_frames, frame_stride, fps) # Cập nhật self.time
         tentative_dict, active_dict, inactive_dict, deleted_dict = self.get_list_uid_veh_dict()
@@ -143,7 +143,8 @@ class PairsScheduler(object):
         self.deleted_pairs = deleted_dict # Cập nhật lại self.deleted_pairs
 
         running_time = int((self.time - self.start_time).total_seconds())
-        if running_time > 0 and running_time % self.save_to_db_period == 0:
+        #print(running_time, running_time % self.save_to_db_period)
+        if running_time > 0 and (running_time % self.save_to_db_period) == 0:
             self.save_pairs_to_db()
 
     def reset(self, time):
@@ -194,7 +195,7 @@ class PairsScheduler(object):
 
     def convert_intances_to_list_of_tuple(self, pairs):
         return list(map(lambda x: (x[1].unified_id, x[1].vehicle_id, x[1].class_id, x[1].type_space,
-                                   x[1].parking_ground, x[1].inactive_steps, x[1].start_time, x[1].end_time), pairs.items()))
+                                   x[1].parking_ground, x[1].inactive_steps, x[1].birth_time, x[1].end_time), pairs.items()))
 
     def save_pairs_to_db(self):
         pairs = {**self.active_pairs, **self.inactive_pairs, **self.deleted_pairs} # Các key ở active và deleted pairs có thể trùng nhau nên áp dụng phương thức dưới với từng dict mà không nên gộp cả 3 như này có thể bị mất instance
@@ -202,3 +203,4 @@ class PairsScheduler(object):
         self.database.add_pairs(pairs_info=pairs_info)
 
         self.deleted_pairs.clear()
+        print("Save pairs and clear deleted pairs")

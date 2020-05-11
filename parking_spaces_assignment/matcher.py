@@ -126,7 +126,7 @@ class Matcher(object):
         #print(unified_id_to_vehicle_id_ios)
         #print(vehicle_id_to_unified_id_ios)
         end = time.time()
-        print("This block consumes {} seconds".format(end - start))
+        #print("This block consumes {} seconds".format(end - start))
         unified_id_status_dict = dict(zip(list(unified_id_to_ps.keys()), ["available"]*len(list(unified_id_to_ps.keys())))) # Tạo một unified_id_status_dict = {unified_id: "unknown", ....} tất cả các unified_id có trạng thái ban đầu là unknown # Từ filled thành unknown
         start = time.time()
         uid_veh_id_match_list = []
@@ -348,7 +348,7 @@ class Matcher(object):
                         considered_vehicle_id_list.append(vehicle_id) # considered_vehicle_id_list thêm vehicle_id
         #print("Unified id status: {}".format(unified_id_status_dict))
         end = time.time()
-        print("This block consumes {} seconds".format(end - start))
+        #print("This block consumes {} seconds".format(end - start))
         start = time.time()
         # Visualize ảnh sử dụng các mask
         status_color_dict = {"filled": (0, 0, 255), "unknown": (0, 255, 255), "available": (0, 255, 0)}
@@ -363,7 +363,7 @@ class Matcher(object):
         num_vehicles = len(vehicle_id_to_vehicle.keys())
         write_information(frame=frame, num_vehicles=num_vehicles, num_available_ps=num_available_ps)
         end = time.time()
-        print("This block consumes {} seconds".format(end - start))
+        #print("This block consumes {} seconds".format(end - start))
         return unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list
 
     def image_match(self, image_path, save_dir, cam="cam_1", threshold=0.3, is_tracking=False, is_showimage=True):

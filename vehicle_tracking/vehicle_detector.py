@@ -40,7 +40,7 @@ class VehicleDetector(object):
         self.positions_mask = OrderedDict()
         self.square_of_mask = OrderedDict() # Number of pixel (square) of each parking space unified id in correspondent camera
 
-    @timethis
+    #@timethis
     def __call__(self, frame, parking_ground="parking_ground_SA", cam="cam_1"):
 
         self.positions_mask[cam] = -1 * np.ones(shape=frame.shape[:2], dtype=np.int16)

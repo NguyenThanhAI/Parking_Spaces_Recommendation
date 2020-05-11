@@ -253,7 +253,7 @@ class VehicleTracker:
 
             self.motion_step(t)
 
-    @timethis
+    #@timethis
     def step(self, vehicle_detections):
         for t in self.active_tracks:
             if len(t.traject_pos) > 1:
@@ -270,11 +270,11 @@ class VehicleTracker:
         self.motion()
 
         if len(self.tentative_tracks) > 0 and len(vehicle_detections) > 0:
-            print("14, {}, {}".format(len(self.tentative_tracks), len(vehicle_detections)), end=", ")
+            #print("14, {}, {}".format(len(self.tentative_tracks), len(vehicle_detections)), end=", ")
             vehicle_detections = self.match_reid_iou_tentative(vehicle_detections=vehicle_detections)
-            print("{}, {}".format(len(self.tentative_tracks), len(vehicle_detections)))
+            #print("{}, {}".format(len(self.tentative_tracks), len(vehicle_detections)))
         elif len(self.tentative_tracks) > 0 and len(vehicle_detections) == 0:
-            print("15, {}, {}".format(len(self.tentative_tracks), len(vehicle_detections)))
+            #print("15, {}, {}".format(len(self.tentative_tracks), len(vehicle_detections)))
             self.tentative_tracks.clear()
 
         if len(self.active_tracks) > 0 and len(vehicle_detections) > 0:
