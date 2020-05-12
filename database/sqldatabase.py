@@ -74,6 +74,12 @@ class SQLiteDataBase(object):
         records = cursor.fetchall()
         return records
 
+    def get_deleted_pairs(self):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM PAIRS WHERE END_TIME NOT NULL")
+        records = cursor.fetchall()
+        return records
+
     def get_all_pairs(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM PAIRS")

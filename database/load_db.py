@@ -14,7 +14,7 @@ sqlite_database = SQLiteDataBase(database_dir="../database", database_file="2019
 
 try:
     while True:
-        records = sqlite_database.get_active_pairs()
+        records = sqlite_database.get_all_pairs()
         print("=================================================================")
         for record in records:
             record = list(map(lambda x: int.from_bytes(x, byteorder="little") if isinstance(x, bytes) else x, record))
