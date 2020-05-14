@@ -59,7 +59,7 @@ def get_records_grouped_by_vehicle_id(records: list):
 def get_vehicle_id_infos(records: list):
     info_dicts = get_records_grouped_by_vehicle_id(records)
     time_interval = dict(map(lambda x: (x, (min(info_dicts[x]["time_intervals"], key=lambda y: y[0])[0], max(list(filter(lambda z: z[1] is not None, info_dicts[x]["time_intervals"])), key=lambda y: y[1])[1] if any(list(map(lambda x: x[1] is not None, info_dicts[x]["time_intervals"]))) else None)), info_dicts.keys()))
-    info_dicts = dict(map(lambda x: (x, {"Start_time": time_interval[x][0], "End_time": time_interval[x][1], "infos": info_dicts[x]["infos"], "class_id": info_dicts[x]["class_id"]}), info_dicts.keys()))
+    info_dicts = dict(map(lambda x: (x, {"Class_id": info_dicts[x]["class_id"], "Parking_time": (time_interval[x][1] - time_interval[x][0]) if time_interval[x][1] else "Parking", "Start_time": time_interval[x][0], "End_time": time_interval[x][1], "Cells_info": info_dicts[x]["infos"]}), info_dicts.keys()))
 
     return info_dicts
 
@@ -106,6 +106,6 @@ def get_heatmap(records: list, start_time=None, end_time=None):
     union_intervals = dict(map(lambda x: (x, sum(list(map(lambda y: (y[1] - y[0]).total_seconds(), union_intervals[x])))), union_intervals.keys()))
     #print(union_intervals)
     total_time = (end_time - start_time).total_seconds()
-    heatmap = dict(map(lambda x: (x, union_intervals[x] / total_time), union_intervals.keys()))
+    heatmap = dict(map(lambda x: (x, round((union_intervals[x] / total_time) * 100., 2)), union_intervals.keys()))
     #print(heatmap)
     return heatmap
