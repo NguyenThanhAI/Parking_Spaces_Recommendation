@@ -1102,3 +1102,12 @@ for unified_id in range(129):
                 sa_unified_id_to_orientation_consideration[unified_id][cam].append(orient)
         if len(sa_unified_id_to_orientation_consideration[unified_id][cam]) == 0:
             sa_unified_id_to_orientation_consideration[unified_id].pop(cam)
+
+
+sa_type_space_to_unified_id = {"small": list(range(71)) + list(range(119, 129)),
+                               "big": list(range(71, 119))}
+
+
+sa_cam_to_considered_unified_id = {"cam_1": list(range(39, 119)) + list(range(127, 129)),
+                                   "cam_2": list(range(39)),
+                                   "cam_3": list(range(119, 127))}

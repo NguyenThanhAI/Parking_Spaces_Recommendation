@@ -713,3 +713,13 @@ for unified_id in range(80):
                 pa_unified_id_to_orientation_consideration[unified_id][cam].append(orient)
         if len(pa_unified_id_to_orientation_consideration[unified_id][cam]) == 0:
             pa_unified_id_to_orientation_consideration[unified_id].pop(cam)
+
+
+pa_type_space_to_unified_id = {"small": list(range(31)) + list(range(73, 76)),
+                               "big": list(range(31, 73)) + list(range(76, 80))}
+
+
+pa_cam_to_considered_unified_id = {"cam_1": list(range(31)),
+                                   "cam_2": list(range(31, 41)) + list(range(63, 73)),
+                                   "cam_3": list(range(41, 48)) + list(range(56, 63)),
+                                   "cam_4": list(range(48, 56)) + list(range(73, 80))}

@@ -3,8 +3,8 @@ import os
 import argparse
 import json
 
-from parking_spaces_data.sa_order_in_json_to_unified_id import sa_order_in_json_to_unified_id, sa_cam_to_space_id, sa_unified_id_and_adjacency_ids, sa_unified_id_to_orientation_consideration
-from parking_spaces_data.pa_order_in_json_to_unified_id import pa_order_in_json_to_unified_id, pa_cam_to_space_id, pa_unified_id_and_adjacency_ids, pa_unified_id_to_orientation_consideration
+from parking_spaces_data.sa_order_in_json_to_unified_id import sa_order_in_json_to_unified_id, sa_cam_to_space_id, sa_unified_id_and_adjacency_ids, sa_unified_id_to_orientation_consideration, sa_type_space_to_unified_id, sa_cam_to_considered_unified_id
+from parking_spaces_data.pa_order_in_json_to_unified_id import pa_order_in_json_to_unified_id, pa_cam_to_space_id, pa_unified_id_and_adjacency_ids, pa_unified_id_to_orientation_consideration, pa_type_space_to_unified_id, pa_cam_to_considered_unified_id
 
 
 def get_args():
@@ -40,6 +40,8 @@ if __name__ == '__main__':
             order_in_json_to_unified_id = sa_order_in_json_to_unified_id
             unified_id_and_adjacency_ids = sa_unified_id_and_adjacency_ids
             unified_id_to_orientation_consideration = sa_unified_id_to_orientation_consideration
+            type_space_to_unified_id = sa_type_space_to_unified_id
+            cam_to_considered_unified_id = sa_cam_to_considered_unified_id
 
         else:
 
@@ -48,12 +50,22 @@ if __name__ == '__main__':
             order_in_json_to_unified_id = pa_order_in_json_to_unified_id
             unified_id_and_adjacency_ids = pa_unified_id_and_adjacency_ids
             unified_id_to_orientation_consideration = pa_unified_id_to_orientation_consideration
+            type_space_to_unified_id = pa_type_space_to_unified_id
+            cam_to_considered_unified_id = pa_cam_to_considered_unified_id
 
         annotations = json_label["annotations"]
 
         space_id_to_cam = {}
         for k, v in cam_to_space_id.items():
             space_id_to_cam.update(dict(zip(v, [k] * len(v))))
+
+        unified_id_to_type_space = {}
+        for k, v in type_space_to_unified_id.items():
+            unified_id_to_type_space.update(dict(zip(v, [k] * len(v))))
+
+        considered_unified_id_to_cam = {}
+        for k, v in cam_to_considered_unified_id.items():
+            considered_unified_id_to_cam.update(dict(zip(v, [k] * len(v))))
 
         unified_id_to_polygons[parking_ground] = {}
         for order in order_in_json_to_unified_id:
@@ -75,6 +87,8 @@ if __name__ == '__main__':
             unified_id_to_polygons[parking_ground][unified_id]["positions"][cam] = annotation_wrt_order[0]["segmentation"]
             unified_id_to_polygons[parking_ground][unified_id].update(unified_id_and_adjacency_ids[unified_id])
             unified_id_to_polygons[parking_ground][unified_id]["reversed_considered_orients"] = unified_id_to_orientation_consideration[unified_id]
+            unified_id_to_polygons[parking_ground][unified_id]["type_space"] = unified_id_to_type_space[unified_id]
+            unified_id_to_polygons[parking_ground][unified_id]["considered_in_cam"] = considered_unified_id_to_cam[unified_id]
 
     with open("parking_spaces_unified_id_segmen_in_cameras.json", "w") as f:
         json.dump(unified_id_to_polygons, f, indent=5)
