@@ -7,30 +7,33 @@ from parking_spaces_data.pa_order_in_json_to_unified_id import pa_cam_to_unified
 
 
 class ParkingSpace(object):
-    def __init__(self, unified_id, positions, reversed_considered_orients, adjacencies, active_cams: list, parking_ground="parking_ground_SA", shape=(720, 1080)):
+    def __init__(self, unified_id, positions, reversed_considered_orients, adjacencies, type_space:str, considered_in_cam: str, active_cams: list, parking_ground="parking_ground_SA", shape=(720, 1080)):
         self.unified_id = unified_id
         self.positions = positions # Positions of vertices of polygon of correspondent cam
         self.reversed_considered_orients = reversed_considered_orients
         self.adjacencies = adjacencies
+        self.type_space = type_space
+        self.considered_in_cam = considered_in_cam
         self.parking_ground = parking_ground
         self.bbox = OrderedDict() # Crop position in parkingspacesinitializer.positions_mask to compute intersection with vehicle_detections or vehicle_tracks
 
         cam_list = list(self.positions.keys())
         for cam in cam_list:
-            if cam not in active_cams:
+            if cam not in active_cams or cam != self.considered_in_cam:
                 self.positions.pop(cam)
 
         for cam in self.positions:
-            cc, rr = np.array(self.positions[cam], dtype=np.uint16).reshape(-1, 2).T
-            x_min = np.min(cc)
-            y_min = np.min(rr)
-            x_max = np.max(cc)
-            y_max = np.max(rr)
-            self.bbox[cam] = [x_min, y_min, x_max, y_max]
+            if cam == self.considered_in_cam:
+                cc, rr = np.array(self.positions[cam], dtype=np.uint16).reshape(-1, 2).T
+                x_min = np.min(cc)
+                y_min = np.min(rr)
+                x_max = np.max(cc)
+                y_max = np.max(rr)
+                self.bbox[cam] = [x_min, y_min, x_max, y_max]
 
         cam_list = list(self.reversed_considered_orients.keys())
         for cam in cam_list:
-            if cam not in active_cams:
+            if cam not in active_cams or cam != self.considered_in_cam:
                 self.reversed_considered_orients.pop(cam)
 
 
@@ -61,14 +64,18 @@ class ParkingSpacesInitializer(object):
             positions = self.config_json[self.parking_ground][str(unified_id)]["positions"] # Sau khi sửa json sẽ phải thêm ["parking_ground_SA"] vào sau config_json
             reversed_considered_orients = self.config_json[self.parking_ground][str(unified_id)]["reversed_considered_orients"]
             adjacencies = self.config_json[self.parking_ground][str(unified_id)]["adjacencies"]
+            type_space = self.config_json[self.parking_ground][str(unified_id)]["type_space"]
+            considered_in_cam = self.config_json[self.parking_ground][str(unified_id)]["considered_in_cam"]
             parking_spaces_list.append(ParkingSpace(unified_id=unified_id,
                                                     positions=positions,
                                                     reversed_considered_orients=reversed_considered_orients,
                                                     adjacencies=adjacencies,
+                                                    type_space=type_space,
+                                                    considered_in_cam=considered_in_cam,
                                                     active_cams=self.active_cams,
                                                     shape=self.shape))
             for cam in positions:
-                if cam in self.active_cams:
+                if cam in self.active_cams and cam == considered_in_cam:
                     cc, rr = np.array(positions[cam], dtype=np.uint16).reshape(-1, 2).T
                     rr, cc = polygon(rr, cc)
                     self.positions_mask[cam][rr, cc] = unified_id

@@ -39,10 +39,11 @@ class SQLiteDataBase(object):
                           CLASS_ID INT  NOT NULL,
                           TYPE_SPACE TEXT NOT NULL,
                           PARKING_GROUND TEXT NOT NULL,
+                          CAM TEXT NOT NULL,
                           INACTIVE_STEPS INT NOT NULL,
                           START_TIME  TIMESTAMP NOT NULL,
                           END_TIME TIMESTAMP,
-                          PRIMARY KEY (CELL_ID, VEHICLE_ID, CLASS_ID, TYPE_SPACE, PARKING_GROUND, START_TIME));""")
+                          PRIMARY KEY (CELL_ID, VEHICLE_ID, CLASS_ID, TYPE_SPACE, PARKING_GROUND, CAM, START_TIME));""")
 
         cursor.execute("""CREATE TABLE PARKING_SPACES
                           (PARKING_GROUND TEXT NOT NULL,
@@ -54,7 +55,7 @@ class SQLiteDataBase(object):
 
     def add_pairs(self, pairs_info):
         cursor = self.conn.cursor()
-        cursor.executemany("INSERT OR REPLACE INTO PAIRS VALUES (?, ?, ?, ?, ?, ?, ?, ?)", pairs_info)
+        cursor.executemany("INSERT OR REPLACE INTO PAIRS VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", pairs_info)
         self.conn.commit()
 
     def add_parking_spaces(self, cells_info):
