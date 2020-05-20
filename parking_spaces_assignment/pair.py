@@ -3,6 +3,7 @@ import pickle
 from datetime import datetime, timedelta
 from load_videos.videos_utils import get_time_amount_from_frames_number
 from database.sqldatabase import SQLiteDataBase
+from database.mysqldatabase import MySQLDataBase
 from code_timing_profiling.profiling import profile
 from code_timing_profiling.timing import timethis
 
@@ -47,12 +48,21 @@ class Pair(object):
 
 class PairsScheduler(object):
 
-    def __init__(self, time, database_dir="../database", database_file=None, save_to_db_period=2, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
+    def __init__(self, time, database_dir="../database", database_file=None, use_mysql=False, host="localhost", user="Thanh", passwd="Aimesoft", reset_table=True, save_to_db_period=2, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
         self.start_time = time
         self.time = time
         if not database_file:
-            database_file = self.start_time.strftime("%Y-%m-%d") + ".db"
-        self.database = SQLiteDataBase(database_dir=database_dir, database_file=database_file)
+            if not use_mysql:
+                database_file = self.start_time.strftime("%Y-%m-%d") + ".db"
+            else:
+                database_file = self.start_time.strftime("%Y_%m_%d")
+        else:
+            if use_mysql:
+                database_file = database_file.split(".")[0]
+        if not use_mysql:
+            self.database = SQLiteDataBase(database_dir=database_dir, database_file=database_file)
+        else:
+            self.database = MySQLDataBase(host=host, user=user, passwd=passwd, database=database_file, reset_table=reset_table)
         self.save_to_db_period = save_to_db_period
         self.tentative_steps_before_accepted = tentative_steps_before_accepted
         self.inactive_steps_before_removed = inactive_steps_before_removed
@@ -92,7 +102,7 @@ class PairsScheduler(object):
             if uid_veh_id in tentative_dict:
                 tentative_dict[uid_veh_id].tentative_steps += 1
                 if tentative_dict[uid_veh_id].tentative_steps > tentative_dict[uid_veh_id].tentative_steps_before_accepted:
-                    brand_new[uid_veh_id] = Pair(unified_id=uid_veh_id[0], vehicle_id=uid_veh_id[1], class_id=uid_veh_id[2], type_space=uid_veh_id[3], parking_ground=uid_veh_id[4], cam=uid_veh_id[5], birth_time=tentative_dict[uid_veh_id].birth_time, inactive_steps_before_removed=self.inactive_steps_before_removed)
+                    brand_new[uid_veh_id] = Pair(unified_id=int(uid_veh_id[0]), vehicle_id=int(uid_veh_id[1]), class_id=int(uid_veh_id[2]), type_space=uid_veh_id[3], parking_ground=uid_veh_id[4], cam=uid_veh_id[5], birth_time=tentative_dict[uid_veh_id].birth_time, inactive_steps_before_removed=self.inactive_steps_before_removed)
                 continue
 
             if uid_veh_id in active_dict: # Nếu uid_veh_id nằm trong active_dict nghĩa là cặp này đang active và tiếp tục bước này vẫn active
