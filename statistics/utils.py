@@ -10,7 +10,7 @@ def convert_bytes_to_int(records: list):
 
 
 def gather_time_intervals(records: list):
-    return list(map(lambda x: (x[6], x[7]), records))
+    return list(map(lambda x: (x[7], x[8]), records))
 
 
 def gather_class_vehicle_id_type_space(records: list):
@@ -97,9 +97,9 @@ def create_gantt_chart_plot(records: list, end_time: datetime.datetime=datetime.
 @timethis
 def get_heatmap(records: list, start_time=None, end_time=None):
     if not start_time:
-        start_time = min(records, key=lambda x: x[6])[6]
+        start_time = min(records, key=lambda x: x[7])[7]
     if not end_time:
-        end_time = max(list(filter(lambda x: x[7] is not None, records)))[7] if any(map(lambda x: x[7] is not None, records)) else None
+        end_time = max(list(filter(lambda x: x[8] is not None, records)))[8] if any(map(lambda x: x[8] is not None, records)) else None
     #print(start_time, end_time, type(start_time), type(end_time))
     info_dicts = get_records_grouped_by_unified_id(records)
     union_intervals = dict(map(lambda x: (x, find_union_of_time_intervals(info_dicts[x]["time_intervals"], end_time=end_time)), info_dicts.keys()))

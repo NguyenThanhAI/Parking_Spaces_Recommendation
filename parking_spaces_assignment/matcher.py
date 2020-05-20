@@ -71,7 +71,7 @@ class Matcher(object):
 
         if len(parking_spaces_in_cam) < len(vehicles_list): # Giả sử chọn vòng lặp for theo các key của dictionary của unified_id sang instance của parking_space:
             for unified_id in unified_id_to_ps:
-                x_min, y_min, x_max, y_max = unified_id_to_ps[unified_id].bbox
+                x_min, y_min, x_max, y_max = unified_id_to_ps[unified_id].bbox[cam] # Vì bbox là dict nên phải key cam vào một unified ứng với mỗi cam sẽ là một bbox khác nhau
                 cropped_ps_mask = parking_spaces_in_cam_mask[y_min:y_max + 1, x_min:x_max + 1] # Crop parking space positions mask
                 cropped_vh_mask = vehicle_masks[y_min:y_max + 1, x_min:x_max + 1] # Crop vehicle positions mask
                 cropped_mask = np.stack((cropped_ps_mask, cropped_vh_mask), axis=2)
