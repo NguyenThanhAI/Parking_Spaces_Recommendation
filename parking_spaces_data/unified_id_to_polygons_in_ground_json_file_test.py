@@ -14,8 +14,8 @@ from parking_spaces_data.sa_pa_parking_spaces_ground_annotation import sa_in_ord
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset_dir", type=str, default=r"C:\Users\Thanh\Downloads\Parking_ground_images_and_db", help="Directory contains images")
-    parser.add_argument("--label_file_path", type=str, default="parking_spaces_ground_annotation.json", help="Path to parking spaces annotation file")
+    parser.add_argument("--image_ground_dir", type=str, default=r"C:\Users\Thanh\Downloads\Parking_ground_images_and_db", help="Directory contains images")
+    parser.add_argument("--label_file_path", type=str, default="parking_spaces_unified_id_segmen_in_ground.json", help="Path to parking spaces annotation file")
     parser.add_argument("--image_save_dir", type=str, default=r"C:\Users\Thanh\Downloads\Parking_ground_images_and_db", help="Directory contains result images")
 
     args = parser.parse_args()
@@ -36,66 +36,39 @@ def parse_json_label(args, json_label, save_images=True):
         if not os.path.exists(args.image_save_dir):
             os.makedirs(args.image_save_dir, exist_ok=True)
 
-    assert isinstance(json_label, dict)
-    images = json_label["images"]
-    annotations = json_label["annotations"]
+    unified_id_to_polygons = json_label
 
-    assert isinstance(images, list) and isinstance(annotations, list)
-
-    for image_id, items in groupby(images, key=itemgetter("id")):
-        print("Image id: {}".format(image_id))
-
-        if image_id == 0:
-            order_in_json_to_unified_id = pa_in_order_in_json_to_unified_id
+    for parking_ground in unified_id_to_polygons:
+        if parking_ground == "parking_ground_SA":
+            file_name = "cropped_SA.jpg"
         else:
-            order_in_json_to_unified_id = sa_in_order_in_json_to_unified_id
+            file_name = "cropped_PA.jpg"
 
-        for item in items:
-            print("Path of image id {0} is {1}".format(image_id, item["file_name"]))
-            file_name = item["file_name"]
-            width = item["width"]
-            height = item["height"]
-            file_path = os.path.join(args.dataset_dir, file_name)
-
-        parking_spaces = list(filter(lambda x: x["image_id"] == image_id, annotations))
-        print("Parking spaces of image id {0} is {1}".format(image_id, len(parking_spaces)))
-
+        file_path = os.path.join(args.image_ground_dir, file_name)
         img = cv2.imread(file_path)
 
-        #for id, parking_space in groupby(parking_spaces, key=itemgetter("id")):
-        #    #print("id: {0}, len: {1}".format(id, len(list(parking_space))))
-        #    for space in parking_space:
-        #        segm = space["segmentation"]
-        space_id_list = []
-        for i, parking_space in enumerate(parking_spaces):
-            segmentation = parking_space["segmentation"]
-            id = parking_space["id"]
-            if id in order_in_json_to_unified_id:
-                id = order_in_json_to_unified_id[id]
-            else:
-                continue
-            space_id_list.append(id)
-            segmentation = np.array(segmentation, dtype=np.uint16).reshape(-1, 2)
-            cc, rr = segmentation.T
+        for unified_id in unified_id_to_polygons[parking_ground]:
+            segment = unified_id_to_polygons[parking_ground][unified_id]["positions"]
+            segment = np.array(segment, dtype=np.uint16).reshape(-1, 2)
+            cc, rr = segment.T
             rr, cc = polygon(rr, cc)
             img[rr, cc] = np.random.randint(0, 255, [3], dtype=np.uint8)
-            center_x, center_y = np.mean(segmentation, axis=0).astype(np.uint16)
-            segmentation = segmentation.tolist()
+            center_x, center_y = np.mean(segment, axis=0).astype(np.uint16)
+            segment = segment.tolist()
             color = (np.random.randint(150, 255), np.random.randint(150, 255), np.random.randint(150, 255))
-            for j, point in enumerate(segmentation):
+            for j, point in enumerate(segment):
                 x1, y1, = point
-                if j < len(segmentation) - 1:
-                    x2, y2 = segmentation[j + 1]
+                if j < len(segment) - 1:
+                    x2, y2 = segment[j + 1]
                 else:
-                    x2, y2 = segmentation[0]
+                    x2, y2 = segment[0]
 
                 cv2.line(img, (x1, y1), (x2, y2), color=color, thickness=1)
             #cv2.putText(img, "{}".format(sa_order_in_json_to_unified_id[id]), (center_x, center_y),
             #            cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), thickness=1)
-            cv2.putText(img, "{}".format(id), (center_x, center_y),
+            cv2.putText(img, "{}".format(unified_id), (center_x, center_y),
                         cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), thickness=1)
-        print("Space id list {} in the image id {}".format(space_id_list, image_id))
-        cv2.imshow("Image id {}".format(image_id), img)
+        cv2.imshow("{}".format(parking_ground), img)
         cv2.waitKey(0)
         if save_images:
             file_name = "".join([os.path.basename(file_path).split(".")[0], "_result.jpg"])
