@@ -41,14 +41,16 @@ def gather_class_id(records: list):
 
 def get_records_grouped_by_vehicle_id(records: list):
     info_dicts = {}
-    for vehicle_id, grouped in groupby(sorted(records, key=lambda x: x[1]), key=lambda x: x[1]):
+    records = sorted(records, key=lambda x: x[7])
+    records = dict(zip(range(len(records)), records))
+    for vehicle_id, record in records.items():
         info_dicts[vehicle_id] = {}
-        grouped = list(grouped)
-        time_intervals = gather_time_intervals(grouped)
+        record = [record]
+        time_intervals = gather_time_intervals(record)
         info_dicts[vehicle_id]["time_intervals"] = time_intervals
-        infos = gather_unified_id_type_space(grouped)
+        infos = gather_unified_id_type_space(record)
         info_dicts[vehicle_id]["infos"] = infos
-        class_id = gather_class_id(records)[0]
+        class_id = gather_class_id(record)[0]
         info_dicts[vehicle_id]["class_id"] = class_id
         #print(vehicle_id, infos, time_intervals)
 
@@ -83,7 +85,7 @@ def find_union_of_time_intervals(intervals: list, end_time=datetime.datetime(yea
 
 
 def create_gantt_chart_plot(records: list, end_time: datetime.datetime=datetime.datetime(year=2019, month=11, day=30, hour=10, minute=10, second=0)):
-    df = list(map(lambda x: dict(Task="Cell_id " + str(x[0]), Start=x[6].strftime("%Y-%m-%d %H:%M:%S"), Finish=x[7].strftime("%Y-%m-%d %H:%M:%S") if x[7] is not None else end_time, Type_Space="small"), sorted(records, key=lambda x: x[0])))
+    df = list(map(lambda x: dict(Task="Cell_id " + str(x[0]), Start=x[7].strftime("%Y-%m-%d %H:%M:%S"), Finish=x[8].strftime("%Y-%m-%d %H:%M:%S") if x[8] is not None else end_time, Type_Space="small"), sorted(records, key=lambda x: x[0])))
 
     colors = dict(small="rgb(0, 0, 255",
                   big="rgb(255, 0, 0")
@@ -100,11 +102,14 @@ def get_heatmap(records: list, start_time=None, end_time=None):
         start_time = min(records, key=lambda x: x[7])[7]
     if not end_time:
         end_time = max(list(filter(lambda x: x[8] is not None, records)))[8] if any(map(lambda x: x[8] is not None, records)) else None
-    #print(start_time, end_time, type(start_time), type(end_time))
+    print(start_time, end_time, type(start_time), type(end_time))
+    assert start_time < end_time
     info_dicts = get_records_grouped_by_unified_id(records)
+    print(info_dicts)
     union_intervals = dict(map(lambda x: (x, find_union_of_time_intervals(info_dicts[x]["time_intervals"], end_time=end_time)), info_dicts.keys()))
+    print(union_intervals)
     union_intervals = dict(map(lambda x: (x, sum(list(map(lambda y: (y[1] - y[0]).total_seconds(), union_intervals[x])))), union_intervals.keys()))
-    #print(union_intervals)
+    print(union_intervals)
     total_time = (end_time - start_time).total_seconds()
     heatmap = dict(map(lambda x: (x, round((union_intervals[x] / total_time) * 100., 2)), union_intervals.keys()))
     #print(heatmap)
