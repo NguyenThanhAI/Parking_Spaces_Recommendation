@@ -8,15 +8,15 @@ import numpy as np
 from skimage.draw import polygon
 import cv2
 
-from parking_spaces_data.sa_order_in_json_to_unified_id import sa_order_in_json_to_unified_id
-from parking_spaces_data.pa_order_in_json_to_unified_id import pa_order_in_json_to_unified_id
+from parking_spaces_data.sa_pa_parking_spaces_ground_annotation import sa_in_order_in_json_to_unified_id, pa_in_order_in_json_to_unified_id
 
 
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset_dir", type=str, default=r"F:\Parking_Spaces_Recommendation_Data\PA_parking_spaces", help="Directory contains images")
-    parser.add_argument("--label_file_path", type=str, default="pa_parking_spaces_annotation.json", help="Path to parking spaces annotation file")
+    parser.add_argument("--dataset_dir", type=str, default=r"C:\Users\Thanh\Downloads\Parking_ground_images_and_db", help="Directory contains images")
+    parser.add_argument("--label_file_path", type=str, default="parking_spaces_ground_annotation.json", help="Path to parking spaces annotation file")
+    parser.add_argument("--image_save_dir", type=str, default=r"C:\Users\Thanh\Downloads\Parking_ground_images_and_db", help="Directory contains result images")
 
     args = parser.parse_args()
 
@@ -30,7 +30,12 @@ def read_label_file(label_file_path):
     return json_label
 
 
-def parse_json_label(args, json_label):
+def parse_json_label(args, json_label, save_images=True):
+
+    if save_images:
+        if not os.path.exists(args.image_save_dir):
+            os.makedirs(args.image_save_dir, exist_ok=True)
+
     assert isinstance(json_label, dict)
     images = json_label["images"]
     annotations = json_label["annotations"]
@@ -39,6 +44,11 @@ def parse_json_label(args, json_label):
 
     for image_id, items in groupby(images, key=itemgetter("id")):
         print("Image id: {}".format(image_id))
+
+        if image_id == 0:
+            order_in_json_to_unified_id = pa_in_order_in_json_to_unified_id
+        else:
+            order_in_json_to_unified_id = sa_in_order_in_json_to_unified_id
 
         for item in items:
             print("Path of image id {0} is {1}".format(image_id, item["file_name"]))
@@ -60,6 +70,10 @@ def parse_json_label(args, json_label):
         for i, parking_space in enumerate(parking_spaces):
             segmentation = parking_space["segmentation"]
             id = parking_space["id"]
+            if id in order_in_json_to_unified_id:
+                id = order_in_json_to_unified_id[id]
+            else:
+                continue
             space_id_list.append(id)
             segmentation = np.array(segmentation, dtype=np.uint16).reshape(-1, 2)
             cc, rr = segmentation.T
@@ -75,14 +89,17 @@ def parse_json_label(args, json_label):
                 else:
                     x2, y2 = segmentation[0]
 
-                cv2.line(img, (x1, y1), (x2, y2), color=color, thickness=2)
+                cv2.line(img, (x1, y1), (x2, y2), color=color, thickness=1)
             #cv2.putText(img, "{}".format(sa_order_in_json_to_unified_id[id]), (center_x, center_y),
             #            cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), thickness=1)
             cv2.putText(img, "{}".format(id), (center_x, center_y),
-                        cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), thickness=1)
+                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), thickness=1)
         print("Space id list {} in the image id {}".format(space_id_list, image_id))
         cv2.imshow("Image id {}".format(image_id), img)
         cv2.waitKey(0)
+        if save_images:
+            file_name = "".join([os.path.basename(file_path).split(".")[0], "_result.jpg"])
+            cv2.imwrite(os.path.join(args.image_save_dir, file_name), img)
         cv2.destroyAllWindows()
 
 
