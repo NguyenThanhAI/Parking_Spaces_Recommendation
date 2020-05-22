@@ -50,7 +50,7 @@ def parse_json_label(args, json_label, save_images=True):
     img = cv2.imread(file_path)
 
     cells_heatmap = pd.read_csv(args.cells_heatmap_file)
-    cells_heatmap = dict(zip(cells_heatmap.vehicle_id, cells_heatmap.heatmap))
+    cells_heatmap = dict(zip(cells_heatmap.cell_id, cells_heatmap.heatmap))
 
     for unified_id in unified_id_to_polygons[args.parking_ground]:
         if int(unified_id) not in cells_heatmap:

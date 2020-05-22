@@ -5,7 +5,7 @@ from statistics.utils import convert_bytes_to_int, get_records_grouped_by_unifie
     find_union_of_time_intervals, get_heatmap, create_gantt_chart_plot, get_vehicle_id_infos
 
 
-sqlite_database = SQLiteDataBase(database_dir="../database", database_file="2019-11-30.db")
+sqlite_database = SQLiteDataBase(database_dir="../database", database_file="2019-10-24.db")
 records = sqlite_database.get_all_pairs()
 
 records = convert_bytes_to_int(records)
