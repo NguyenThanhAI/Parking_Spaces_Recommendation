@@ -12,8 +12,8 @@ class MaskRCNNConfig(mrcnn.config.Config):
     NAME = "coco_pretrained_model_config"
     IMAGES_PER_GPU = 1
     GPU_COUNT = 1
-    NUM_CLASSES = 1 + 80
-    DETECTION_MIN_CONFIDENCE = 0.0
+    NUM_CLASSES = 1 + 1
+    DETECTION_MIN_CONFIDENCE = 0.5
 
 
 def get_car_boxes(boxes, class_ids):
@@ -21,7 +21,7 @@ def get_car_boxes(boxes, class_ids):
 
     for i, box in enumerate(boxes):
         # If the detected object isn't a car / truck, skip it
-        if class_ids[i] in [3, 8, 6]:
+        if class_ids[i] in [1]:
             car_boxes.append(box)
 
     return np.array(car_boxes)
@@ -30,7 +30,7 @@ ROOT_DIR = Path(".")
 
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
-COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_cars_and_vehicles_0008.h5")
 
 if not os.path.exists(COCO_MODEL_PATH):
     mrcnn.utils.download_trained_weights(COCO_MODEL_PATH)
@@ -46,7 +46,7 @@ model = MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=MaskRCNNConfig())
 
 model.load_weights(COCO_MODEL_PATH, by_name=True)
 
-image_path = "201909_20190914_1_2019-09-14_02-00-00_8996.jpg"
+image_path = "201911_20191129_2_2019-11-29_09-00-00_38343.jpg"
 
 image_path = os.path.join(IMAGE_DIR, image_path)
 
@@ -69,10 +69,10 @@ color = np.array([255, 255, 0], dtype=np.uint8)
 color_mask = np.zeros_like(img, dtype=np.uint8)
 
 for roi, score, class_id, mask in zip(rois, scores, class_ids, masks):
-    if score >= 0.0 and class_id in [3, 8, 6]:
+    if score >= 0.0 and class_id in [1]:
         color = np.array([np.random.randint(100, 255), np.random.randint(100, 255), np.random.randint(100, 255)], dtype=np.uint8)
-        #y_min, x_min, y_max, x_max = roi
-        #cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
+        y_min, x_min, y_max, x_max = roi
+        cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
         color_mask = np.where(mask[:, :, np.newaxis], color[np.newaxis, np.newaxis, :], color_mask)
 
 #cv2.imshow("", img)
