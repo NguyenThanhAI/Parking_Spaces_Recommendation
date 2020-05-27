@@ -61,25 +61,28 @@ class ParkingSpacesInitializer(object):
     def initialize_parking_spaces(self):
         parking_spaces_list = []
         for unified_id in self.unified_id_list:
-            positions = self.config_json[self.parking_ground][str(unified_id)]["positions"] # Sau khi sửa json sẽ phải thêm ["parking_ground_SA"] vào sau config_json
-            reversed_considered_orients = self.config_json[self.parking_ground][str(unified_id)]["reversed_considered_orients"]
-            adjacencies = self.config_json[self.parking_ground][str(unified_id)]["adjacencies"]
-            type_space = self.config_json[self.parking_ground][str(unified_id)]["type_space"]
-            considered_in_cam = self.config_json[self.parking_ground][str(unified_id)]["considered_in_cam"]
-            parking_spaces_list.append(ParkingSpace(unified_id=unified_id,
-                                                    positions=positions,
-                                                    reversed_considered_orients=reversed_considered_orients,
-                                                    adjacencies=adjacencies,
-                                                    type_space=type_space,
-                                                    considered_in_cam=considered_in_cam,
-                                                    active_cams=self.active_cams,
-                                                    shape=self.shape))
-            for cam in positions:
-                if cam in self.active_cams and cam == considered_in_cam:
-                    cc, rr = np.array(positions[cam], dtype=np.uint16).reshape(-1, 2).T
-                    rr, cc = polygon(rr, cc)
-                    self.positions_mask[cam][rr, cc] = unified_id
-                    self.square_of_mask[cam][unified_id] = rr.shape[0] # Square of mask (number of pixel) of parking space unified id in camera
+            if unified_id < 1000:
+                positions = self.config_json[self.parking_ground][str(unified_id)]["positions"] # Sau khi sửa json sẽ phải thêm ["parking_ground_SA"] vào sau config_json
+                reversed_considered_orients = self.config_json[self.parking_ground][str(unified_id)]["reversed_considered_orients"]
+                adjacencies = self.config_json[self.parking_ground][str(unified_id)]["adjacencies"]
+                type_space = self.config_json[self.parking_ground][str(unified_id)]["type_space"]
+                considered_in_cam = self.config_json[self.parking_ground][str(unified_id)]["considered_in_cam"]
+                parking_spaces_list.append(ParkingSpace(unified_id=unified_id,
+                                                        positions=positions,
+                                                        reversed_considered_orients=reversed_considered_orients,
+                                                        adjacencies=adjacencies,
+                                                        type_space=type_space,
+                                                        considered_in_cam=considered_in_cam,
+                                                        active_cams=self.active_cams,
+                                                        shape=self.shape))
+                for cam in positions:
+                    if cam in self.active_cams and cam == considered_in_cam:
+                        cc, rr = np.array(positions[cam], dtype=np.uint16).reshape(-1, 2).T
+                        rr, cc = polygon(rr, cc)
+                        self.positions_mask[cam][rr, cc] = unified_id
+                        self.square_of_mask[cam][unified_id] = rr.shape[0] # Square of mask (number of pixel) of parking space unified id in camera
+            else:
+                continue
         return sorted(parking_spaces_list, key=lambda x: x.unified_id)
 
     def get_dict_convert_row_to_unified_id(self, cam="cam_1"):

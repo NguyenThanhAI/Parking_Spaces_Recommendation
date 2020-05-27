@@ -52,6 +52,9 @@ def parse_json_label(args, json_label):
 
         img = cv2.imread(file_path)
 
+        if img is None:
+            img = np.zeros(shape=(720, 1280, 3), dtype=np.uint8)
+
         #for id, parking_space in groupby(parking_spaces, key=itemgetter("id")):
         #    #print("id: {0}, len: {1}".format(id, len(list(parking_space))))
         #    for space in parking_space:
@@ -59,7 +62,7 @@ def parse_json_label(args, json_label):
         space_id_list = []
         for i, parking_space in enumerate(parking_spaces):
             segmentation = parking_space["segmentation"]
-            id = parking_space["id"]
+            id = pa_order_in_json_to_unified_id[parking_space["id"]]
             space_id_list.append(id)
             segmentation = np.array(segmentation, dtype=np.uint16).reshape(-1, 2)
             cc, rr = segmentation.T

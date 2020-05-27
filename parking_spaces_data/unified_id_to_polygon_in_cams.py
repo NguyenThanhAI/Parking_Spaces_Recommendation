@@ -85,8 +85,10 @@ if __name__ == '__main__':
             assert len(annotation_wrt_order) == 1
 
             unified_id_to_polygons[parking_ground][unified_id]["positions"][cam] = annotation_wrt_order[0]["segmentation"]
-            unified_id_to_polygons[parking_ground][unified_id].update(unified_id_and_adjacency_ids[unified_id])
-            unified_id_to_polygons[parking_ground][unified_id]["reversed_considered_orients"] = unified_id_to_orientation_consideration[unified_id]
+            if unified_id < 1000:
+                unified_id_to_polygons[parking_ground][unified_id].update(unified_id_and_adjacency_ids[unified_id])
+                print(parking_ground, unified_id)
+                unified_id_to_polygons[parking_ground][unified_id]["reversed_considered_orients"] = unified_id_to_orientation_consideration[unified_id]
             unified_id_to_polygons[parking_ground][unified_id]["type_space"] = unified_id_to_type_space[unified_id]
             unified_id_to_polygons[parking_ground][unified_id]["considered_in_cam"] = considered_unified_id_to_cam[unified_id]
 
