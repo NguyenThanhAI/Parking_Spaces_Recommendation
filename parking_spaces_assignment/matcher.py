@@ -38,10 +38,10 @@ class Matcher(object):
         #    self.detectors_list.append(VehicleDetector(checkpoint_name=checkpoint_name,
         #                                               cam=cam))
         self.detector = VehicleDetector(checkpoint_name=checkpoint_name, detection_vehicle_thresh=detection_vehicle_thresh)
-        self.parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
+        self.parking_spaces_list, self.outlier_parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
 
     #@profile
-    def frame_match(self, frame, cam="cam_2", threshold=0.1, is_tracking=False, tracker=None):
+    def frame_match(self, frame, cam="cam_2", ios_threshold=0.1, iov_threshold=0.4, is_tracking=False, tracker=None):
 
         assert cam in self.active_cams, "{} must be in {} of Matcher".format(cam, self.active_cams)
 
@@ -53,17 +53,21 @@ class Matcher(object):
             vehicles_list = tracker.get_result() #Sử dụng track lấy ra các vehicle track là list các instance của vehicle_track
         start = time.time()
         parking_spaces_in_cam = list(filter(lambda x: cam in list(x.positions.keys()), self.parking_spaces_list)) # Lọc ra các parking spaces có trong cam hiện tại dưới dạng list các instance parking_space
+        outlier_parking_spaces_in_cam = list(filter(lambda x: cam in list(x.positions.keys()), self.outlier_parking_spaces_list)) # Lọc ra các outlier parking spaces có trong cam hiện tại dưới dạng list các instance parking space
         if not is_tracking: # Tạo ra dictionary map từ vehicle_id (detection_id nếu không track, track_id nếu sử dụng track), sang instance của vehicle_detection (nếu không sử dụng track) hoặc vehicle_track (nếu sử dụng track)
             vehicle_id_to_vehicle = dict(map(lambda x: (x.detection_id, x), vehicles_list))
         else:
             vehicle_id_to_vehicle = dict(map(lambda x: (x.track_id, x), vehicles_list))
 
         unified_id_to_ps = dict(map(lambda x: (x.unified_id, x), parking_spaces_in_cam)) # Tạo ra dictionary map từ unified_id sang instance của parking_space
+        outlier_unified_id_to_ps = dict(map(lambda x: (x.unified_id, x), outlier_parking_spaces_in_cam)) # Tạo ra dictionary map từ unified_id sang instance của parking_space (outlier parking space)
 
         if is_tracking: # Lấy positions_mask của parking_space từ parkingspaceinitializer._positions_map[cam] và positions_mask của vehicle từ vehicle_detector.positions_mask[cam] (nếu không sử dụng track) hoặc vehicle_tracker.positions_mask (nếu sử dụng track
             vehicle_masks = tracker.positions_mask
+            vehicle_square_of_mask = tracker.square_of_mask
         else:
             vehicle_masks = self.detector.positions_mask[cam]
+            vehicle_square_of_mask = self.detector.square_of_mask[cam]
         parking_spaces_in_cam_mask = self.parking_space_initializer.positions_mask[cam]
         # Tạo hai dictionary unified_id_to_vehicle_id_ios và vehicle_id_to_unified_id_ios chứa thông tin ios (intersection over space) {unified_id1: {vehicle_id1: ..., vehicle_id2: ..., ...}, unified_id2: ...}, {vehicle_id1: {unified_id1:..., unified_id2:...,...}, vehicle_id2:...}
         unified_id_to_vehicle_id_ios = {}
@@ -81,7 +85,7 @@ class Matcher(object):
                     uid, vid = ps_veh
                     inter = inter_dict[ps_veh]
                     ios = inter / self.parking_space_initializer.square_of_mask[cam][uid]
-                    if ios < threshold: # Tìm số lượng giao của unified_id với các vehicle_id trong vùng crop trên và lưu vào 2 dictionary unified_id_to_vehicle_id và vehicle_id_to_unified_id nếu ios thỏa mãn > threshold đặt trước, nếu không thì bỏ qua
+                    if ios < ios_threshold: # Tìm số lượng giao của unified_id với các vehicle_id trong vùng crop trên và lưu vào 2 dictionary unified_id_to_vehicle_id và vehicle_id_to_unified_id nếu ios thỏa mãn > threshold đặt trước, nếu không thì bỏ qua
                         continue
                     else:
                         if uid not in unified_id_to_vehicle_id_ios:
@@ -108,7 +112,7 @@ class Matcher(object):
                     uid, vid = ps_veh
                     inter = inter_dict[ps_veh]
                     ios = inter / self.parking_space_initializer.square_of_mask[cam][uid]
-                    if ios < threshold:
+                    if ios < ios_threshold:
                         continue
                     else:
                         if uid not in unified_id_to_vehicle_id_ios:
@@ -123,13 +127,13 @@ class Matcher(object):
                             vehicle_id_to_unified_id_ios[vid][uid] = inter / self.parking_space_initializer.square_of_mask[cam][uid]
                         else:
                             assert vehicle_id_to_unified_id_ios[vid][uid] == (inter / self.parking_space_initializer.square_of_mask[cam][uid]), "ios of 2 times is not equal"
-        #print(unified_id_to_vehicle_id_ios)
-        #print(vehicle_id_to_unified_id_ios)
+        #print("unified_id_to_vehicle_id_ios: {}, vehicle_id_to_unified_id_ios: {}".format(unified_id_to_vehicle_id_ios, vehicle_id_to_unified_id_ios))
         end = time.time()
         #print("This block consumes {} seconds".format(end - start))
         unified_id_status_dict = dict(zip(list(unified_id_to_ps.keys()), ["available"]*len(list(unified_id_to_ps.keys())))) # Tạo một unified_id_status_dict = {unified_id: "unknown", ....} tất cả các unified_id có trạng thái ban đầu là unknown # Từ filled thành unknown
         start = time.time()
         uid_veh_id_match_list = []
+        matched_vehicles_id_list = []
         considered_vehicle_id_list = [] # Đặt một considered_vehicle_id_list = [] chứa các vehicle_id đã được xét với các unified_id
         for unified_id in unified_id_status_dict: # Duyệt từng unified_id trên unified_id_status_dict:
             if unified_id not in unified_id_to_vehicle_id_ios: # Nếu unified_id không là tồn tại là key trong unified_id_to_vehicle_id thì chuyển trạng thái của unified_id trong unified_id_status_dict là "available"
@@ -141,6 +145,7 @@ class Matcher(object):
                         if len(vehicle_id_to_unified_id_ios[vehicle_id]) == 1: # Nếu vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét này chỉ có đúng một unified_id đang xét
                             unified_id_status_dict[unified_id] = "filled"
                             uid_veh_id_match_list.append((unified_id, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, unified_id_to_ps[unified_id].type_space, self.parking_ground, cam))
+                            matched_vehicles_id_list.append(vehicle_id)
                             #print("Parking space unified id {} and vehicle id {} is matched".format(unified_id, vehicle_id))
                         else: # Nếu vehicle_id_to_unified_id[vehicle_id] của vehicle_id đang xét nhiều hơn một unified_id
                             pspace_dict = {}  # Dictionary of dictionary, each dictionary represents and parking space with information east level, south level and adjacencies against orient
@@ -287,6 +292,7 @@ class Matcher(object):
                                     chosen_uid = max(pspace_dict.keys(), key=lambda x: pspace_dict[x]["ios"]) # Chọn unified_id ứng với ios lớn nhất là "filled"
                                     unified_id_status_dict[chosen_uid] = "filled"
                                     uid_veh_id_match_list.append((chosen_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, unified_id_to_ps[chosen_uid].type_space, self.parking_ground, cam))
+                                    matched_vehicles_id_list.append(vehicle_id)
                                     for uid_match in pspace_dict:
                                         if uid_match != chosen_uid:
                                             if pspace_dict[uid_match]["ios"] > 0.75: # Các unified_id còn lại cái nào ios lớn hơn 0.75 đặt là "unknown" ngược lại là "available
@@ -298,6 +304,7 @@ class Matcher(object):
                                         if pspace_dict[uid_match]["ios"] > 0.65:
                                             unified_id_status_dict[uid_match] = "filled"
                                             uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, unified_id_to_ps[uid_match].type_space, self.parking_ground, cam))
+                                            matched_vehicles_id_list.append(vehicle_id)
                             else: # Nếu hợp của hai trường hợp trên không rỗng
                                 try:
                                     assert len(considered_uid) == 1 # Xác nhận chỉ có một điểm đỗ (bug ở chỗ này
@@ -305,6 +312,7 @@ class Matcher(object):
                                     filled_list = []
                                     unified_id_status_dict[considered_uid] = "filled" # Điểm đỗ này được chọn là "filled"
                                     uid_veh_id_match_list.append((considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, unified_id_to_ps[considered_uid].type_space, self.parking_ground, cam))
+                                    matched_vehicles_id_list.append(vehicle_id)
                                     filled_list.append(considered_uid) # Khởi tạo filled_list = []. filled_list thêm điểm đỗ vừa rồi
                                     if max_south: # Nếu là max_south (ưu tiên south_level cao nhất)
                                         if "northern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lân cận phía Bắc và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
@@ -312,6 +320,7 @@ class Matcher(object):
                                             if pspace_dict[north_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                                 unified_id_status_dict[north_of_considered_uid] = "filled"
                                                 uid_veh_id_match_list.append((north_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, unified_id_to_ps[north_of_considered_uid].type_space, self.parking_ground, cam))
+                                                matched_vehicles_id_list.append(vehicle_id)
                                                 filled_list.append(north_of_considered_uid)
                                     else: # Nếu là min_south (ưu tiên south_level thấp nhất)
                                         if "southern_adjacency" in pspace_dict[considered_uid]["adjacencies"]: # Nếu điểm đỗ trên có lần cận phía Nam và ios > 0.6 và loại xe là xe tải thì điểm đỗ lân cận này cũng được điền là "filled"
@@ -319,6 +328,7 @@ class Matcher(object):
                                             if pspace_dict[south_of_considered_uid]["ios"] > 0.6: # and vehicles_list[col].class_id == 1 # "truck"
                                                 unified_id_status_dict[south_of_considered_uid] = "filled"
                                                 uid_veh_id_match_list.append((south_of_considered_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, unified_id_to_ps[south_of_considered_uid].type_space, self.parking_ground, cam))
+                                                matched_vehicles_id_list.append(vehicle_id)
                                                 filled_list.append(south_of_considered_uid) # filled_list thêm điểm trên vào
                                     for uid_match in pspace_dict: # Xét các điểm đỗ còn lại (not in filled_list):
                                         if uid_match not in filled_list:
@@ -342,11 +352,84 @@ class Matcher(object):
                                         if pspace_dict[uid_match]["ios"] > 0.5:
                                             unified_id_status_dict[uid_match] = "filled"
                                             uid_veh_id_match_list.append((uid_match, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, unified_id_to_ps[uid_match].type_space, self.parking_ground, cam))
+                                            matched_vehicles_id_list.append(vehicle_id)
 
                             #print("Unified id {}, vehicle id {}, Pspace_dict {}".format(unified_id, vehicle_id, pspace_dict))
 
                         considered_vehicle_id_list.append(vehicle_id) # considered_vehicle_id_list thêm vehicle_id
         #print("Unified id status: {}".format(unified_id_status_dict))
+        end = time.time()
+        #print("This block consumes {} seconds".format(end - start))
+        start = time.time()
+        remained_vehicles_id_list = list(set(vehicle_id_to_vehicle.keys()) - set(matched_vehicles_id_list))
+        #print("remained_vehicles_id_list: {}, vehicle square masks: {}".format(remained_vehicles_id_list, vehicle_square_of_mask.keys()))
+        outlier_parking_spaces_in_cam_mask = self.parking_space_initializer.outlier_positions_mask[cam]
+        # Tạo hai dictionary unified_id_to_vehicle_id_iov và vehicle_id_to_unified_id_iov chứa thông tin ios (intersection over vehicle) {unified_id1: {vehicle_id1: ..., vehicle_id2: ..., ...}, unified_id2: ...}, {vehicle_id1: {unified_id1:..., unified_id2:...,...}, vehicle_id2:...}
+        outlier_unified_id_to_remained_vehicle_id_iov = {}
+        remained_vehicle_id_to_outlier_unified_id_iov = {}
+        if len(outlier_parking_spaces_in_cam) < len(remained_vehicles_id_list):  # Giả sử chọn vòng lặp for theo các key của dictionary của unified_id sang instance của parking_space:
+            for unified_id in outlier_unified_id_to_ps:
+                x_min, y_min, x_max, y_max = outlier_unified_id_to_ps[unified_id].bbox[cam]  # Vì bbox là dict nên phải key cam vào một unified ứng với mỗi cam sẽ là một bbox khác nhau
+                cropped_ps_mask = outlier_parking_spaces_in_cam_mask[y_min:y_max + 1, x_min:x_max + 1]  # Crop parking space positions mask
+                cropped_vh_mask = vehicle_masks[y_min:y_max + 1, x_min:x_max + 1]  # Crop vehicle positions mask
+                cropped_mask = np.stack((cropped_ps_mask, cropped_vh_mask), axis=2)
+                # print("unified_id", unified_id, cropped_mask.shape)
+                inter_dict = find_unique_values_and_frequency(cropped_mask=cropped_mask, id=unified_id, use_unified_id=True)
+                for ps_veh in inter_dict:
+                    uid, vid = ps_veh
+                    if vid not in remained_vehicles_id_list:
+                        continue
+                    inter = inter_dict[ps_veh]
+                    iov = inter / vehicle_square_of_mask[vid]
+                    if iov < iov_threshold:  # Tìm số lượng giao của unified_id với các vehicle_id trong vùng crop trên và lưu vào 2 dictionary unified_id_to_vehicle_id và vehicle_id_to_unified_id nếu ios thỏa mãn > threshold đặt trước, nếu không thì bỏ qua
+                        continue
+                    else:
+                        if uid not in outlier_unified_id_to_remained_vehicle_id_iov:
+                            outlier_unified_id_to_remained_vehicle_id_iov[uid] = {}
+                        if vid not in outlier_unified_id_to_remained_vehicle_id_iov[uid]:
+                            outlier_unified_id_to_remained_vehicle_id_iov[uid][vid] = inter / vehicle_square_of_mask[vid]
+                        else:
+                            assert outlier_unified_id_to_remained_vehicle_id_iov[uid][vid] == (
+                                        inter / vehicle_square_of_mask[vid]), "iov of 2 times is not equal"
+                        if vid not in remained_vehicle_id_to_outlier_unified_id_iov:
+                            remained_vehicle_id_to_outlier_unified_id_iov[vid] = {}
+                        if uid not in remained_vehicle_id_to_outlier_unified_id_iov[vid]:
+                            remained_vehicle_id_to_outlier_unified_id_iov[vid][uid] = inter / vehicle_square_of_mask[vid]
+                        else:
+                            assert remained_vehicle_id_to_outlier_unified_id_iov[vid][uid] == (inter / vehicle_square_of_mask[vid]), "iov of 2 times is not equal"
+        else:
+            for vehicle_id in vehicle_id_to_vehicle:
+                if vehicle_id in remained_vehicles_id_list:
+                    x_min, y_min, x_max, y_max = vehicle_id_to_vehicle[vehicle_id].bbox
+                    cropped_ps_mask = outlier_parking_spaces_in_cam_mask[y_min:y_max + 1, x_min:x_max + 1]  # Crop parking space positions mask
+                    cropped_vh_mask = vehicle_masks[y_min:y_max + 1, x_min:x_max + 1]  # Crop vehicle positions mask
+                    cropped_mask = np.stack((cropped_ps_mask, cropped_vh_mask), axis=2)
+                    # print("vehicle_id", vehicle_id, cropped_mask.shape)
+                    inter_dict = find_unique_values_and_frequency(cropped_mask=cropped_mask, id=vehicle_id,
+                                                                  use_unified_id=False)
+                    for ps_veh in inter_dict:
+                        uid, vid = ps_veh
+                        inter = inter_dict[ps_veh]
+                        iov = inter / vehicle_square_of_mask[vid]
+                        if iov < iov_threshold:
+                            continue
+                        else:
+                            if uid not in outlier_unified_id_to_remained_vehicle_id_iov:
+                                outlier_unified_id_to_remained_vehicle_id_iov[uid] = {}
+                            if vid not in outlier_unified_id_to_remained_vehicle_id_iov[uid]:
+                                outlier_unified_id_to_remained_vehicle_id_iov[uid][vid] = inter / vehicle_square_of_mask[vid]
+                            else:
+                                assert outlier_unified_id_to_remained_vehicle_id_iov[uid][vid] == (inter / vehicle_square_of_mask[vid]), "iov of 2 times is not equal"
+                            if vid not in remained_vehicle_id_to_outlier_unified_id_iov:
+                                remained_vehicle_id_to_outlier_unified_id_iov[vid] = {}
+                            if uid not in remained_vehicle_id_to_outlier_unified_id_iov[vid]:
+                                remained_vehicle_id_to_outlier_unified_id_iov[vid][uid] = inter / vehicle_square_of_mask[vid]
+                            else:
+                                assert remained_vehicle_id_to_outlier_unified_id_iov[vid][uid] == (inter / vehicle_square_of_mask[vid]), "iov of 2 times is not equal"
+        #print("outlier_unified_id_to_remained_vehicle_id_iov: {}, remained_vehicle_id_to_outlier_unified_id_iov: {}".format(outlier_unified_id_to_remained_vehicle_id_iov, remained_vehicle_id_to_outlier_unified_id_iov))
+        for unified_id in outlier_unified_id_to_remained_vehicle_id_iov:
+            for vehicle_id in outlier_unified_id_to_remained_vehicle_id_iov[unified_id]:
+                uid_veh_id_match_list.append((unified_id, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id, outlier_unified_id_to_ps[unified_id].type_space, self.parking_ground, cam))
         end = time.time()
         #print("This block consumes {} seconds".format(end - start))
         start = time.time()
@@ -357,16 +440,22 @@ class Matcher(object):
         for uid, color in unified_id_to_color.items():
             color_mask[parking_spaces_in_cam_mask == uid] = color
         color_mask[vehicle_masks >= 0] = (255, 0, 0)
+        color_mask[outlier_parking_spaces_in_cam_mask >= 0] = (255, 0, 255)
 
         frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.4, color_mask, 0.6, 0), frame)
         num_available_ps = len(list(filter(lambda x: unified_id_status_dict[x] == "available", unified_id_to_ps.keys())))
         num_vehicles = len(vehicle_id_to_vehicle.keys())
+        for vehicle_id in vehicle_id_to_vehicle:
+            x_min, y_min, x_max, y_max = vehicle_id_to_vehicle[vehicle_id].bbox
+            track_id = vehicle_id_to_vehicle[vehicle_id].track_id
+            cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (255, 255, 0), thickness=1)
+            cv2.putText(frame, str(track_id), (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 0), thickness=1)
         write_information(frame=frame, num_vehicles=num_vehicles, num_available_ps=num_available_ps)
         end = time.time()
         #print("This block consumes {} seconds".format(end - start))
         return unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list
 
-    def image_match(self, image_path, save_dir, cam="cam_1", threshold=0.3, is_tracking=False, is_showimage=True):
+    def image_match(self, image_path, save_dir, cam="cam_1", ios_threshold=0.3, iov_threshold=0.4, is_tracking=False, is_showimage=True):
         if is_tracking:
             tracker = VehicleTracker(detection_vehicle_thresh=0.2,
                                      inactive_steps_before_removed=10,
@@ -377,7 +466,7 @@ class Matcher(object):
         else:
             tracker = None
         image = cv2.imread(image_path)
-        unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list = self.frame_match(frame=image, cam=cam, threshold=threshold, is_tracking=is_tracking, tracker=tracker)
+        unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list = self.frame_match(frame=image, cam=cam, ios_threshold=ios_threshold, iov_threshold=iov_threshold, is_tracking=is_tracking, tracker=tracker)
         if is_showimage:
             cv2.imshow("", frame)
             cv2.waitKey(0)
@@ -389,7 +478,7 @@ class Matcher(object):
         results_path = os.path.join(save_dir, os.path.basename(image_path).split(".")[0] + ".jpg")
         cv2.imwrite(results_path, frame)
 
-    def video_match(self, video_source, is_savevideo=False, save_dir=None, cam="cam_1", threshold=0.3, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=30, tracking_inactive_steps_before_removed=200, pair_inactive_steps_before_removed=1000):
+    def video_match(self, video_source, is_savevideo=False, save_dir=None, cam="cam_1", ios_threshold=0.3, iov_threshold=0.4, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=30, tracking_inactive_steps_before_removed=200, pair_inactive_steps_before_removed=1000):
         if is_tracking:
             tracker = VehicleTracker(detection_vehicle_thresh=0.2,
                                      inactive_steps_before_removed=tracking_inactive_steps_before_removed,
@@ -438,7 +527,8 @@ class Matcher(object):
 
                 unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list = self.frame_match(frame=frame,
                                                                                                                                  cam=cam,
-                                                                                                                                 threshold=threshold,
+                                                                                                                                 ios_threshold=ios_threshold,
+                                                                                                                                 iov_threshold=iov_threshold,
                                                                                                                                  is_tracking=is_tracking,
                                                                                                                                  tracker=tracker)
                 pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, num_frames=i, frame_stride=1, fps=fps)

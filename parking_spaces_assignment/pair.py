@@ -19,7 +19,11 @@ class TentativePair(object):
         self.cam = cam
         self.birth_time = birth_time
         self.tentative_steps = 0
-        self.tentative_steps_before_accepted = tentative_steps_before_accepted
+        if unified_id >= 1000:
+            assert unified_id >= 1000 and type_space == "outlier"
+            self.tentative_steps_before_accepted = 30
+        else:
+            self.tentative_steps_before_accepted = tentative_steps_before_accepted
 
     def __str__(self):
         return str(self.__class__) + ":" + str(self.__dict__)
