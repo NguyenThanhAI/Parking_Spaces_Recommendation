@@ -13,7 +13,7 @@ print(os.path.abspath("../database"))
 if not use_mysql:
     database = SQLiteDataBase(database_dir="../database", database_file="2019-10-24.db")
 else:
-    database = MySQLDataBase(host="localhost", user="Thanh", passwd="Aimesoft", database="2019_11_30")
+    database = MySQLDataBase(host="localhost", user="Thanh", passwd="Aimesoft", database="2019_10_24", reset_table=False)
 
 
 try:

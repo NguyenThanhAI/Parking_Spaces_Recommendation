@@ -28,6 +28,7 @@ class MySQLDataBase(object):
     def reset_table(self):
         cursor = self.conn.cursor()
         cursor.execute("DROP TABLE IF EXISTS PAIRS")
+        cursor.execute("DROP TABLE IF EXISTS PARKING_SPACES")
 
     def create_tables(self):
         cursor = self.conn.cursor()
@@ -46,7 +47,7 @@ class MySQLDataBase(object):
         cursor.execute("""CREATE TABLE IF NOT EXISTS PARKING_SPACES
                           (PARKING_GROUND VARCHAR(20) NOT NULL,
                           CELL_ID INT NOT NULL,
-                          TYPE_SPACE VARCHAR(5) NOT NULL,
+                          TYPE_SPACE VARCHAR(8) NOT NULL,
                           COORDINATE LONGTEXT NOT NULL,
                           PRIMARY KEY (PARKING_GROUND, CELL_ID));""")
 
