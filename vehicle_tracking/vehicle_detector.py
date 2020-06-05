@@ -6,6 +6,15 @@ import cv2
 from mrcnn import config
 from mrcnn.model import MaskRCNN
 from vehicle_tracking.vehicle_detection import VehicleDetection
+
+#import torch
+#import torch.backends.cudnn as cudnn
+#from yolact.yolact import Yolact
+#from yolact.utils.functions import SavePath
+#from yolact.data import cfg, set_cfg
+#from yolact.layers.output_utils import postprocess
+#from yolact.utils.augmentations import FastBaseTransform
+
 from code_timing_profiling.profiling import profile
 from code_timing_profiling.timing import timethis
 
@@ -17,23 +26,51 @@ class MaskRCNNConfig(config.Config):
     NUM_CLASSES = 1 + 1
     DETECTION_MIN_CONFIDENCE = 0.0
 
+
 ROOT_DIR = os.path.abspath("../")
 sys.path.append(ROOT_DIR)
 
 
 class VehicleDetector(object):
-    def __init__(self, checkpoint_name="mask_rcnn_cars_and_vehicles_0008.h5", detection_vehicle_thresh=0.4):
+    def __init__(self, checkpoint_name="mask_rcnn_cars_and_vehicles_0008.h5", detection_vehicle_thresh=0.4, model_arch="mask_rcnn", cuda=False):
 
-        PRETRAINED_DIR = os.path.join(ROOT_DIR, "test_object_detection_models")
+        self.model_arch = model_arch
+        self.cuda = cuda
 
-        PRETRAINED_PATH = os.path.join(PRETRAINED_DIR, checkpoint_name)
+        if self.model_arch.lower() == "mask_rcnn":
 
-        LOG_DIR = os.path.join(PRETRAINED_DIR, "logs")
+            PRETRAINED_DIR = os.path.join(ROOT_DIR, "test_object_detection_models")
+
+            PRETRAINED_PATH = os.path.join(PRETRAINED_DIR, checkpoint_name)
+
+            LOG_DIR = os.path.join(PRETRAINED_DIR, "logs")
 
 
-        self.model = MaskRCNN(mode="inference", config=MaskRCNNConfig(), model_dir=LOG_DIR)
+            self.model = MaskRCNN(mode="inference", config=MaskRCNNConfig(), model_dir=LOG_DIR)
 
-        self.model.load_weights(filepath=PRETRAINED_PATH, by_name=True)
+            self.model.load_weights(filepath=PRETRAINED_PATH, by_name=True)
+
+        elif self.model_arch.lower() == "yolact":
+
+            PRETRAINED_PATH = os.path.join("yolact", "weights", checkpoint_name)
+
+            model_path = SavePath.from_str(PRETRAINED_PATH)
+
+            config = model_path.model_name + "_config"
+
+            print("Config not specified. Parsed %s from the file name.\n" % config)
+
+            set_cfg(config)
+
+            self.model = Yolact()
+            self.model.load_weights(PRETRAINED_PATH)
+            if self.cuda:
+                self.model.cuda()
+            self.model.eval()
+            self.model.detect.use_fast_nms = True
+            self.model.detect.use_cross_class_nms = True
+            cfg.mask_proto_debug = False
+            cfg.eval_mask_branch = True
 
         self.detection_vehicle_thresh = detection_vehicle_thresh
 
@@ -46,15 +83,44 @@ class VehicleDetector(object):
         self.positions_mask[cam] = -1 * np.ones(shape=frame.shape[:2], dtype=np.int16)
         self.square_of_mask[cam] = OrderedDict()
 
-        rgb_frame = frame[:, :, ::-1]
+        if self.model_arch.lower() == "mask_rcnn":
 
-        results = self.model.detect([rgb_frame], verbose=0)
+            rgb_frame = frame[:, :, ::-1]
 
-        result = results[0]
+            results = self.model.detect([rgb_frame], verbose=0)
 
-        rois, scores, class_ids, masks = result["rois"], result["scores"], result["class_ids"], result["masks"]
+            result = results[0]
 
-        masks = np.transpose(masks, axes=(2, 0, 1))
+            rois, scores, class_ids, masks = result["rois"], result["scores"], result["class_ids"], result["masks"]
+
+            masks = np.transpose(masks, axes=(2, 0, 1))
+
+        elif self.model_arch.lower() == "yolact":
+            with torch.no_grad():
+                if self.cuda:
+                    cudnn.fastest = True
+                    torch.set_default_tensor_type("torch.cuda.FloatTensor")
+                else:
+                    torch.set_default_tensor_type("torch.FloatTensor")
+
+                if self.cuda:
+                    tensor_frame = torch.from_numpy(frame).cuda().float()
+                else:
+                    tensor_frame = torch.from_numpy(frame).float()
+
+                batch = FastBaseTransform()(tensor_frame.unsqueeze(0))
+                preds = self.model(batch)
+
+                h, w, _ = tensor_frame.shape
+
+                save = cfg.rescore_bbox
+                cfg.rescore_bbox = True
+
+                t = postprocess(preds, w, h, visualize_lincomb=False, crop_masks=True, score_threshold=self.detection_vehicle_thresh)
+
+                cfg.rescore_bbox = save
+
+                class_ids, scores, rois, masks = [x.cpu().numpy() for x in t]
 
         detections_list = []
 
@@ -88,7 +154,7 @@ class VehicleDetector(object):
 #for i in range(len(vehicles)):
 #    color_dict[i] = np.random.randint(100, 256, dtype=np.uint8)
 #mask = detector.positions_mask["cam_1"]
-#mask = np.vectorize(color_dict.get)(mask)
+##mask = np.vectorize(color_dict.get)(mask)
 #mask = np.tile(mask[:, :, np.newaxis], (1, 1, 3)).astype(np.uint8)
 #
 #cv2.imshow("Anh", image)
