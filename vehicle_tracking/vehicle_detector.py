@@ -7,13 +7,13 @@ from mrcnn import config
 from mrcnn.model import MaskRCNN
 from vehicle_tracking.vehicle_detection import VehicleDetection
 
-#import torch
-#import torch.backends.cudnn as cudnn
-#from yolact.yolact import Yolact
-#from yolact.utils.functions import SavePath
-#from yolact.data import cfg, set_cfg
-#from yolact.layers.output_utils import postprocess
-#from yolact.utils.augmentations import FastBaseTransform
+import torch
+import torch.backends.cudnn as cudnn
+from yolact.yolact import Yolact
+from yolact.utils.functions import SavePath
+from yolact.data import cfg, set_cfg
+from yolact.layers.output_utils import postprocess
+from yolact.utils.augmentations import FastBaseTransform
 
 from code_timing_profiling.profiling import profile
 from code_timing_profiling.timing import timethis
@@ -52,7 +52,7 @@ class VehicleDetector(object):
 
         elif self.model_arch.lower() == "yolact":
 
-            PRETRAINED_PATH = os.path.join("yolact", "weights", checkpoint_name)
+            PRETRAINED_PATH = os.path.join(ROOT_DIR, "yolact", "weights", checkpoint_name)
 
             model_path = SavePath.from_str(PRETRAINED_PATH)
 
@@ -123,10 +123,15 @@ class VehicleDetector(object):
                 class_ids, scores, rois, masks = [x.cpu().numpy() for x in t]
 
         detections_list = []
-
+        if self.model_arch == "mask_rcnn":
+            class_id_list = [1]
+        else:
+            class_id_list = [2, 5, 7]
         for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
-            if score >= self.detection_vehicle_thresh and class_id in [1]:
+            if score >= self.detection_vehicle_thresh and class_id in class_id_list:
                 rr, cc = np.where(mask)
+                if len(rr) == 0 or len(cc) == 0:
+                    continue
                 self.positions_mask[cam][rr, cc] = det_id
                 self.square_of_mask[cam][det_id] = rr.shape[0]
                 y_min, y_max = np.min(rr), np.max(rr)
