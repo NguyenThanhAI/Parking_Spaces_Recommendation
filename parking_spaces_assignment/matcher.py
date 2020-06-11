@@ -22,6 +22,8 @@ sys.path.append(ROOT_DIR)
 class Matcher(object):
     def __init__(self,
                  checkpoint_name="mask_rcnn_cars_and_vehicles_0008.h5",
+                 model_arch="mask_rcnn",
+                 cuda=False,
                  parking_ground="parking_ground_SA",
                  active_cams=["cam_2"],
                  shape=(720, 1280),
@@ -37,7 +39,8 @@ class Matcher(object):
         #for cam in self.active_cams:
         #    self.detectors_list.append(VehicleDetector(checkpoint_name=checkpoint_name,
         #                                               cam=cam))
-        self.detector = VehicleDetector(checkpoint_name=checkpoint_name, detection_vehicle_thresh=detection_vehicle_thresh)
+        self.detector = VehicleDetector(checkpoint_name=checkpoint_name, detection_vehicle_thresh=detection_vehicle_thresh,
+                                        model_arch=model_arch, cuda=cuda)
         self.parking_spaces_list, self.outlier_parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
 
     #@profile
