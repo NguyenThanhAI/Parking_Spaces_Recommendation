@@ -219,4 +219,4 @@ class PairsScheduler(object):
         self.database.add_pairs(pairs_info=pairs_info)
 
         self.deleted_pairs.clear()
-        print("Save pairs and clear deleted pairs")
+        #print("Save pairs and clear deleted pairs")

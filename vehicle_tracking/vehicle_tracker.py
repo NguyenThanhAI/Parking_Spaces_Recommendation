@@ -36,6 +36,7 @@ class VehicleTracker:
         self.shape = shape
         self.positions_mask = -1 * np.ones(shape=self.shape, dtype=np.int16)
         self.square_of_mask = OrderedDict() # Number of pixel (square) of each track id mask
+        self.det_id_to_track_id_match_dict = OrderedDict()
 
         self.tentative_tracks = []
         self.active_tracks = []
@@ -54,6 +55,9 @@ class VehicleTracker:
             self.track_num = 0
             #self.results = {}
             #self.im_index = 0
+
+    def reset_match_dict(self):
+        self.det_id_to_track_id_match_dict = OrderedDict()
 
     def tracks_to_inactive(self, tracks):
         self.active_tracks = [t for t in self.active_tracks if t not in tracks]
@@ -180,6 +184,7 @@ class VehicleTracker:
                 t.score = vehicle_detections[c].score
                 t.positions = vehicle_detections[c].positions
                 t.time_stamp.append(time.time())
+                self.det_id_to_track_id_match_dict[vehicle_detections[c].detection_id] = t.track_id
         unmatched_tracks = [self.active_tracks[i] for i in range(len(self.active_tracks)) if i not in matched_track_indx]
         unmatched_detections = [vehicle_detections[j] for j in range(len(vehicle_detections)) if j not in matched_detection_indx] # Huhu, đáng ra phải là matched_detection_indx nhưng viết nhầm thành matched_track_indx, giờ mới phát hiện ra
 
@@ -214,6 +219,7 @@ class VehicleTracker:
                 t.inactive_steps = 0
                 t.birth_time.append(time.time())
                 self.active_tracks.append(t)
+                self.det_id_to_track_id_match_dict[vehicle_detections[c].detection_id] = t.track_id
 
         matched_tracks = [self.inactive_tracks[i] for i in range(len(self.inactive_tracks)) if i in matched_track_idx]
         unmatched_detections = [vehicle_detections[j] for j in range(len(vehicle_detections)) if j not in matched_detection_idx]
@@ -255,6 +261,8 @@ class VehicleTracker:
 
     #@timethis
     def step(self, vehicle_detections):
+        self.reset_match_dict()
+
         for t in self.active_tracks:
             if len(t.traject_pos) > 1:
                 t.traject_pos.append(t.bbox.copy())
