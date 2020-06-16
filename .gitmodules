@@ -1,1 +1,4 @@
 
+[submodule "yolact"]
+	path = yolact
+	url = https://github.com/NguyenThanhAI/yolact.git
