@@ -1,10 +1,14 @@
 import sys
 import os
+from collections import OrderedDict
 from itertools import groupby
 from tqdm import tqdm
 import numpy as np
 import cv2
+from vehicle_tracking.vehicle_detection import VehicleDetection
 from vehicle_tracking.vehicle_detector import VehicleDetector
+from vehicle_tracking.multiprocess_vehicle_detector import MultiProcessVehicleDetector
+from load_videos.videostream import QueuedStream
 from parking_spaces_assignment.parking_space import ParkingSpacesInitializer
 from vehicle_tracking.vehicle_tracker import VehicleTracker
 from parking_spaces_assignment.utils import find_unique_values_and_frequency, write_information
@@ -39,16 +43,25 @@ class Matcher(object):
         #for cam in self.active_cams:
         #    self.detectors_list.append(VehicleDetector(checkpoint_name=checkpoint_name,
         #                                               cam=cam))
-        self.detector = VehicleDetector(checkpoint_name=checkpoint_name, detection_vehicle_thresh=detection_vehicle_thresh,
-                                        model_arch=model_arch, cuda=cuda)
+        self.model_arch = model_arch
+        self.detection_vehicle_thresh = detection_vehicle_thresh
+        self.detector = MultiProcessVehicleDetector(checkpoint_name=checkpoint_name, detection_vehicle_thresh=detection_vehicle_thresh, model_arch=model_arch)
+        self.detector.start()
+        self.detector.warm_up()
+        self.run = False
         self.parking_spaces_list, self.outlier_parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
+        self.positions_mask = OrderedDict()
+        self.square_of_mask = OrderedDict()
+
+    def stop(self):
+        self.run = False
 
     #@profile
-    def frame_match(self, frame, cam="cam_2", ios_threshold=0.1, iov_threshold=0.4, is_tracking=False, tracker=None):
+    def frame_match(self, frame, vehicles_list, cam="cam_2", ios_threshold=0.1, iov_threshold=0.4, is_tracking=False, tracker=None):
 
         assert cam in self.active_cams, "{} must be in {} of Matcher".format(cam, self.active_cams)
 
-        vehicles_list = self.detector(frame=frame, parking_ground=self.parking_ground, cam=cam) # Phát hiện vehicle detection dưới dạng list các instance vehicle_detection
+        #vehicles_list = self.detector(frame=frame, parking_ground=self.parking_ground, cam=cam) # Phát hiện vehicle detection dưới dạng list các instance vehicle_detection
 
         #if is_tracking: # Nếu có sử dụng tracking
         #    assert tracker, "vehicles tracker cannot be None"
@@ -69,8 +82,8 @@ class Matcher(object):
         #    vehicle_masks = tracker.positions_mask
         #    vehicle_square_of_mask = tracker.square_of_mask
         #else:
-        vehicle_masks = self.detector.positions_mask[cam]
-        vehicle_square_of_mask = self.detector.square_of_mask[cam]
+        vehicle_masks = self.positions_mask[cam]
+        vehicle_square_of_mask = self.square_of_mask[cam]
         parking_spaces_in_cam_mask = self.parking_space_initializer.positions_mask[cam]
         # Tạo hai dictionary unified_id_to_vehicle_id_ios và vehicle_id_to_unified_id_ios chứa thông tin ios (intersection over space) {unified_id1: {vehicle_id1: ..., vehicle_id2: ..., ...}, unified_id2: ...}, {vehicle_id1: {unified_id1:..., unified_id2:...,...}, vehicle_id2:...}
         unified_id_to_vehicle_id_ios = {}
@@ -502,13 +515,14 @@ class Matcher(object):
         results_path = os.path.join(save_dir, os.path.basename(image_path).split(".")[0] + ".jpg")
         cv2.imwrite(results_path, frame)
 
-    def video_match(self, video_source, is_savevideo=False, save_dir=None, cam="cam_1", ios_threshold=0.3, iov_threshold=0.4, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=30, tracking_inactive_steps_before_removed=200, pair_inactive_steps_before_removed=1000):
+    def video_match(self, video_source, is_savevideo=False, save_dir=None, cam="cam_1", ios_threshold=0.3, iov_threshold=0.4, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=3, tracking_tentative_steps_before_accepted=3, tracking_inactive_steps_before_removed=10, pair_inactive_steps_before_removed=10):
         if is_tracking:
             tracker = VehicleTracker(detection_vehicle_thresh=0.2,
                                      inactive_steps_before_removed=tracking_inactive_steps_before_removed,
                                      reid_iou_threshold=0.3,
                                      max_traject_steps=50,
                                      parking_ground=self.parking_ground,
+                                     tentative_steps_before_accepted=tracking_tentative_steps_before_accepted,
                                      cam=cam)
         else:
             tracker = None
@@ -523,11 +537,11 @@ class Matcher(object):
         cap = cv2.VideoCapture(video_source)
 
         length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         if is_savevideo:
             assert save_dir, "When save video, save_dir cannot be None"
-            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             fps = int(cap.get(cv2.CAP_PROP_FPS))
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             if video_source.endswith((".mp4", ".avi")):
@@ -539,40 +553,84 @@ class Matcher(object):
                 os.makedirs(save_dir, exist_ok=True)
             output = cv2.VideoWriter(os.path.join(save_dir, video_name), fourcc, fps, (width, height))
 
-        stopped = False
+        cap.release()
 
-        for i in tqdm(range(length)):
-            if not stopped:
-                ret, frame = cap.read()
+        stream = QueuedStream(video_source)
+        stream.start()
 
-                if not ret:
-                    stopped = True
-                    continue
+        if not stream.isOpened():
+            print("Can not open video: {}".format(video_source))
+            self.detector.stop()
+            raise StopIteration
 
-                unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list = self.frame_match(frame=frame,
-                                                                                                                                 cam=cam,
-                                                                                                                                 ios_threshold=ios_threshold,
-                                                                                                                                 iov_threshold=iov_threshold,
-                                                                                                                                 is_tracking=is_tracking,
-                                                                                                                                 tracker=tracker)
-                pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, num_frames=i, frame_stride=1, fps=fps)
-                pair_scheduler.verify()
-                pairs = pair_scheduler.get_pairs_instances()
-                #print(vehicle_id_to_vehicle.keys())
-                #print(uid_veh_id_match_list)
-                #for pair in pairs:
-                #    print("pair:", pair)
-                #for uid, uid_pairs in groupby(dict(sorted(pairs.items(), key=lambda y: y[1].unified_id)).items(), key=lambda x: x[1].unified_id):
-                #    #for uid_pair in uid_pairs:
-                #    print(uid, len(list(uid_pairs)))
+        self.run = True
 
-                if is_savevideo:
-                    output.write(frame)
-                if is_showframe:
-                    cv2.imshow("", frame)
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    stopped = True
+        while self.run:
+            ret, frame, frame_id, time_stamp = stream.read()
+
+
+            if not ret:
+                self.run = False
+                break
+
+            self.positions_mask[cam] = -1 * np.ones(shape=[height, width], dtype=np.int16)
+            self.square_of_mask[cam] = OrderedDict()
+
+            self.detector.put_frame(frame_id, frame)
+
+            rois, scores, class_ids, masks = self.detector.get_result()
+
+            detections_list = []
+
+            if self.model_arch == "mask_rcnn":
+                class_id_list = [1]
             else:
+                class_id_list = [2, 5, 7]
+            for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
+                if score >= self.detection_vehicle_thresh and class_id in class_id_list:
+                    rr, cc = np.where(mask)
+                    if len(rr) == 0 or len(cc) == 0:
+                        continue
+                    self.positions_mask[cam][rr, cc] = det_id
+                    self.square_of_mask[cam][det_id] = rr.shape[0]
+                    y_min, y_max = np.min(rr), np.max(rr)
+                    x_min, x_max = np.min(cc), np.max(cc)
+                    bbox = [x_min, y_min, x_max, y_max]
+                    positions = np.array(
+                        [rr, cc])  # Tập hợp các điểm [y1, y2, ..., yn], [x1, x2, ..., xn] nằm trong vehicle mask
+                    if self.parking_ground == "parking_ground_SA" and cam == "cam_1":  # Thêm điều kiện nếu là sân đỗ SA và camera là camera 1 thêm điều kiện để vùng nằm trên đường thẳng 9x + 10y - 5760 (góc trên bên trái màn hình), các xe được phát hiện trong vùng này sẽ bị bỏ qua
+                        if 81 * x_max + 96 * y_max - 62208 >= 0:
+                            detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, self.parking_ground, cam))
+                        else:
+                            self.positions_mask[cam][rr, cc] = -1
+                    else:
+                        detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, self.parking_ground, cam))
+
+            unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list = self.frame_match(frame=frame,
+                                                                                                                             vehicles_list=detections_list,
+                                                                                                                             cam=cam,
+                                                                                                                             ios_threshold=ios_threshold,
+                                                                                                                             iov_threshold=iov_threshold,
+                                                                                                                             is_tracking=is_tracking,
+                                                                                                                             tracker=tracker)
+            pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, num_frames=frame_id, frame_stride=1, fps=fps)
+            pair_scheduler.verify()
+            pairs = pair_scheduler.get_pairs_instances()
+            #print(vehicle_id_to_vehicle.keys())
+            #print(uid_veh_id_match_list)
+            #for pair in pairs:
+            #    print("pair:", pair)
+            #for uid, uid_pairs in groupby(dict(sorted(pairs.items(), key=lambda y: y[1].unified_id)).items(), key=lambda x: x[1].unified_id):
+            #    #for uid_pair in uid_pairs:
+            #    print(uid, len(list(uid_pairs)))
+            if is_savevideo:
+                output.write(frame)
+            if is_showframe:
+                cv2.imshow("", frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                self.run = False
+                self.detector.stop()
+                stream.stop()
                 cv2.destroyAllWindows()
                 break
 

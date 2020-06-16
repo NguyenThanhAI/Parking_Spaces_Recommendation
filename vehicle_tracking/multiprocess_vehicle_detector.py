@@ -159,7 +159,7 @@ class MultiProcessVehicleDetector(object):
             self.in_queue.get(False)
         except Exception:
             pass
-        self.in_queue.put(frame_id, img)
+        self.in_queue.put((frame_id, img))
 
     def get_result(self, block=True):
         if block:
