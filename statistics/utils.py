@@ -85,7 +85,7 @@ def find_union_of_time_intervals(intervals: list, end_time=datetime.datetime(yea
 
 
 def create_gantt_chart_plot(records: list, end_time: datetime.datetime=datetime.datetime(year=2019, month=11, day=30, hour=10, minute=10, second=0)):
-    df = list(map(lambda x: dict(Task="Cell_id " + str(x[0]), Start=x[7].strftime("%Y-%m-%d %H:%M:%S"), Finish=x[8].strftime("%Y-%m-%d %H:%M:%S") if x[8] is not None else end_time, Type_Space="small"), sorted(records, key=lambda x: x[0])))
+    df = list(map(lambda x: dict(Task="Cell_id " + str(x[0]), Start=x[7].strftime("%Y-%m-%d %H:%M:%S"), Finish=x[8].strftime("%Y-%m-%d %H:%M:%S") if x[8] is not None else end_time, Type_Space=x[3]), sorted(records, key=lambda x: x[0])))
 
     colors = dict(small="rgb(0, 0, 255",
                   big="rgb(255, 0, 0")
