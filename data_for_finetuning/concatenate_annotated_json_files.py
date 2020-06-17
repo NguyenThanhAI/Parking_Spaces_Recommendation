@@ -65,15 +65,20 @@ if __name__ == '__main__':
         nrof_previous_images = len(accumulated_images)
         nrof_previous_annotations = len(accumulated_annotations)
 
+        img_id = 0
+        anno_id = 0
+
         image_id_dict = {} # Convert old image id to new image id
 
         for image_id, items in groupby(sorted(annotations, key=itemgetter("image_id")), key=itemgetter("image_id")):
-            print("image_id: {}".format(image_id))
-            image_id_dict[image_id] = image_id + nrof_previous_images
+            print("member: {}, image_id: {}".format(member, image_id))
+            image_id_dict[image_id] = img_id + nrof_previous_images
             for item in items:
-                print("image id: {}, item id: {}".format(item["image_id"], item["id"]))
-                item["image_id"] += nrof_previous_images
-                item["id"] += nrof_previous_annotations
+                print("member: {}, image id: {}, item id: {}, new image id: {}, new item id: {}".format(member, item["image_id"], item["id"], img_id + nrof_previous_images, anno_id + nrof_previous_annotations))
+                item["image_id"] = img_id + nrof_previous_images
+                item["id"] = anno_id + nrof_previous_annotations
+                anno_id += 1
+            img_id += 1
 
         images = list(filter(lambda x: x["id"] in list(image_id_dict.keys()), images))
 
