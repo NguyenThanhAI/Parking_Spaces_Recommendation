@@ -6,7 +6,7 @@ from statistics.utils import convert_bytes_to_int, get_records_grouped_by_unifie
     find_union_of_time_intervals, get_heatmap, create_gantt_chart_plot, get_vehicle_id_infos
 
 
-sqlite_database = SQLiteDataBase(database_dir="../database", database_file="2019-11-24.db")
+sqlite_database = SQLiteDataBase(database_dir="../database", database_file="2019-09-18.db")
 records = sqlite_database.get_all_pairs()
 
 records = convert_bytes_to_int(records)
@@ -21,7 +21,7 @@ info_dicts = get_records_grouped_by_vehicle_id(records)
 vehicles_info = get_vehicle_id_infos(records)
 for k, v in vehicles_info.items():
     if not v["End_time"]:
-        v["End_time"] = datetime.datetime(year=2019, month=11, day=24, hour=15, minute=2, second=0)
+        v["End_time"] = datetime.datetime(year=2019, month=9, day=18, hour=13, minute=3, second=0)
 print("Vehicles_info:", vehicles_info)
 vehicles_df = pd.DataFrame.from_dict(vehicles_info, orient="index")
 #print(vehicles_df)
@@ -31,10 +31,10 @@ vehicles_df.to_csv("vehicle_info.csv")
 #intervals = [(datetime.datetime(2019, 11, 30, 10, 0, 1), datetime.datetime(2019, 11, 30, 10, 0, 11)), (datetime.datetime(2019, 11, 30, 10, 0, 40), None), (datetime.datetime(2019, 11, 30, 10, 0, 11), None), (datetime.datetime(2019, 11, 30, 10, 0, 11), None)]
 #print(find_union_of_time_intervals(intervals, end_time=100))
 
-heatmap = get_heatmap(records, end_time=datetime.datetime(year=2019, month=11, day=24, hour=15, minute=2, second=0))
+heatmap = get_heatmap(records, end_time=datetime.datetime(year=2019, month=9, day=18, hour=13, minute=3, second=0))
 heatmap = {k: np.ceil(v) for k, v in heatmap.items()}
 print(heatmap)
 heatmap_df = pd.DataFrame.from_dict(heatmap, orient="index", columns=["heatmap"])
 heatmap_df.to_csv("cells_heatmap.csv")
 
-create_gantt_chart_plot(records, end_time=datetime.datetime(year=2019, month=11, day=24, hour=15, minute=2, second=0))
+create_gantt_chart_plot(records, end_time=datetime.datetime(year=2019, month=9, day=18, hour=13, minute=3, second=0))
