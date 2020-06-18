@@ -28,11 +28,13 @@ class CarsAndVehiclesConfig(Config):
 
     NAME = "cars_and_vehicles"
 
+    GPU_COUNT = 2
+
     IMAGES_PER_GPU = 2
 
-    NUM_CLASSES = 1 + 1 # Background + car
+    NUM_CLASSES = 1 + 4 # Background + car
 
-    STEPS_PER_EPOCH = 2000
+    STEPS_PER_EPOCH = 500
 
     DETECTION_MIN_CONFIDENCE = 0.6
 
@@ -265,13 +267,13 @@ def train(model, args):
     dataset_train = CarsAndVehiclesDataset()
     dataset_train.load_carsandvehicles(dataset_dir=args.dataset,
                                        subset="train",
-                                       json_label_file_path="Label_car.json")
+                                       json_label_file_path=args.train_json_label_file_path)
     dataset_train.prepare()
 
     dataset_val = CarsAndVehiclesDataset()
     dataset_val.load_carsandvehicles(dataset_dir=args.dataset,
                                      subset="val",
-                                     json_label_file_path="Label_car.json")
+                                     json_label_file_path=args.test_json_label_file_path)
     dataset_val.prepare()
 
     # Image Augmentation
@@ -283,7 +285,7 @@ def train(model, args):
     model.train(train_dataset=dataset_train,
                 val_dataset=dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=60,
+                epochs=10,
                 layers="heads",
                 augmentation=augmentation)
 
@@ -293,7 +295,7 @@ def train(model, args):
     model.train(train_dataset=dataset_train,
                 val_dataset=dataset_val,
                 learning_rate=config.LEARNING_RATE / 2,
-                epochs=60,
+                epochs=20,
                 layers="5+",
                 augmentation=augmentation)
 
@@ -304,7 +306,7 @@ def train(model, args):
     model.train(train_dataset=dataset_train,
                 val_dataset=dataset_val,
                 learning_rate=config.LEARNING_RATE / 4,
-                epochs=60,
+                epochs=30,
                 layers="4+",
                 augmentation=augmentation)
 
@@ -314,7 +316,7 @@ def train(model, args):
     model.train(train_dataset=dataset_train,
                 val_dataset=dataset_val,
                 learning_rate=config.LEARNING_RATE / 4,
-                epochs=60,
+                epochs=40,
                 layers="3+",
                 augmentation=augmentation)
 
@@ -324,7 +326,7 @@ def train(model, args):
     model.train(train_dataset=dataset_train,
                 val_dataset=dataset_val,
                 learning_rate=config.LEARNING_RATE / 8,
-                epochs=60,
+                epochs=50,
                 layers="all",
                 augmentation=augmentation)
 
@@ -333,7 +335,7 @@ def evaluate(model, args):
     dataset_val = CarsAndVehiclesDataset()
     coco = dataset_val.load_carsandvehicles(dataset_dir=args.dataset,
                                             subset="val",
-                                            json_label_file_path="Label_car.json",
+                                            json_label_file_path=args.test_json_label_file_path,
                                             return_coco=True)
     dataset_val.prepare()
     print("Running COCO evaluation on {} images".format(args.limit))
@@ -364,7 +366,12 @@ if __name__ == '__main__':
                         required=True,
                         metavar="/path/to/mask_rcnn_coco.h5",
                         help="Pretrained weights name")
-    parser.add_argument("--json_label_file_path",
+    parser.add_argument("--train_json_label_file_path",
+                        required=False,
+                        default="Label_car.json",
+                        metavar="/path/to/label/file/",
+                        help="Path to json label file")
+    parser.add_argument("--test_json_label_file_path",
                         required=False,
                         default="Label_car.json",
                         metavar="/path/to/label/file/",
