@@ -25,7 +25,7 @@ class MaskRCNNConfig(config.Config):
     NAME = "coco_pretrained_model_config"
     IMAGES_PER_GPU = 1
     GPU_COUNT = 1
-    NUM_CLASSES = 1 + 1
+    NUM_CLASSES = 1 + 4
     DETECTION_MIN_CONFIDENCE = 0.0
 
 
