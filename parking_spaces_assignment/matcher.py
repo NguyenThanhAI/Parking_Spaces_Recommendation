@@ -532,10 +532,12 @@ class Matcher(object):
 
         if video_source_list[0].endswith((".mp4", ".avi")):
             start_time = get_start_time_from_video_name(source=video_source_list[0])
+            use_time_stamp = False
         else:
             start_time = datetime.now()
+            use_time_stamp = True
 
-        pair_scheduler = PairsScheduler(time=start_time, tentative_steps_before_accepted=tentative_steps_before_accepted, inactive_steps_before_removed=pair_inactive_steps_before_removed)
+        pair_scheduler = PairsScheduler(time=start_time, use_time_stamp=use_time_stamp, tentative_steps_before_accepted=tentative_steps_before_accepted, inactive_steps_before_removed=pair_inactive_steps_before_removed)
 
         output = {}
         for video_source, cam in zip(video_source_list, cam_list):
@@ -624,7 +626,7 @@ class Matcher(object):
                                                                                                                                  iov_threshold=iov_threshold,
                                                                                                                                  is_tracking=is_tracking,
                                                                                                                                  tracker=tracker_dict[cam_detect])
-                pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, num_frames=frame_id, frame_stride=1, fps=fps)
+                pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, num_frames=frame_id, time_stamp=time_stamp, frame_stride=1, fps=fps)
                 pair_scheduler.verify()
                 pairs = pair_scheduler.get_pairs_instances()
                 #print(vehicle_id_to_vehicle.keys())

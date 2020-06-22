@@ -1,4 +1,5 @@
 import os
+from collections import deque
 import pickle
 from datetime import datetime, timedelta
 from load_videos.videos_utils import get_time_amount_from_frames_number
@@ -39,6 +40,7 @@ class Pair(object):
         self.parking_ground = parking_ground
         self.cam = cam
         self.birth_time = birth_time
+        self.time_stamp_traject = deque([birth_time], maxlen=1)
         self.inactive_steps_before_removed = inactive_steps_before_removed
         self.end_time = None
         self.inactive_steps = 0
@@ -52,9 +54,10 @@ class Pair(object):
 
 class PairsScheduler(object):
 
-    def __init__(self, time, database_dir="../database", database_file=None, use_mysql=False, host="localhost", user="Thanh", passwd="Aimesoft", reset_table=True, save_to_db_period=2, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
+    def __init__(self, time, use_time_stamp, database_dir="../database", database_file=None, use_mysql=False, host="localhost", user="Thanh", passwd="Aimesoft", reset_table=True, save_to_db_period=2, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
         self.start_time = time
         self.time = time
+        self.use_time_stamp = use_time_stamp
         if not database_file:
             if not use_mysql:
                 database_file = self.start_time.strftime("%Y-%m-%d") + ".db"
@@ -93,8 +96,11 @@ class PairsScheduler(object):
         return tentative_dict, active_dict, inactive_dict, deleted_dict
 
     #@timethis
-    def step(self, uid_veh_list, num_frames, frame_stride=1, fps=24):
-        self.update_time_from_frame_numbers(num_frames, frame_stride, fps) # Cập nhật self.time
+    def step(self, uid_veh_list, num_frames, time_stamp, frame_stride=1, fps=24):
+        if not self.use_time_stamp:
+            self.update_time_from_frame_numbers(num_frames, frame_stride, fps) # Cập nhật self.time
+        else:
+            self.time = time_stamp
         tentative_dict, active_dict, inactive_dict, deleted_dict = self.get_list_uid_veh_dict()
         inactive_to_active = {} # Những pair đang ở inactive list và ở bước này xuất hiện trong match pair giữa unified id và vehicle id
         active_this_step = {} # Những pair đang ở trong active list và bước này cũng xuất hiện trong match pair giữa unified id và vehicle id
@@ -112,11 +118,13 @@ class PairsScheduler(object):
             if uid_veh_id in active_dict: # Nếu uid_veh_id nằm trong active_dict nghĩa là cặp này đang active và tiếp tục bước này vẫn active
                 #existed = True
                 active_this_step[uid_veh_id] = active_dict[uid_veh_id]
+                active_this_step[uid_veh_id].time_stamp_traject.append(self.time)
                 continue
 
             if uid_veh_id in inactive_dict: # Nếu uid_veh_id nằm trong inactive_dict nghĩa là cặp này bước trước đang inactive bước này sẽ được active
                 inactive_to_active[uid_veh_id] = inactive_dict[uid_veh_id]
                 inactive_to_active[uid_veh_id].inactive_steps = 0 # Những cặp ở trong inactive bước trước, bước này thành active, số bước inactive được đưa về 0
+                inactive_to_active[uid_veh_id].time_stamp_traject.append(self.time)
                 continue
 
             if uid_veh_id in deleted_dict:
@@ -143,11 +151,14 @@ class PairsScheduler(object):
             assert inactive_dict[uid_veh_id].unified_id == uid_veh_id[0] and inactive_dict[uid_veh_id].vehicle_id == uid_veh_id[1] and inactive_dict[uid_veh_id].class_id == uid_veh_id[2] and inactive_dict[uid_veh_id].type_space == uid_veh_id[3] and inactive_dict[uid_veh_id].parking_ground == uid_veh_id[4] and inactive_dict[uid_veh_id].cam == uid_veh_id[5] # Gọi pair instance ứng với uid_veh_id
             inactive_dict[uid_veh_id].inactive_steps += 1 # Tăng inactive step liên tiếp thêm 1
             if inactive_dict[uid_veh_id].inactive_steps > inactive_dict[uid_veh_id].inactive_steps_before_removed: # Nếu số bước liên tiếp là inactive của cặp này lớn hơn ngưỡng cho phép
-                num_seconds_inactive = get_time_amount_from_frames_number(num_frames=inactive_dict[uid_veh_id].inactive_steps, # Tính thời gian kể từ khi trở thành cặp inactive
-                                                                          frame_stride=frame_stride,
-                                                                          fps=fps)
-                time = self.time + timedelta(seconds=-num_seconds_inactive) # Thời gian trở thành căp inactive
-                inactive_dict[uid_veh_id].delete(time=time) # Tạo period là thời gian khởi tạo pair và thời điểm sang inactive??????
+                if not self.use_time_stamp:
+                    num_seconds_inactive = get_time_amount_from_frames_number(num_frames=inactive_dict[uid_veh_id].inactive_steps, # Tính thời gian kể từ khi trở thành cặp inactive
+                                                                              frame_stride=frame_stride,
+                                                                              fps=fps)
+                    time = self.time + timedelta(seconds=-num_seconds_inactive) # Thời gian trở thành căp inactive
+                    inactive_dict[uid_veh_id].delete(time=time) # Tạo period là thời gian khởi tạo pair và thời điểm sang inactive??????
+                else:
+                    inactive_dict[uid_veh_id].delete(time=inactive_to_active[uid_veh_id].time_stamp_traject[-1])
                 inactive_to_deleted[uid_veh_id] = inactive_dict[uid_veh_id] # List các cặp inactive thành deleted thêm phần tử này
 
         inactive_dict = dict(filter(lambda x: x[0] not in inactive_to_deleted, inactive_dict.items())) # Cập nhật lại list inactive bằng cách list inactive loại bỏ đi các inactive thành deleted
