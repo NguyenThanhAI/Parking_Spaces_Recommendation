@@ -3,6 +3,7 @@ import os
 from collections import OrderedDict
 from ctypes import c_bool
 from multiprocessing import Process, Queue, Value
+from datetime import datetime
 import numpy as np
 import cv2
 from mrcnn import config
@@ -88,7 +89,7 @@ class MultiProcessVehicleDetector(object):
 
         if model_arch.lower() == "mask_rcnn":
             while not stopped.value:
-                fid, frame = in_queue.get()
+                fid, frame, time_stamp, cam = in_queue.get()
                 if fid is None:
                     break
 
@@ -108,11 +109,11 @@ class MultiProcessVehicleDetector(object):
                 except:
                     pass
 
-                out_queue.put((rois, scores, class_ids, masks))
+                out_queue.put((rois, scores, class_ids, masks, fid, time_stamp, cam))
         elif model_arch.lower() == "yolact":
             with torch.no_grad():
                 while not stopped.value:
-                    fid, frame = in_queue.get()
+                    fid, frame, time_stamp, cam = in_queue.get()
                     if fid is None:
                         break
 
@@ -138,7 +139,7 @@ class MultiProcessVehicleDetector(object):
                     except:
                         pass
 
-                    out_queue.put((rois, scores, class_ids, masks))
+                    out_queue.put((rois, scores, class_ids, masks, fid, time_stamp, cam))
 
     def start(self):
         self.process = Process(target=MultiProcessVehicleDetector._run_function,
@@ -154,12 +155,12 @@ class MultiProcessVehicleDetector(object):
             pass
         self.process.join()
 
-    def put_frame(self, frame_id, img):
+    def put_frame(self, frame_id, img, time_stamp, cam):
         try:
             self.in_queue.get(False)
         except Exception:
             pass
-        self.in_queue.put((frame_id, img))
+        self.in_queue.put((frame_id, img, time_stamp, cam))
 
     def get_result(self, block=True):
         if block:
@@ -173,4 +174,4 @@ class MultiProcessVehicleDetector(object):
 
     def warm_up(self):
         img = np.zeros((720, 1280, 3), np.uint8)
-        self.put_frame(-1, img)
+        self.put_frame(-1, img, datetime.now(), "cam_1")

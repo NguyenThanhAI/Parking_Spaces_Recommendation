@@ -8,8 +8,9 @@ import cv2
 
 class QueuedStream:
 
-    def __init__(self, uri, drop=True):
+    def __init__(self, uri, cam, drop=True):
         self.uri = uri
+        self.cam = cam
         self.queue = queue.Queue(maxsize=1)
         self.lock_started = threading.Lock()
         self.fps = 25
@@ -28,12 +29,12 @@ class QueuedStream:
 
     def read(self):
         if not self.stopped:
-            frame, frame_id, time_stamp = self.queue.get(True)
+            frame, frame_id, time_stamp, cam = self.queue.get(True)
             if frame is None:
-                return (False, None, None, None)
-            return (True, frame, frame_id, time_stamp)
+                return (False, None, None, None, None)
+            return (True, frame, frame_id, time_stamp, cam)
         else:
-            return (False, None, None, None)
+            return (False, None, None, None, None)
 
     def stop(self):
         if not self.stopped:
@@ -108,9 +109,9 @@ class QueuedStream:
                     self.queue.get(False)
                 except Exception:
                     pass
-                self.queue.put((frame, frame_id, time_stamp))
+                self.queue.put((frame, frame_id, time_stamp, self.cam))
             else:  # not drop
-                self.queue.put((frame, frame_id, time_stamp))
+                self.queue.put((frame, frame_id, time_stamp, self.cam))
 
             if frame is None:
                 stream.release()
@@ -139,13 +140,14 @@ class QueuedStream:
 #if __name__ == '__main__':
 #
 #    video_path = r"C:\Users\Thanh\Downloads\2019-11-24_14-00-00_cam_1.mp4"
-#    stream = QueuedStream(video_path)
+#    stream = QueuedStream(video_path, cam="cam_1")
 #    stream.start()
 #
 #    while True:
-#        ret, frame, frame_id, time_stamp = stream.read()
+#        ret, frame, frame_id, time_stamp, cam = stream.read()
 #        if time_stamp:
 #            print("{}".format(time_stamp.strftime("%m/%d/%Y, %H:%M:%S")))
+#        print("{}, {}".format(frame_id, cam))
 #        if ret is False:
 #            print('Videos is ended')
 #            # self.run = False
