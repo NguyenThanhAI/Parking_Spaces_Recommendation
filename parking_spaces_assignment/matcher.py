@@ -537,7 +537,7 @@ class Matcher(object):
             start_time = datetime.now()
             use_time_stamp = True
 
-        pair_scheduler = PairsScheduler(time=start_time, use_time_stamp=use_time_stamp, tentative_steps_before_accepted=tentative_steps_before_accepted, inactive_steps_before_removed=pair_inactive_steps_before_removed)
+        pair_scheduler = PairsScheduler(time=start_time, use_time_stamp=use_time_stamp, active_cams=cam_list, tentative_steps_before_accepted=tentative_steps_before_accepted, inactive_steps_before_removed=pair_inactive_steps_before_removed)
 
         output = {}
         for video_source, cam in zip(video_source_list, cam_list):
@@ -580,11 +580,12 @@ class Matcher(object):
 
             for cam in cam_list:
                 ret, frame, frame_id, time_stamp, cam_stream = stream_dict[cam].read()
-                assert cam == cam_stream, "Cam of stream must be cam of this loop"
 
                 if not ret:
                     self.run = False
                     break
+
+                assert cam == cam_stream, "Cam of stream must be cam of this loop, cam {}, cam_stream {}".format(cam, cam_stream)
 
                 self.detector.put_frame(frame_id, frame, time_stamp, cam_stream)
 
@@ -626,9 +627,9 @@ class Matcher(object):
                                                                                                                                  iov_threshold=iov_threshold,
                                                                                                                                  is_tracking=is_tracking,
                                                                                                                                  tracker=tracker_dict[cam_detect])
-                pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, num_frames=frame_id, time_stamp=time_stamp, frame_stride=1, fps=fps)
-                pair_scheduler.verify()
-                pairs = pair_scheduler.get_pairs_instances()
+                pair_scheduler.step(uid_veh_list=uid_veh_id_match_list, num_frames=frame_id, time_stamp=time_stamp, cam=cam_detect, frame_stride=1, fps=fps)
+                pair_scheduler.verify(cam=cam_detect)
+                pairs = pair_scheduler.get_pairs_instances(cam=cam_detect)
                 #print(vehicle_id_to_vehicle.keys())
                 #print(uid_veh_id_match_list)
                 #for pair in pairs:
@@ -648,7 +649,8 @@ class Matcher(object):
                     cv2.destroyAllWindows()
                     break
 
-        pair_scheduler.save_pairs_to_db()
+        for cam in cam_list:
+            pair_scheduler.save_pairs_to_db(cam=cam)
         if is_savevideo:
             for cam in cam_list:
                 output[cam].release()
