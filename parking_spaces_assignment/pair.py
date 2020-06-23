@@ -1,5 +1,6 @@
 import os
 from collections import deque
+from collections import OrderedDict
 import pickle
 from datetime import datetime, timedelta
 from load_videos.videos_utils import get_time_amount_from_frames_number
@@ -54,7 +55,7 @@ class Pair(object):
 
 class PairsScheduler(object):
 
-    def __init__(self, time, use_time_stamp, database_dir="../database", database_file=None, use_mysql=False, host="localhost", user="Thanh", passwd="Aimesoft", reset_table=True, save_to_db_period=2, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
+    def __init__(self, time, use_time_stamp, active_cams, database_dir="../database", database_file=None, use_mysql=False, host="localhost", user="Thanh", passwd="Aimesoft", reset_table=True, save_to_db_period=2, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
         self.start_time = time
         self.time = time
         self.use_time_stamp = use_time_stamp
@@ -73,10 +74,15 @@ class PairsScheduler(object):
         self.save_to_db_period = save_to_db_period
         self.tentative_steps_before_accepted = tentative_steps_before_accepted
         self.inactive_steps_before_removed = inactive_steps_before_removed
-        self.tentative_pairs = {}
-        self.active_pairs = {} # Only pair of unified_id and vehicle_id
-        self.inactive_pairs = {}
-        self.deleted_pairs = {}
+        self.tentative_pairs = OrderedDict() # Huhu, nếu là OrderedDict() sẽ bị lỗi KeyError
+        self.active_pairs = OrderedDict() # Only pair of unified_id and vehicle_id
+        self.inactive_pairs = OrderedDict()
+        self.deleted_pairs = OrderedDict()
+        for cam in active_cams:
+            self.tentative_pairs[cam] = {}
+            self.active_pairs[cam] = {}
+            self.inactive_pairs[cam] = {}
+            self.deleted_pairs[cam] = {}
 
     def update_time_from_frame_numbers(self, num_frames, frame_stride=1, fps=24):
         num_seconds = get_time_amount_from_frames_number(num_frames=num_frames, frame_stride=frame_stride, fps=fps)
@@ -85,23 +91,23 @@ class PairsScheduler(object):
     def update_time_from_system(self):
         self.time = datetime.now()
 
-    def get_list_uid_veh_dict(self):
+    def get_list_uid_veh_dict(self, cam):
         #active_list = list(map(lambda x: (x.unified_id, x.vehicle_id), self.active_pairs))
         #inactive_list = list(map(lambda x: (x.unified_id, x.vehicle_id), self.inactive_pairs))
-        tentative_dict = self.tentative_pairs
-        active_dict = self.active_pairs
-        inactive_dict = self.inactive_pairs
-        deleted_dict = self.deleted_pairs
+        tentative_dict = self.tentative_pairs[cam]
+        active_dict = self.active_pairs[cam]
+        inactive_dict = self.inactive_pairs[cam]
+        deleted_dict = self.deleted_pairs[cam]
 
         return tentative_dict, active_dict, inactive_dict, deleted_dict
 
     #@timethis
-    def step(self, uid_veh_list, num_frames, time_stamp, frame_stride=1, fps=24):
+    def step(self, uid_veh_list, num_frames, time_stamp, cam, frame_stride=1, fps=24):
         if not self.use_time_stamp:
             self.update_time_from_frame_numbers(num_frames, frame_stride, fps) # Cập nhật self.time
         else:
             self.time = time_stamp
-        tentative_dict, active_dict, inactive_dict, deleted_dict = self.get_list_uid_veh_dict()
+        tentative_dict, active_dict, inactive_dict, deleted_dict = self.get_list_uid_veh_dict(cam=cam)
         inactive_to_active = {} # Những pair đang ở inactive list và ở bước này xuất hiện trong match pair giữa unified id và vehicle id
         active_this_step = {} # Những pair đang ở trong active list và bước này cũng xuất hiện trong match pair giữa unified id và vehicle id
         #active_to_inactive = [] # Những pair đang ở trong active list và bước này không xuất hiện trong match pair giữa unified id và vehicle id
@@ -164,15 +170,15 @@ class PairsScheduler(object):
         inactive_dict = dict(filter(lambda x: x[0] not in inactive_to_deleted, inactive_dict.items())) # Cập nhật lại list inactive bằng cách list inactive loại bỏ đi các inactive thành deleted
         deleted_dict.update(inactive_to_deleted) # Cập list các cặp bị deleted bằng cách cộng thêm các cặp ở trong list các cặp từ inactive thành deleted
 
-        self.tentative_pairs = tentative_dict
-        self.active_pairs = active_dict # Cập nhật lại self.active_pairs
-        self.inactive_pairs = inactive_dict # Cập nhật lại self.inactive_pairs
-        self.deleted_pairs = deleted_dict # Cập nhật lại self.deleted_pairs
+        self.tentative_pairs[cam] = tentative_dict
+        self.active_pairs[cam] = active_dict # Cập nhật lại self.active_pairs
+        self.inactive_pairs[cam] = inactive_dict # Cập nhật lại self.inactive_pairs
+        self.deleted_pairs[cam] = deleted_dict # Cập nhật lại self.deleted_pairs
 
         running_time = int((self.time - self.start_time).total_seconds())
         #print(running_time, running_time % self.save_to_db_period)
         if running_time > 0 and (running_time % self.save_to_db_period) == 0:
-            self.save_pairs_to_db()
+            self.save_pairs_to_db(cam=cam)
 
     def reset(self, time):
         self.start_time = time
@@ -182,23 +188,23 @@ class PairsScheduler(object):
         self.inactive_pairs.clear()
         self.deleted_pairs.clear()
 
-    def verify(self):
+    def verify(self, cam):
         # Kiểm tra các active_pairs, inactive_pairs, deleted_pairs phải không có phần tử chung
         # Hợp của ba list trên phải đủ trong self.pairs
-        assert len(list(set(self.active_pairs.keys()))) == len(list(self.active_pairs.keys()))
-        assert len(list(set(self.inactive_pairs.keys()))) == len(list(self.inactive_pairs.keys()))
-        assert len(list(set(self.tentative_pairs.keys()))) == len(list(self.tentative_pairs.keys()))
+        assert len(list(set(self.active_pairs[cam].keys()))) == len(list(self.active_pairs[cam].keys()))
+        assert len(list(set(self.inactive_pairs[cam].keys()))) == len(list(self.inactive_pairs[cam].keys()))
+        assert len(list(set(self.tentative_pairs[cam].keys()))) == len(list(self.tentative_pairs[cam].keys()))
 
-        inter = set(self.active_pairs.keys()).intersection(self.inactive_pairs.keys())
-        inter = list(inter.intersection(self.tentative_pairs.keys()))
+        inter = set(self.active_pairs[cam].keys()).intersection(self.inactive_pairs[cam].keys())
+        inter = list(inter.intersection(self.tentative_pairs[cam].keys()))
         assert len(inter) == 0
 
-        assert len(list(set(self.active_pairs.keys()).intersection(self.inactive_pairs.keys()))) == 0, print(self.active_pairs.keys(), self.inactive_pairs.keys())
-        assert len(list(set(self.active_pairs.keys()).intersection(self.tentative_pairs.keys()))) == 0, print(self.active_pairs.keys(), self.tentative_pairs.keys())
-        assert len(list(set(self.inactive_pairs.keys()).intersection(self.tentative_pairs.keys()))) == 0, print(self.inactive_pairs.keys(), self.tentative_pairs.keys())
+        assert len(list(set(self.active_pairs[cam].keys()).intersection(self.inactive_pairs[cam].keys()))) == 0, print(cam, self.active_pairs[cam].keys(), self.inactive_pairs[cam].keys())
+        assert len(list(set(self.active_pairs[cam].keys()).intersection(self.tentative_pairs[cam].keys()))) == 0, print(cam, self.active_pairs[cam].keys(), self.tentative_pairs[cam].keys())
+        assert len(list(set(self.inactive_pairs[cam].keys()).intersection(self.tentative_pairs[cam].keys()))) == 0, print(cam, self.inactive_pairs[cam].keys(), self.tentative_pairs[cam].keys())
 
-        union = {**self.active_pairs, **self.inactive_pairs, **self.tentative_pairs}
-        assert len(union) == (len(self.active_pairs.keys()) + len(self.inactive_pairs.keys()) + len(self.tentative_pairs.keys())), print(self.active_pairs.keys(), self.inactive_pairs.keys(), self.tentative_pairs.keys())
+        union = {**self.active_pairs[cam], **self.inactive_pairs[cam], **self.tentative_pairs[cam]}
+        assert len(union) == (len(self.active_pairs[cam].keys()) + len(self.inactive_pairs[cam].keys()) + len(self.tentative_pairs[cam].keys())), print(cam, self.active_pairs[cam].keys(), self.inactive_pairs[cam].keys(), self.tentative_pairs[cam].keys())
         for uid_veh_id in union:
             assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2] and union[uid_veh_id].type_space == uid_veh_id[3] and union[uid_veh_id].parking_ground == uid_veh_id[4] and union[uid_veh_id].cam == uid_veh_id[5]
 
@@ -217,17 +223,17 @@ class PairsScheduler(object):
         for uid_veh_id in union:
             assert union[uid_veh_id].unified_id == uid_veh_id[0] and union[uid_veh_id].vehicle_id == uid_veh_id[1] and union[uid_veh_id].class_id == uid_veh_id[2] and union[uid_veh_id].type_space == uid_veh_id[3] and union[uid_veh_id].parking_ground == uid_veh_id[4] and union[uid_veh_id].cam == uid_veh_id[5]
 
-    def get_pairs_instances(self):
-        return {**self.active_pairs, **self.inactive_pairs}
+    def get_pairs_instances(self, cam):
+        return {**self.active_pairs[cam], **self.inactive_pairs[cam]}
 
     def convert_intances_to_list_of_tuple(self, pairs):
         return list(map(lambda x: (x[1].unified_id, x[1].vehicle_id, x[1].class_id, x[1].type_space,
                                    x[1].parking_ground, x[1].cam, x[1].inactive_steps, x[1].birth_time, x[1].end_time), pairs.items()))
 
-    def save_pairs_to_db(self):
-        pairs = {**self.active_pairs, **self.inactive_pairs, **self.deleted_pairs} # Các key ở active và deleted pairs có thể trùng nhau nên áp dụng phương thức dưới với từng dict mà không nên gộp cả 3 như này có thể bị mất instance
+    def save_pairs_to_db(self, cam):
+        pairs = {**self.active_pairs[cam], **self.inactive_pairs[cam], **self.deleted_pairs[cam]} # Các key ở active và deleted pairs có thể trùng nhau nên áp dụng phương thức dưới với từng dict mà không nên gộp cả 3 như này có thể bị mất instance
         pairs_info = self.convert_intances_to_list_of_tuple(pairs)
         self.database.add_pairs(pairs_info=pairs_info)
 
-        self.deleted_pairs.clear()
+        self.deleted_pairs[cam].clear() # Huhu, khi chạy nhiều cam phải nhớ thêm deleted_pairs[cam]
         #print("Save pairs and clear deleted pairs")
