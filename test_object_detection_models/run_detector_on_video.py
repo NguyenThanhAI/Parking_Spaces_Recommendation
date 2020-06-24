@@ -9,7 +9,7 @@ import numpy as np
 import cv2
 from load_videos.videostream import QueuedStream
 from vehicle_tracking.multiprocess_vehicle_detector import MultiProcessVehicleDetector
-from vehicle_tracking.utils import non_maximum_suppression
+from vehicle_tracking.utils import non_maximum_suppression, iou_mat
 
 
 def get_args():
@@ -43,7 +43,34 @@ def filter_boxes(rois, scores, class_ids, masks, size):
         new_class_ids.append(class_ids[idx])
         new_maskes.append(masks[idx])
 
-    return new_rois, new_scores, new_class_ids, new_maskes
+    return np.array(new_rois), np.array(new_scores), np.array(new_class_ids), np.array(new_maskes)
+
+
+def filter_iou(rois, scores, class_ids, masks):
+    hold_idx = list(range(len(rois)))
+    iou = iou_mat(rois, rois)
+    iu = np.tril_indices(iou.shape[0])
+    iou[iu] = 0.
+    pairs_idx = np.argwhere(iou)
+    for pair in pairs_idx:
+        a_idx, b_idx = pair
+        a_roi = rois[a_idx]
+        b_roi = rois[b_idx]
+        a_y_min, a_x_min, a_y_max, a_x_max = a_roi
+        b_y_min, b_x_min, b_y_max, b_x_max = b_roi
+        a_area = (a_y_max - a_y_min + 1) * (a_x_max - a_x_min + 1)
+        b_area = (b_y_max - b_y_min + 1) * (b_x_max - b_x_min + 1)
+        if a_area >= b_area:
+            large_idx = a_idx
+            tiny_idx = b_idx
+        else:
+            large_idx = b_idx
+            tiny_idx = a_idx
+
+        if iou[a_idx, b_idx] > 0.05 and rois[large_idx][0] < rois[tiny_idx][0] and rois[large_idx][1] < rois[tiny_idx][1] and rois[large_idx][2] < rois[tiny_idx][2]:
+            hold_idx.remove(tiny_idx)
+
+    return hold_idx
 
 
 if __name__ == '__main__':
@@ -99,13 +126,19 @@ if __name__ == '__main__':
 
         rois, scores, class_ids, masks, frame_id, time_stamp, cam_detect = detector.get_result()
 
-        chosen_indices = non_maximum_suppression(bboxes=rois, scores=scores, max_bbox_overlap=0.6)
+        chosen_indices = non_maximum_suppression(bboxes=rois, scores=scores, max_bbox_overlap=0.3)
         rois = rois[chosen_indices]
         scores = scores[chosen_indices]
         class_ids = class_ids[chosen_indices]
         masks = masks[chosen_indices]
 
         rois, scores, class_ids, masks = filter_boxes(rois=rois, scores=scores, class_ids=class_ids, masks=masks, size=frame.shape)
+
+        hold_idx = filter_iou(rois, scores, class_ids, masks)
+        rois = rois[hold_idx]
+        scores = scores[hold_idx]
+        class_ids = class_ids[hold_idx]
+        masks = masks[hold_idx]
 
         if args.model_arch == "mask_rcnn":
             class_id_list = [1, 2, 3, 4]
@@ -118,10 +151,10 @@ if __name__ == '__main__':
 
         for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
             if score >= args.detection_vehicle_thresh and class_id in class_id_list:
-                y_min, x_min, y_max, x_max = roi
-                hr = (y_max - y_min) / height
-                wr = (x_max - x_min)/ width
-                sr = (y_max - y_min) * (x_max - x_min) / (width * height)
+                #y_min, x_min, y_max, x_max = roi
+                #hr = (y_max - y_min) / height
+                #wr = (x_max - x_min)/ width
+                #sr = (y_max - y_min) * (x_max - x_min) / (width * height)
                 rr, cc = np.where(mask)
                 y_min, y_max = np.min(rr), np.max(rr)
                 x_min, x_max = np.min(cc), np.max(cc)
