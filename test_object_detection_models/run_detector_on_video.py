@@ -9,6 +9,7 @@ import numpy as np
 import cv2
 from load_videos.videostream import QueuedStream
 from vehicle_tracking.multiprocess_vehicle_detector import MultiProcessVehicleDetector
+from vehicle_tracking.utils import non_maximum_suppression
 
 
 def get_args():
@@ -27,9 +28,28 @@ def get_args():
     return args
 
 
+def filter_boxes(rois, scores, class_ids, masks, size):
+    height, width, _ = size
+    new_rois = []
+    new_scores = []
+    new_class_ids = []
+    new_maskes = []
+    for idx, roi in enumerate(rois):
+        y_min, x_min, y_max, x_max = roi
+        if x_max - x_min > 0.4 * width or y_max - y_min > 0.7 * height or x_max - x_min < 0.05 * width or y_max - y_min < 0.05 * height or (y_max - y_min) * (x_max - x_min) < 0.01 * height * width:
+            continue
+        new_rois.append(rois[idx])
+        new_scores.append(scores[idx])
+        new_class_ids.append(class_ids[idx])
+        new_maskes.append(masks[idx])
+
+    return new_rois, new_scores, new_class_ids, new_maskes
+
 
 if __name__ == '__main__':
     args = get_args()
+
+    class_id_to_name = {1: "Car", 2: "Truck", 3: "Bus", 4: "Bicycle"}
 
     detector = MultiProcessVehicleDetector(checkpoint_name=args.checkpoint_name, detection_vehicle_thresh=args.detection_vehicle_thresh, model_arch=args.model_arch)
     detector.start()
@@ -79,6 +99,14 @@ if __name__ == '__main__':
 
         rois, scores, class_ids, masks, frame_id, time_stamp, cam_detect = detector.get_result()
 
+        chosen_indices = non_maximum_suppression(bboxes=rois, scores=scores, max_bbox_overlap=0.6)
+        rois = rois[chosen_indices]
+        scores = scores[chosen_indices]
+        class_ids = class_ids[chosen_indices]
+        masks = masks[chosen_indices]
+
+        rois, scores, class_ids, masks = filter_boxes(rois=rois, scores=scores, class_ids=class_ids, masks=masks, size=frame.shape)
+
         if args.model_arch == "mask_rcnn":
             class_id_list = [1, 2, 3, 4]
         else:
@@ -91,9 +119,16 @@ if __name__ == '__main__':
         for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
             if score >= args.detection_vehicle_thresh and class_id in class_id_list:
                 y_min, x_min, y_max, x_max = roi
+                hr = (y_max - y_min) / height
+                wr = (x_max - x_min)/ width
+                sr = (y_max - y_min) * (x_max - x_min) / (width * height)
                 rr, cc = np.where(mask)
+                y_min, y_max = np.min(rr), np.max(rr)
+                x_min, x_max = np.min(cc), np.max(cc)
                 color_mask = np.where(mask[:, :, np.newaxis], color[np.newaxis, np.newaxis, :], color_mask)
                 cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                #cv2.putText(frame, str(round(score, 3)) + " " + str(round(hr, 3)) + " " + str(round(wr, 3)) + " " + str(round(sr, 3)), org=(x_min - 80, y_min + 20), fontScale=0.35, color=(0, 0, 255), thickness=1, fontFace=cv2.FONT_HERSHEY_SIMPLEX)
+                cv2.putText(frame, str(class_id_to_name[class_id]) + " " + str(round(score, 3)), org=(x_min + 20, y_min + 20), fontScale=0.35, color=(0, 0, 255), thickness=1, fontFace=cv2.FONT_HERSHEY_SIMPLEX)
 
         frame = np.where(color_mask > 0, cv2.addWeighted(frame, 0.3, color_mask, 0.7, 0), frame)
 
