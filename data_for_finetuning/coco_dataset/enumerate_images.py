@@ -55,8 +55,11 @@ def parse_json_label(args, json_label):
 
     coco_class_to_id_dict = {}
 
-    class_to_final_class_id = {"bicycle": 4, "motorcycle": 4, "car": 1, "truck": 2, "bus": 3}
-    final_class_id_to_class = {1: "Car", 2: "Truck", 3: "Bus", 4: "Bicycle"}
+    #class_to_final_class_id = {"bicycle": 4, "motorcycle": 4, "car": 1, "truck": 2, "bus": 3}
+    #final_class_id_to_class = {1: "Car", 2: "Truck", 3: "Bus", 4: "Bicycle"}
+
+    class_to_final_class_id = {"bicycle": 4, "motorcycle": 4}
+    final_class_id_to_class = {4: "Bicycle"}
 
     for considered_class in considered_classes:
         category = list(filter(lambda x: x["name"] == considered_class, categories))
