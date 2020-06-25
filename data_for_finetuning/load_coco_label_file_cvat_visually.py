@@ -50,16 +50,33 @@ def parse_json_label(args, json_label):
         for i, car_or_vehicle in enumerate(cars_or_vehicles):
             bbox = car_or_vehicle["bbox"]
             segmentation = car_or_vehicle["segmentation"]
-            segmentation = np.array(segmentation, dtype=np.uint16).reshape(-1, 2).tolist()
-            for j, point in enumerate(segmentation):
-                x1, y1 = point
-                if j < len(segmentation) - 1:
-                    x2, y2 = segmentation[j + 1]
-                else:
-                    x2, y2 = segmentation[0]
-                cv2.line(img, (x1, y1), (x2, y2), color=(0, 255, 255), thickness=1)
-            x, y, w, h = list(map(lambda x: int(x), bbox))
-            cv2.rectangle(img, (x, y), (x + w, y + h), color=(255, 255, 0), thickness=0)
+            try:
+                segmentation = np.array(segmentation, dtype=np.uint16).reshape(-1, 2).tolist()
+                for j, point in enumerate(segmentation):
+                    x1, y1 = point
+                    if j < len(segmentation) - 1:
+                        x2, y2 = segmentation[j + 1]
+                    else:
+                        x2, y2 = segmentation[0]
+                    cv2.line(img, (x1, y1), (x2, y2), color=(0, 255, 255), thickness=1)
+                x, y, w, h = list(map(lambda x: int(x), bbox))
+                cv2.rectangle(img, (x, y), (x + w, y + h), color=(255, 255, 0), thickness=0)
+            except:
+                for segment in segmentation:
+                    print(segment)
+                    try:
+                        segment = np.array(segment, dtype=np.uint16).reshape(-1, 2).tolist()
+                    except:
+                        continue
+                    for j, point in enumerate(segment):
+                        x1, y1 = point
+                        if j < len(segment) - 1:
+                            x2, y2 = segment[j + 1]
+                        else:
+                            x2, y2 = segment[0]
+                        cv2.line(img, (x1, y1), (x2, y2), color=(0, 255, 255), thickness=1)
+                    x, y, w, h = list(map(lambda x: int(x), bbox))
+                    cv2.rectangle(img, (x, y), (x + w, y + h), color=(255, 255, 0), thickness=0)
 
         cv2.imshow("Image id {0}".format(image_id), img)
         cv2.waitKey(0)
