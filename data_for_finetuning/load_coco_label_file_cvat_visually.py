@@ -50,6 +50,8 @@ def parse_json_label(args, json_label):
         for i, car_or_vehicle in enumerate(cars_or_vehicles):
             bbox = car_or_vehicle["bbox"]
             segmentation = car_or_vehicle["segmentation"]
+            area = car_or_vehicle["area"]
+            print("Area {}".format(area))
             try:
                 segmentation = np.array(segmentation, dtype=np.uint16).reshape(-1, 2).tolist()
                 for j, point in enumerate(segmentation):
