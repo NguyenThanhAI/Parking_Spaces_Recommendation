@@ -32,7 +32,8 @@ class Matcher(object):
                  active_cams=["cam_2"],
                  shape=(720, 1280),
                  config_json_path=os.path.join(ROOT_DIR, "parking_spaces_data/parking_spaces_unified_id_segmen_in_cameras.json"),
-                 detection_vehicle_thresh=0.4):
+                 detection_vehicle_thresh=0.4,
+                 run_multiprocessing=True):
         self.parking_ground = parking_ground
         self.active_cams = active_cams
         self.parking_space_initializer = ParkingSpacesInitializer(active_cams=self.active_cams,
@@ -45,9 +46,15 @@ class Matcher(object):
         #                                               cam=cam))
         self.model_arch = model_arch
         self.detection_vehicle_thresh = detection_vehicle_thresh
-        self.detector = MultiProcessVehicleDetector(checkpoint_name=checkpoint_name, detection_vehicle_thresh=detection_vehicle_thresh, model_arch=model_arch)
-        self.detector.start()
-        self.detector.warm_up()
+        self.run_multiprocessing = run_multiprocessing
+        if self.run_multiprocessing:
+            print("Run mutiprocessing")
+            self.detector = MultiProcessVehicleDetector(checkpoint_name=checkpoint_name, detection_vehicle_thresh=detection_vehicle_thresh, model_arch=model_arch)
+            self.detector.start()
+            self.detector.warm_up()
+        else:
+            print("Don't run multiprocessing")
+            self.detector = VehicleDetector(checkpoint_name=checkpoint_name, detection_vehicle_thresh=detection_vehicle_thresh, model_arch=model_arch, cuda=cuda)
         self.run = False
         self.parking_spaces_list, self.outlier_parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
         self.positions_mask = OrderedDict()
@@ -587,38 +594,48 @@ class Matcher(object):
 
                 assert cam == cam_stream, "Cam of stream must be cam of this loop, cam {}, cam_stream {}".format(cam, cam_stream)
 
-                self.detector.put_frame(frame_id, frame, time_stamp, cam_stream)
+                if self.run_multiprocessing:
 
-                rois, scores, class_ids, masks, frame_id, time_stamp, cam_detect = self.detector.get_result()
+                    self.detector.put_frame(frame_id, frame, time_stamp, cam_stream)
 
-                self.positions_mask[cam_detect] = -1 * np.ones(shape=[height, width], dtype=np.int16)
-                self.square_of_mask[cam_detect] = OrderedDict()
+                    rois, scores, class_ids, masks, frame_id, time_stamp, cam_detect = self.detector.get_result()
 
-                detections_list = []
+                    self.positions_mask[cam_detect] = -1 * np.ones(shape=[height, width], dtype=np.int16)
+                    self.square_of_mask[cam_detect] = OrderedDict()
 
-                if self.model_arch == "mask_rcnn":
-                    class_id_list = [1, 2, 3, 4]
-                else:
-                    class_id_list = [2, 5, 7]
-                for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
-                    if score >= self.detection_vehicle_thresh and class_id in class_id_list:
-                        rr, cc = np.where(mask)
-                        if len(rr) == 0 or len(cc) == 0:
-                            continue
-                        self.positions_mask[cam_detect][rr, cc] = det_id
-                        self.square_of_mask[cam_detect][det_id] = rr.shape[0]
-                        y_min, y_max = np.min(rr), np.max(rr)
-                        x_min, x_max = np.min(cc), np.max(cc)
-                        bbox = [x_min, y_min, x_max, y_max]
-                        positions = np.array(
-                            [rr, cc])  # Tập hợp các điểm [y1, y2, ..., yn], [x1, x2, ..., xn] nằm trong vehicle mask
-                        if self.parking_ground == "parking_ground_SA" and cam_detect == "cam_1":  # Thêm điều kiện nếu là sân đỗ SA và camera là camera 1 thêm điều kiện để vùng nằm trên đường thẳng 9x + 10y - 5760 (góc trên bên trái màn hình), các xe được phát hiện trong vùng này sẽ bị bỏ qua
-                            if 81 * x_max + 96 * y_max - 62208 >= 0:
-                                detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, self.parking_ground, cam_detect))
+                    detections_list = []
+
+                    if self.model_arch == "mask_rcnn":
+                        class_id_list = [1, 2, 3, 4]
+                    else:
+                        class_id_list = [2, 5, 7]
+                    for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
+                        if score >= self.detection_vehicle_thresh and class_id in class_id_list:
+                            rr, cc = np.where(mask)
+                            if len(rr) == 0 or len(cc) == 0:
+                                continue
+                            self.positions_mask[cam_detect][rr, cc] = det_id
+                            self.square_of_mask[cam_detect][det_id] = rr.shape[0]
+                            y_min, y_max = np.min(rr), np.max(rr)
+                            x_min, x_max = np.min(cc), np.max(cc)
+                            bbox = [x_min, y_min, x_max, y_max]
+                            positions = np.array(
+                                [rr, cc])  # Tập hợp các điểm [y1, y2, ..., yn], [x1, x2, ..., xn] nằm trong vehicle mask
+                            if self.parking_ground == "parking_ground_SA" and cam_detect == "cam_1":  # Thêm điều kiện nếu là sân đỗ SA và camera là camera 1 thêm điều kiện để vùng nằm trên đường thẳng 9x + 10y - 5760 (góc trên bên trái màn hình), các xe được phát hiện trong vùng này sẽ bị bỏ qua
+                                if 81 * x_max + 96 * y_max - 62208 >= 0:
+                                    detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, self.parking_ground, cam_detect))
+                                else:
+                                    self.positions_mask[cam_detect][rr, cc] = -1
                             else:
-                                self.positions_mask[cam_detect][rr, cc] = -1
-                        else:
-                            detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, self.parking_ground, cam_detect))
+                                detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, self.parking_ground, cam_detect))
+
+                else:
+                    cam_detect = cam_stream
+
+                    detections_list = self.detector(frame, parking_ground=self.parking_ground, cam=cam_detect)
+
+                    self.positions_mask[cam_detect] = self.detector.positions_mask[cam_detect]
+                    self.square_of_mask[cam_detect] = self.detector.square_of_mask[cam_detect]
 
                 unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list = self.frame_match(frame=frame,
                                                                                                                                  vehicles_list=detections_list,

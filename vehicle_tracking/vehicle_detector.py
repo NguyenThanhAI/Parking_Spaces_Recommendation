@@ -124,7 +124,7 @@ class VehicleDetector(object):
 
         detections_list = []
         if self.model_arch == "mask_rcnn":
-            class_id_list = [1]
+            class_id_list = [1, 2, 3, 4]
         else:
             class_id_list = [2, 5, 7]
         for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
