@@ -3,7 +3,9 @@ import os
 from collections import OrderedDict
 from itertools import groupby
 from tqdm import tqdm
+import json
 import numpy as np
+from skimage.draw import polygon
 import cv2
 from vehicle_tracking.vehicle_detection import VehicleDetection
 from vehicle_tracking.vehicle_detector import VehicleDetector
@@ -33,7 +35,9 @@ class Matcher(object):
                  shape=(720, 1280),
                  config_json_path=os.path.join(ROOT_DIR, "parking_spaces_data/parking_spaces_unified_id_segmen_in_cameras.json"),
                  detection_vehicle_thresh=0.4,
-                 run_multiprocessing=True):
+                 run_multiprocessing=True,
+                 use_config_considered_area=True,
+                 config_considered_area_json_path=os.path.join(ROOT_DIR, "parking_spaces_data/parking_ground_cam_to_considered_area.json")):
         self.parking_ground = parking_ground
         self.active_cams = active_cams
         self.parking_space_initializer = ParkingSpacesInitializer(active_cams=self.active_cams,
@@ -59,6 +63,39 @@ class Matcher(object):
         self.parking_spaces_list, self.outlier_parking_spaces_list = self.parking_space_initializer.initialize_parking_spaces()
         self.positions_mask = OrderedDict()
         self.square_of_mask = OrderedDict()
+
+        self.shape = shape
+        self.use_config_considered_area = use_config_considered_area
+        if self.use_config_considered_area:
+            self.considered_areas_mask = self.create_config_considered_areas_mask(json_file_path=config_considered_area_json_path)
+            self.zeros = np.zeros(shape=(self.shape[0], self.shape[1], 3), dtype=np.uint8)
+
+    def read_json_file(self, json_file_path):
+        with open(json_file_path, "r") as f:
+            unified_id_to_polygons = json.load(f)
+
+        return unified_id_to_polygons
+
+    def create_config_considered_areas_mask(self, json_file_path):
+        parking_ground_cam_to_considered_area = self.read_json_file(json_file_path=json_file_path)
+
+        considered_areas_mask = OrderedDict()
+
+        for cam in parking_ground_cam_to_considered_area[self.parking_ground]:
+            if cam in self.active_cams:
+                mask = np.zeros(shape=self.shape, dtype=np.bool)
+
+                areas = parking_ground_cam_to_considered_area[self.parking_ground][cam]
+
+                for i, area in enumerate(areas):
+                    area = np.array(area, dtype=np.uint16).reshape(-1, 2)
+                    cc, rr = area.T
+                    rr, cc = polygon(rr, cc)
+                    mask[rr, cc] = True
+
+                considered_areas_mask[cam] = mask
+
+        return considered_areas_mask
 
     def stop(self):
         self.run = False
@@ -594,9 +631,14 @@ class Matcher(object):
 
                 assert cam == cam_stream, "Cam of stream must be cam of this loop, cam {}, cam_stream {}".format(cam, cam_stream)
 
+                if self.use_config_considered_area:
+                    detected_frame = np.where(self.considered_areas_mask[cam_stream][:, :, np.newaxis], frame, self.zeros)
+                else:
+                    detected_frame = frame
+
                 if self.run_multiprocessing:
 
-                    self.detector.put_frame(frame_id, frame, time_stamp, cam_stream)
+                    self.detector.put_frame(frame_id, detected_frame, time_stamp, cam_stream)
 
                     rois, scores, class_ids, masks, frame_id, time_stamp, cam_detect = self.detector.get_result()
 
@@ -632,7 +674,7 @@ class Matcher(object):
                 else:
                     cam_detect = cam_stream
 
-                    detections_list = self.detector(frame, parking_ground=self.parking_ground, cam=cam_detect)
+                    detections_list = self.detector(detected_frame, parking_ground=self.parking_ground, cam=cam_detect)
 
                     self.positions_mask[cam_detect] = self.detector.positions_mask[cam_detect]
                     self.square_of_mask[cam_detect] = self.detector.square_of_mask[cam_detect]
@@ -660,7 +702,8 @@ class Matcher(object):
                     cv2.imshow(cam_detect, frame)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     self.run = False
-                    self.detector.stop()
+                    if self.run_multiprocessing:
+                        self.detector.stop()
                     for cam in cam_list:
                         stream_dict[cam].stop()
                     cv2.destroyAllWindows()

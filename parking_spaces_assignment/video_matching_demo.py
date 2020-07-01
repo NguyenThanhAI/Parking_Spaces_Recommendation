@@ -34,6 +34,7 @@ def get_args():
     parser.add_argument("--parking_ground", type=str, default="parking_ground_SA", help="Parking ground")
     parser.add_argument("--cam_list", type=str, default="cam_1", help="Cam")
     parser.add_argument("--run_multiprocessing", type=str2bool, nargs="?", const=True, default=True, help="Run multiprocessing or not")
+    parser.add_argument("--use_config_considered_area", type=str2bool, nargs="?", const=True, default=False, help="Use config areas or not")
 
     args = parser.parse_args()
 
@@ -47,7 +48,8 @@ if __name__ == '__main__':
     assert len(video_source_list) == len(cam_list)
     matcher = Matcher(active_cams=cam_list, parking_ground=args.parking_ground, model_arch=args.model_arch,
                       checkpoint_name=args.checkpoint_name, detection_vehicle_thresh=args.detection_vehicle_thresh,
-                      run_multiprocessing=args.run_multiprocessing)
+                      run_multiprocessing=args.run_multiprocessing,
+                      use_config_considered_area=args.use_config_considered_area)
     matcher.video_match(video_source_list=video_source_list, is_savevideo=True, save_dir=args.video_output_dir,
                         cam_list=cam_list, ios_threshold=args.ios_threshold, iov_threshold=args.iov_threshold,
                         is_tracking=True, is_showframe=args.is_showframe)
