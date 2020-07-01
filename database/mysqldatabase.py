@@ -3,14 +3,16 @@ import mysql.connector
 
 
 class MySQLDataBase(object):
-    def __init__(self, host, user, passwd, database, reset_table=False):
+    def __init__(self, host, user, passwd, database, port=None, reset_table=False):
         try:
             self.conn = mysql.connector.connect(host=host,
+                                                port=port,
                                                 user=user,
                                                 passwd=passwd,
                                                 database=database)
         except:
             self.conn = mysql.connector.connect(host=host,
+                                                port=port,
                                                 user=user,
                                                 passwd=passwd)
             self.create_database(database)
