@@ -4,18 +4,30 @@ import mysql.connector
 
 class MySQLDataBase(object):
     def __init__(self, host, user, passwd, database, port=None, reset_table=False):
-        try:
-            self.conn = mysql.connector.connect(host=host,
-                                                port=port,
-                                                user=user,
-                                                passwd=passwd,
-                                                database=database)
-        except:
-            self.conn = mysql.connector.connect(host=host,
-                                                port=port,
-                                                user=user,
-                                                passwd=passwd)
-            self.create_database(database)
+        if port is None:
+            try:
+                self.conn = mysql.connector.connect(host=host,
+                                                    user=user,
+                                                    passwd=passwd,
+                                                    database=database)
+            except:
+                self.conn = mysql.connector.connect(host=host,
+                                                    user=user,
+                                                    passwd=passwd)
+                self.create_database(database)
+        else:
+            try:
+                self.conn = mysql.connector.connect(host=host,
+                                                    port=port,
+                                                    user=user,
+                                                    passwd=passwd,
+                                                    database=database)
+            except:
+                self.conn = mysql.connector.connect(host=host,
+                                                    port=port,
+                                                    user=user,
+                                                    passwd=passwd)
+                self.create_database(database)
 
         if reset_table:
             self.reset_table()
@@ -38,7 +50,7 @@ class MySQLDataBase(object):
                           (CELL_ID INT NOT NULL,
                           VEHICLE_ID INT NOT NULL,
                           CLASS_ID INT  NOT NULL,
-                          TYPE_SPACE VARCHAR(5) NOT NULL,
+                          TYPE_SPACE VARCHAR(7) NOT NULL,
                           PARKING_GROUND VARCHAR(20) NOT NULL,
                           CAM VARCHAR(5) NOT NULL,
                           INACTIVE_STEPS INT NOT NULL,
