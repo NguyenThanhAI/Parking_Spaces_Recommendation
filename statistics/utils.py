@@ -88,7 +88,8 @@ def create_gantt_chart_plot(records: list, end_time: datetime.datetime=datetime.
     df = list(map(lambda x: dict(Task="Cell_id " + str(x[0]), Start=x[7].strftime("%Y-%m-%d %H:%M:%S"), Finish=x[8].strftime("%Y-%m-%d %H:%M:%S") if x[8] is not None else end_time, Type_Space=x[3]), sorted(records, key=lambda x: x[0])))
 
     colors = dict(small="rgb(0, 0, 255",
-                  big="rgb(255, 0, 0")
+                  big="rgb(255, 0, 0",
+                  outlier="rgb(255, 255, 0")
 
     fig = ff.create_gantt(df, colors=colors, index_col="Type_Space", title="Gantt Chart", show_colorbar=True,
                           bar_width=0.1, showgrid_x=True, showgrid_y=True, group_tasks=True, height=2000, width=2000)
