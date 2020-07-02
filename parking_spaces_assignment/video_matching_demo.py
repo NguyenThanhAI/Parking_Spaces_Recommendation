@@ -35,6 +35,12 @@ def get_args():
     parser.add_argument("--cam_list", type=str, default="cam_1", help="Cam")
     parser.add_argument("--run_multiprocessing", type=str2bool, nargs="?", const=True, default=True, help="Run multiprocessing or not")
     parser.add_argument("--use_config_considered_area", type=str2bool, nargs="?", const=True, default=False, help="Use config areas or not")
+    parser.add_argument("--use_mysql", type=str2bool, nargs="?", const=True, default=False, help="Use config areas or not")
+    parser.add_argument("--host", type=str, default="18.181.144.207", help="Host ip")
+    parser.add_argument("--port", type=str, default="3306", help="Port")
+    parser.add_argument("--user", type=str, default="edge_matrix", help="User")
+    parser.add_argument("--passwd", type=str, default="edgematrix", help="Password")
+    parser.add_argument("--database_file", type=str, default="edge_matrix_thanh", help="Database file")
 
     args = parser.parse_args()
 
@@ -52,4 +58,6 @@ if __name__ == '__main__':
                       use_config_considered_area=args.use_config_considered_area)
     matcher.video_match(video_source_list=video_source_list, is_savevideo=True, save_dir=args.video_output_dir,
                         cam_list=cam_list, ios_threshold=args.ios_threshold, iov_threshold=args.iov_threshold,
-                        is_tracking=True, is_showframe=args.is_showframe)
+                        is_tracking=True, is_showframe=args.is_showframe,
+                        use_mysql=args.use_mysql, host=args.host, port=args.port, user=args.user,
+                        passwd=args.passwd, database_file=args.database_file)

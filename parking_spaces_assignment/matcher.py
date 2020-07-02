@@ -559,7 +559,12 @@ class Matcher(object):
         results_path = os.path.join(save_dir, os.path.basename(image_path).split(".")[0] + ".jpg")
         cv2.imwrite(results_path, frame)
 
-    def video_match(self, video_source_list, is_savevideo=False, save_dir=None, cam_list=["cam_1"], ios_threshold=0.3, iov_threshold=0.4, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=3, tracking_tentative_steps_before_accepted=3, tracking_inactive_steps_before_removed=10, pair_inactive_steps_before_removed=10):
+    def video_match(self, video_source_list, is_savevideo=False, save_dir=None, cam_list=["cam_1"], ios_threshold=0.3,
+                    iov_threshold=0.4,
+                    is_tracking=True, is_showframe=True, tentative_steps_before_accepted=3, tracking_tentative_steps_before_accepted=3,
+                    tracking_inactive_steps_before_removed=10, pair_inactive_steps_before_removed=10,
+                    use_mysql=True, host="18.181.144.207", port="3306", user="edge_matrix",
+                    passwd="edgematrix", database_file="edge_matrix_thanh"):
         tracker_dict = {}
         if is_tracking:
             for cam in cam_list:
@@ -581,7 +586,7 @@ class Matcher(object):
             start_time = datetime.now()
             use_time_stamp = True
 
-        pair_scheduler = PairsScheduler(time=start_time, use_time_stamp=use_time_stamp, active_cams=cam_list, tentative_steps_before_accepted=tentative_steps_before_accepted, inactive_steps_before_removed=pair_inactive_steps_before_removed)
+        pair_scheduler = PairsScheduler(time=start_time, use_time_stamp=use_time_stamp, active_cams=cam_list, tentative_steps_before_accepted=tentative_steps_before_accepted, inactive_steps_before_removed=pair_inactive_steps_before_removed, use_mysql=use_mysql, host=host, port=port, user=user, passwd=passwd, database_file=database_file)
 
         output = {}
         for video_source, cam in zip(video_source_list, cam_list):

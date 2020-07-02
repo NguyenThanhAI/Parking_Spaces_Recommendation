@@ -8,12 +8,13 @@ from database.mysqldatabase import MySQLDataBase
 ROOT_DIR = os.path.abspath("..")
 sys.path.append(ROOT_DIR)
 
-use_mysql = False
+use_mysql = True
 print(os.path.abspath("../database"))
 if not use_mysql:
     database = SQLiteDataBase(database_dir="../database", database_file="2019-11-24.db")
 else:
-    database = MySQLDataBase(host="localhost", user="Thanh", passwd="Aimesoft", database="2019_10_24", reset_table=False)
+    #database = MySQLDataBase(host="localhost", user="Thanh", passwd="Aimesoft", database="2019_10_24", reset_table=False)
+    database = MySQLDataBase(host="18.181.144.207", port="3306", user="edge_matrix", passwd="edgematrix", database="edge_matrix_thanh", reset_table=False)
 
 
 try:

@@ -46,11 +46,12 @@ class MySQLDataBase(object):
 
     def create_tables(self):
         cursor = self.conn.cursor()
+        cursor.execute("""SET sql_mode = '';""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS PAIRS
                           (CELL_ID INT NOT NULL,
                           VEHICLE_ID INT NOT NULL,
                           CLASS_ID INT  NOT NULL,
-                          TYPE_SPACE VARCHAR(7) NOT NULL,
+                          TYPE_SPACE VARCHAR(8) NOT NULL,
                           PARKING_GROUND VARCHAR(20) NOT NULL,
                           CAM VARCHAR(5) NOT NULL,
                           INACTIVE_STEPS INT NOT NULL,

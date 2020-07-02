@@ -55,7 +55,7 @@ class Pair(object):
 
 class PairsScheduler(object):
 
-    def __init__(self, time, use_time_stamp, active_cams, database_dir="../database", database_file=None, use_mysql=False, host="localhost", user="Thanh", passwd="Aimesoft", reset_table=True, save_to_db_period=2, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
+    def __init__(self, time, use_time_stamp, active_cams, database_dir="../database", database_file=None, use_mysql=False, host="localhost", port=None, user="Thanh", passwd="Aimesoft", reset_table=True, save_to_db_period=2, tentative_steps_before_accepted=30, inactive_steps_before_removed=1000):
         self.start_time = time
         self.time = time
         self.use_time_stamp = use_time_stamp
@@ -70,7 +70,7 @@ class PairsScheduler(object):
         if not use_mysql:
             self.database = SQLiteDataBase(database_dir=database_dir, database_file=database_file)
         else:
-            self.database = MySQLDataBase(host=host, user=user, passwd=passwd, database=database_file, reset_table=reset_table)
+            self.database = MySQLDataBase(host=host, port=port, user=user, passwd=passwd, database=database_file, reset_table=reset_table)
         self.save_to_db_period = save_to_db_period
         self.tentative_steps_before_accepted = tentative_steps_before_accepted
         self.inactive_steps_before_removed = inactive_steps_before_removed
