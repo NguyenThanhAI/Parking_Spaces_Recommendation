@@ -4367,6 +4367,35 @@
                "type_space": "small",
                "considered_in_cam": "cam_2"
           },
+          "107": {
+               "positions": {
+                    "cam_2": [
+                         [
+                              200.6806640625,
+                              157.6015625,
+                              220.8985600000069,
+                              143.2595200000069,
+                              245.10000000000036,
+                              140.70000000000073,
+                              225.21856000000662,
+                              155.0099200000077
+                         ]
+                    ]
+               },
+               "reversed_considered_orients": {},
+               "adjacencies": {
+                    "eastern_adjacency": null,
+                    "western_adjacency": null,
+                    "southern_adjacency": null,
+                    "northern_adjacency": null,
+                    "south_east_adjacency": null,
+                    "south_west_adjacency": null,
+                    "north_west_adjacency": null,
+                    "north_east_adjacency": null
+               },
+               "type_space": "small",
+               "considered_in_cam": "cam_2"
+          },
           "1001": {
                "positions": {
                     "cam_2": [

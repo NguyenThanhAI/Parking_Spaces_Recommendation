@@ -8,19 +8,19 @@ sa_order_in_json_to_unified_id.update({67: 1002, 68: 1003})
 
 sa_order_in_json_to_unified_id.update(dict(zip(range(69, 141), range(1, 73))))
 
-sa_order_in_json_to_unified_id.update({141: 1001, 142: 1004, 143: 1005})
+sa_order_in_json_to_unified_id.update({141:107, 142: 1001, 143: 1004, 144: 1005})
 
 # Image id 2 - cam 3
 
-sa_order_in_json_to_unified_id.update(dict(zip(range(144, 168), range(73, 97))))
+sa_order_in_json_to_unified_id.update(dict(zip(range(145, 169), range(73, 97))))
 
-sa_order_in_json_to_unified_id.update(dict(zip(range(170, 178), range(97, 105))))
+sa_order_in_json_to_unified_id.update(dict(zip(range(171, 179), range(97, 105))))
 
-sa_order_in_json_to_unified_id.update({168: 1002, 169: 1003})
+sa_order_in_json_to_unified_id.update({169: 1002, 170: 1003})
 
 sa_cam_to_space_id = {"cam_1": list(range(1, 69)),
-                      "cam_2": list(range(69, 144)),
-                      "cam_3": list(range(144, 178))}
+                      "cam_2": list(range(69, 145)),
+                      "cam_3": list(range(145, 179))}
 
 sa_cam_to_unified_id = {k: list(map(lambda x: sa_order_in_json_to_unified_id[x], v)) for k, v in sa_cam_to_space_id.items()}
 
@@ -28,7 +28,7 @@ sa_cam_to_unified_id = {k: list(map(lambda x: sa_order_in_json_to_unified_id[x],
 
 sa_unified_id_and_adjacency_ids = {}
 
-for i in range(1, 107):
+for i in range(1, 108):
     if i == 1:
         sa_unified_id_and_adjacency_ids.update({i: {"adjacencies": {"eastern_adjacency": i + 1,
                                                                    "western_adjacency": None,
@@ -331,6 +331,15 @@ for i in range(1, 107):
                                                                     "western_adjacency": None,
                                                                     "southern_adjacency": None,
                                                                     "northern_adjacency": i - 1,
+                                                                    "south_east_adjacency": None,
+                                                                    "south_west_adjacency": None,
+                                                                    "north_west_adjacency": None,
+                                                                    "north_east_adjacency": None}}})
+    elif i == 107:
+        sa_unified_id_and_adjacency_ids.update({i: {"adjacencies": {"eastern_adjacency": None,
+                                                                    "western_adjacency": None,
+                                                                    "southern_adjacency": None,
+                                                                    "northern_adjacency": None,
                                                                     "south_east_adjacency": None,
                                                                     "south_west_adjacency": None,
                                                                     "north_west_adjacency": None,
@@ -1387,7 +1396,7 @@ sa_cam_to_orient_consideration = {"cam_1": {"east": list(range(52, 57)) + list(r
                                   "cam_3": {"west": list(range(73, 84)) + list(range(85, 96))}}
 
 sa_unified_id_to_orientation_consideration = {}
-for unified_id in range(1, 107):
+for unified_id in range(1, 108):
     sa_unified_id_to_orientation_consideration[unified_id] = {}
     for cam in sa_cam_to_orient_consideration:
         sa_unified_id_to_orientation_consideration[unified_id][cam] = list()
@@ -1398,11 +1407,11 @@ for unified_id in range(1, 107):
             sa_unified_id_to_orientation_consideration[unified_id].pop(cam)
 
 
-sa_type_space_to_unified_id = {"small": list(range(1, 73)) + list(range(97, 107)),
+sa_type_space_to_unified_id = {"small": list(range(1, 73)) + list(range(97, 108)),
                                "big": list(range(73, 97)),
                                "outlier": list(range(1001, 1006))}
 
 
 sa_cam_to_considered_unified_id = {"cam_1": list(range(41, 97)) + list(range(105, 107)),
-                                   "cam_2": list(range(1, 41)) + [1001] + list(range(1004, 1006)),
+                                   "cam_2": list(range(1, 41)) + [107] + [1001] + list(range(1004, 1006)),
                                    "cam_3": list(range(97, 105)) + list(range(1002, 1004))}
