@@ -3,7 +3,7 @@ import os
 import argparse
 import json
 from datetime import datetime, timedelta
-from collections import OrderedDict
+from collections import OrderedDict, deque
 
 ROOT_DIR = os.path.abspath("..")
 sys.path.append(ROOT_DIR)
@@ -32,6 +32,10 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, deque):
+            return list(obj)
         return json.JSONEncoder.default(self, obj)
 
 
@@ -240,6 +244,26 @@ class JsonMatcher(Matcher):
         outlier_parking_spaces_in_cam = list(filter(lambda x: cam in list(x.positions.keys()),
                                                     self.outlier_parking_spaces_list))  # Lọc ra các outlier parking spaces có trong cam hiện tại dưới dạng list các instance parking space
         # if not is_tracking: # Tạo ra dictionary map từ vehicle_id (detection_id nếu không track, track_id nếu sử dụng track), sang instance của vehicle_detection (nếu không sử dụng track) hoặc vehicle_track (nếu sử dụng track)
+        results_json[cam]["parking_spaces_list"] = {}
+        for parking_space in parking_spaces_in_cam:
+            results_json[cam]["parking_spaces_list"][parking_space.unified_id] = {}
+            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["bbox"] = parking_space.bbox[cam]
+            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["positions"] = parking_space.positions[cam]
+            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["reversed_considered_orients"] = parking_space.reversed_considered_orients[cam]
+            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["adjacencies"] = parking_space.adjacencies
+            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["type_space"] = parking_space.type_space
+            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["parking_ground"] = parking_space.parking_ground
+            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["considered_in_cam"] = parking_space.considered_in_cam
+        results_json[cam]["outlier_parking_spaces_list"] = {}
+        for parking_space in outlier_parking_spaces_in_cam:
+            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id] = {}
+            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["bbox"] = parking_space.bbox[cam]
+            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["positions"] = parking_space.positions[cam]
+            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["reversed_considered_orients"] = parking_space.reversed_considered_orients[cam]
+            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["adjacencies"] = parking_space.adjacencies
+            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["type_space"] = parking_space.type_space
+            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["parking_ground"] = parking_space.parking_ground
+            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["considered_in_cam"] = parking_space.considered_in_cam
         vehicle_id_to_vehicle = dict(map(lambda x: (x.detection_id, x), vehicles_list))
         # else:
         #    vehicle_id_to_vehicle = dict(map(lambda x: (x.track_id, x), vehicles_list))
@@ -337,8 +361,8 @@ class JsonMatcher(Matcher):
                                         inter / self.parking_space_initializer.square_of_mask[cam][
                                     uid]), "ios of 2 times is not equal"
         # print("unified_id_to_vehicle_id_ios: {}, vehicle_id_to_unified_id_ios: {}".format(unified_id_to_vehicle_id_ios, vehicle_id_to_unified_id_ios))
-        results_json[cam][frame_id]["unified_id_to_vehicle_id_ios"] = unified_id_to_vehicle_id_ios
-        results_json[cam][frame_id]["vehicle_id_to_unified_id_ios"] = vehicle_id_to_unified_id_ios
+        results_json[cam][frame_id]["unified_id_to_vehicle_id_ios"] = dict([(str(k), dict([(str(k_small), v_small) for k_small, v_small in v.items()])) for k, v in unified_id_to_vehicle_id_ios.items()])
+        results_json[cam][frame_id]["vehicle_id_to_unified_id_ios"] = dict([(str(k), dict([(str(k_small), v_small) for k_small, v_small in v.items()])) for k, v in vehicle_id_to_unified_id_ios.items()])
         end = time.time()
         # print("This block consumes {} seconds".format(end - start))
         unified_id_status_dict = dict(zip(list(unified_id_to_ps.keys()), ["available"] * len(list(
@@ -921,6 +945,9 @@ class JsonMatcher(Matcher):
                     self.positions_mask[cam_detect] = self.detector.positions_mask[cam_detect]
                     self.square_of_mask[cam_detect] = self.detector.square_of_mask[cam_detect]
 
+                results_json[cam][frame_id]["matcher_positions_mask"] = self.positions_mask[cam]
+                results_json[cam][frame_id]["matcher_square_of_mask"] = self.square_of_mask[cam]
+
                 results_json[cam][frame_id]["detections_list"] = {}
                 for detection in detections_list:
                     results_json[cam][frame_id]["detections_list"][detection.detection_id] = {}
@@ -968,6 +995,12 @@ class JsonMatcher(Matcher):
 
         if not os.path.exists(os.path.join(ROOT_DIR, json_save_dir)):
             os.makedirs(os.path.join(ROOT_DIR, json_save_dir), exist_ok=True)
+        for cam in cam_list:
+            results_json[cam]["positions_mask"] = self.parking_space_initializer.positions_mask[cam]
+            results_json[cam]["square_of_mask"] = self.parking_space_initializer.square_of_mask[cam]
+
+            results_json[cam]["outlier_positions_mask"] = self.parking_space_initializer.outlier_positions_mask[cam]
+            results_json[cam]["outlier_square_of_mask"] = self.parking_space_initializer.outlier_square_of_mask[cam]
         print(results_json)
         with open(os.path.join(ROOT_DIR, json_save_dir, results_json_name), "w") as f:
             json.dump(results_json, f, cls=NumpyEncoder)
