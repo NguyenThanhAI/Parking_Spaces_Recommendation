@@ -248,8 +248,8 @@ class JsonMatcher(Matcher):
         for parking_space in parking_spaces_in_cam:
             results_json[cam]["parking_spaces_list"][parking_space.unified_id] = {}
             results_json[cam]["parking_spaces_list"][parking_space.unified_id]["bbox"] = parking_space.bbox[cam]
-            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["positions"] = parking_space.positions[cam]
-            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["reversed_considered_orients"] = parking_space.reversed_considered_orients[cam]
+            #results_json[cam]["parking_spaces_list"][parking_space.unified_id]["positions"] = parking_space.positions[cam]
+            results_json[cam]["parking_spaces_list"][parking_space.unified_id]["reversed_considered_orients"] = parking_space.reversed_considered_orients
             results_json[cam]["parking_spaces_list"][parking_space.unified_id]["adjacencies"] = parking_space.adjacencies
             results_json[cam]["parking_spaces_list"][parking_space.unified_id]["type_space"] = parking_space.type_space
             results_json[cam]["parking_spaces_list"][parking_space.unified_id]["parking_ground"] = parking_space.parking_ground
@@ -258,8 +258,8 @@ class JsonMatcher(Matcher):
         for parking_space in outlier_parking_spaces_in_cam:
             results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id] = {}
             results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["bbox"] = parking_space.bbox[cam]
-            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["positions"] = parking_space.positions[cam]
-            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["reversed_considered_orients"] = parking_space.reversed_considered_orients[cam]
+            #results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["positions"] = parking_space.positions[cam]
+            results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["reversed_considered_orients"] = parking_space.reversed_considered_orients
             results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["adjacencies"] = parking_space.adjacencies
             results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["type_space"] = parking_space.type_space
             results_json[cam]["outlier_parking_spaces_list"][parking_space.unified_id]["parking_ground"] = parking_space.parking_ground
@@ -778,7 +778,7 @@ class JsonMatcher(Matcher):
             results_json[cam][frame_id]["tracks_list"][vehicle.track_id] = {}
             results_json[cam][frame_id]["tracks_list"][vehicle.track_id]["score"] = vehicle.score
             results_json[cam][frame_id]["tracks_list"][vehicle.track_id]["bbox"] = vehicle.bbox
-            results_json[cam][frame_id]["tracks_list"][vehicle.track_id]["positions"] = vehicle.positions
+            #results_json[cam][frame_id]["tracks_list"][vehicle.track_id]["positions"] = vehicle.positions
             results_json[cam][frame_id]["tracks_list"][vehicle.track_id]["class_id"] = vehicle.class_id
             results_json[cam][frame_id]["tracks_list"][vehicle.track_id]["track_id"] = vehicle.track_id
             results_json[cam][frame_id]["tracks_list"][vehicle.track_id]["inactive_steps"] = vehicle.inactive_steps
@@ -815,7 +815,8 @@ class JsonMatcher(Matcher):
     def video_match(self, video_source_list, is_savevideo=False, save_dir=None, cam_list=["cam_1"], ios_threshold=0.3,
                     iov_threshold=0.4, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=3,
                     tracking_tentative_steps_before_accepted=3, tracking_inactive_steps_before_removed=10,
-                    pair_inactive_steps_before_removed=10, json_save_dir=None, results_json_name="results_json.json"):
+                    pair_inactive_steps_before_removed=10, json_save_dir=None, results_json_name="results_json.json",
+                    save_mask_dir=None):
         tracker_dict = {}
         if is_tracking:
             for cam in cam_list:
@@ -945,7 +946,11 @@ class JsonMatcher(Matcher):
                     self.positions_mask[cam_detect] = self.detector.positions_mask[cam_detect]
                     self.square_of_mask[cam_detect] = self.detector.square_of_mask[cam_detect]
 
-                results_json[cam][frame_id]["matcher_positions_mask"] = self.positions_mask[cam]
+                mask_file_name = cam.replace("_", "") + "-" + str(frame_id) + ".txt"
+
+                np.savetxt(os.path.join(save_mask_dir, mask_file_name), self.positions_mask[cam], "%s")
+
+                results_json[cam][frame_id]["matcher_positions_mask"] = mask_file_name
                 results_json[cam][frame_id]["matcher_square_of_mask"] = self.square_of_mask[cam]
 
                 results_json[cam][frame_id]["detections_list"] = {}
@@ -953,7 +958,7 @@ class JsonMatcher(Matcher):
                     results_json[cam][frame_id]["detections_list"][detection.detection_id] = {}
                     results_json[cam][frame_id]["detections_list"][detection.detection_id]["score"] = detection.score
                     results_json[cam][frame_id]["detections_list"][detection.detection_id]["bbox"] = detection.bbox
-                    results_json[cam][frame_id]["detections_list"][detection.detection_id]["positions"] = detection.positions
+                    #results_json[cam][frame_id]["detections_list"][detection.detection_id]["positions"] = detection.positions
                     results_json[cam][frame_id]["detections_list"][detection.detection_id]["class_id"] = detection.class_id
                     results_json[cam][frame_id]["detections_list"][detection.detection_id]["detection_id"] = detection.detection_id
                     results_json[cam][frame_id]["detections_list"][detection.detection_id]["parking_ground"] = detection.parking_ground
@@ -995,15 +1000,15 @@ class JsonMatcher(Matcher):
 
         if not os.path.exists(os.path.join(ROOT_DIR, json_save_dir)):
             os.makedirs(os.path.join(ROOT_DIR, json_save_dir), exist_ok=True)
-        for cam in cam_list:
-            results_json[cam]["positions_mask"] = self.parking_space_initializer.positions_mask[cam]
-            results_json[cam]["square_of_mask"] = self.parking_space_initializer.square_of_mask[cam]
-
-            results_json[cam]["outlier_positions_mask"] = self.parking_space_initializer.outlier_positions_mask[cam]
-            results_json[cam]["outlier_square_of_mask"] = self.parking_space_initializer.outlier_square_of_mask[cam]
+        #for cam in cam_list:
+        #    results_json[cam]["positions_mask"] = self.parking_space_initializer.positions_mask[cam]
+        #    results_json[cam]["square_of_mask"] = self.parking_space_initializer.square_of_mask[cam]
+#
+        #    results_json[cam]["outlier_positions_mask"] = self.parking_space_initializer.outlier_positions_mask[cam]
+        #    results_json[cam]["outlier_square_of_mask"] = self.parking_space_initializer.outlier_square_of_mask[cam]
         print(results_json)
         with open(os.path.join(ROOT_DIR, json_save_dir, results_json_name), "w") as f:
-            json.dump(results_json, f, cls=NumpyEncoder)
+            json.dump(results_json, f, cls=NumpyEncoder, indent=4)
 
         for cam in cam_list:
             pair_scheduler.save_pairs_to_db(cam=cam)
@@ -1042,6 +1047,7 @@ def get_args():
     parser.add_argument("--parking_ground", type=str, default="parking_ground_SA", help="Parking ground")
     parser.add_argument("--cam_list", type=str, default="cam_1", help="Cam")
     parser.add_argument("--run_multiprocessing", type=str2bool, nargs="?", const=True, default=True, help="Run multiprocessing or not")
+    parser.add_argument("--save_mask_dir", type=str, default=r"E:\Parking_Spaces_Recommendation_Data\mask_dir", help="Image dir to save mask")
 
     args = parser.parse_args()
 
@@ -1050,6 +1056,8 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
+    if not os.path.exists(args.save_mask_dir):
+        os.makedirs(args.save_mask_dir)
     video_source_list = [video for video in args.video_source_list.split(",")]
     cam_list = [cam for cam in args.cam_list.split(",")]
     assert len(video_source_list) == len(cam_list)
@@ -1059,4 +1067,4 @@ if __name__ == '__main__':
     matcher.video_match(video_source_list=video_source_list, is_savevideo=True, save_dir=args.video_output_dir,
                         cam_list=cam_list, ios_threshold=args.ios_threshold, iov_threshold=args.iov_threshold,
                         is_tracking=True, is_showframe=args.is_showframe, json_save_dir=args.json_output_dir,
-                        results_json_name=args.results_json_name)
+                        results_json_name=args.results_json_name, save_mask_dir=args.save_mask_dir)
