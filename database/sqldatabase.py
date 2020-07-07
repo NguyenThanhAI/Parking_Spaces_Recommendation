@@ -28,6 +28,10 @@ class SQLiteDataBase(object):
         if not os.path.exists(database):
             self.conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
             self.create_database()
+            self.add_image_links([("parking_ground_SA",
+                                   "https://drive.google.com/file/d/1O0eWAWGR6F8x9vLDlHNQ2I4StpjsXeIe/view?usp=sharing"),
+                                  ("parking_ground_PA",
+                                   "https://drive.google.com/file/d/1FfcOHukOil0w4DlvmE5dI6pLzOmfsQVT/view?usp=sharing")])
         else:
             self.conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 
@@ -51,6 +55,11 @@ class SQLiteDataBase(object):
                           TYPE_SPACE TEXT NOT NULL,
                           COORDINATE ARRAY NOT NULL,
                           PRIMARY KEY (PARKING_GROUND, CELL_ID))""")
+
+        cursor.execute("""CREATE TABLE IMAGE_LINKS
+                          (PARKING_GROUND TEXT NOT NULL,
+                           URL TEXT,
+                           PRIMARY KEY (PARKING_GROUND))""")
         self.conn.commit()
 
     def add_pairs(self, pairs_info):
@@ -61,6 +70,11 @@ class SQLiteDataBase(object):
     def add_parking_spaces(self, cells_info):
         cursor = self.conn.cursor()
         cursor.executemany("INSERT INTO PARKING_SPACES VALUES (?, ?, ?, ?)", cells_info)
+        self.conn.commit()
+
+    def add_image_links(self, links_info):
+        cursor = self.conn.cursor()
+        cursor.executemany("INSERT OR REPLACE INTO IMAGE_LINKS VALUES (?, ?)", links_info)
         self.conn.commit()
 
     def get_active_pairs(self):

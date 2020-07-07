@@ -33,6 +33,8 @@ class MySQLDataBase(object):
             self.reset_table()
 
         self.create_tables()
+        self.add_image_links([("parking_ground_SA", "https://drive.google.com/file/d/1O0eWAWGR6F8x9vLDlHNQ2I4StpjsXeIe/view?usp=sharing"),
+                              ("parking_ground_PA", "https://drive.google.com/file/d/1FfcOHukOil0w4DlvmE5dI6pLzOmfsQVT/view?usp=sharing")])
 
     def create_database(self, database):
         cursor = self.conn.cursor()
@@ -66,6 +68,11 @@ class MySQLDataBase(object):
                           COORDINATE LONGTEXT NOT NULL,
                           PRIMARY KEY (PARKING_GROUND, CELL_ID));""")
 
+        cursor.execute("""CREATE TABLE IF NOT EXISTS IMAGE_LINKS
+                          (PARKING_GROUND VARCHAR(20) NOT NULL,
+                           URL VARCHAR(512),
+                           PRIMARY KEY (PARKING_GROUND));""")
+
     def add_pairs(self, pairs_info):
         cursor = self.conn.cursor()
         cursor.executemany("REPLACE INTO PAIRS (CELL_ID, VEHICLE_ID, CLASS_ID, TYPE_SPACE, PARKING_GROUND, CAM, INACTIVE_STEPS, START_TIME, END_TIME) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", pairs_info)
@@ -74,6 +81,11 @@ class MySQLDataBase(object):
     def add_parking_spaces(self, cells_info):
         cursor = self.conn.cursor()
         cursor.executemany("REPLACE INTO PARKING_SPACES (PARKING_GROUND, CELL_ID, TYPE_SPACE, COORDINATE) VALUES (%s, %s, %s, %s)", cells_info)
+        self.conn.commit()
+
+    def add_image_links(self, links_info):
+        cursor = self.conn.cursor()
+        cursor.executemany("REPLACE INTO IMAGE_LINKS (PARKING_GROUND, URL) VALUES (%s, %s)", links_info)
         self.conn.commit()
 
     def get_active_pairs(self):
