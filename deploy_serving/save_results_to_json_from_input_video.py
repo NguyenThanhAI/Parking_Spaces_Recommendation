@@ -550,20 +550,37 @@ class JsonMatcher(Matcher):
                             if len(considered_uid) == 0:  # Nếu hợp của hai trường hợp trên là rỗng
                                 if len(considered_east_west_uid_list) > 0 or len(
                                         considered_south_north_uid_list) > 0:  # Parking space does not belong to any reversed considered orients, Nếu 1 trong hai trường hợp không rỗng
-                                    chosen_uid = max(pspace_dict.keys(), key=lambda x: pspace_dict[x][
-                                        "ios"])  # Chọn unified_id ứng với ios lớn nhất là "filled"
-                                    unified_id_status_dict[chosen_uid] = "filled"
-                                    uid_veh_id_match_list.append(
-                                        [chosen_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id,
-                                         unified_id_to_ps[chosen_uid].type_space, self.parking_ground, cam])
-                                    matched_vehicles_id_list.append(vehicle_id)
-                                    for uid_match in pspace_dict:
-                                        if uid_match != chosen_uid:
-                                            if pspace_dict[uid_match][
-                                                "ios"] > 0.75:  # Các unified_id còn lại cái nào ios lớn hơn 0.75 đặt là "unknown" ngược lại là "available
-                                                unified_id_status_dict[uid_match] = "unknown"
-                                            # else: # Nên sửa thành từ chuyển sang available thành giữ nguyên trạng thái vì rất có thể trạng thái đang filled
-                                            #    unified_id_status_dict[uid_match] = "available"
+                                    if len(considered_east_west_uid_list) > 0 and len(
+                                            considered_south_north_uid_list) == 0:  # Nếu hướng trục Đông Tây có các unified_id được xem xét và hướng trục Bắc Nam không có
+                                        for chosen_uid in considered_east_west_uid_list:
+                                            unified_id_status_dict[chosen_uid] = "filled"
+                                            uid_veh_id_match_list.append(
+                                                [chosen_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id,
+                                                 unified_id_to_ps[chosen_uid].type_space, self.parking_ground, cam])
+                                            matched_vehicles_id_list.append(vehicle_id)
+                                    elif len(considered_east_west_uid_list) == 0 and len(
+                                            considered_south_north_uid_list) > 0:  # Nếu hướng trục Bắc Nam có các unified_id được xem xét và hướng Đông
+                                        for chosen_uid in considered_south_north_uid_list:
+                                            unified_id_status_dict[chosen_uid] = "filled"
+                                            uid_veh_id_match_list.append(
+                                                [chosen_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id,
+                                                 unified_id_to_ps[chosen_uid].type_space, self.parking_ground, cam])
+                                            matched_vehicles_id_list.append(vehicle_id)
+                                    else:
+                                        chosen_uid = max(pspace_dict.keys(), key=lambda x: pspace_dict[x][
+                                            "ios"])  # Chọn unified_id ứng với ios lớn nhất là "filled"
+                                        unified_id_status_dict[chosen_uid] = "filled"
+                                        uid_veh_id_match_list.append(
+                                            [chosen_uid, vehicle_id, vehicle_id_to_vehicle[vehicle_id].class_id,
+                                             unified_id_to_ps[chosen_uid].type_space, self.parking_ground, cam])
+                                        matched_vehicles_id_list.append(vehicle_id)
+                                        for uid_match in pspace_dict:
+                                            if uid_match != chosen_uid:
+                                                if pspace_dict[uid_match][
+                                                    "ios"] > 0.75:  # Các unified_id còn lại cái nào ios lớn hơn 0.75 đặt là "unknown" ngược lại là "available
+                                                    unified_id_status_dict[uid_match] = "unknown"
+                                                # else: # Nên sửa thành từ chuyển sang available thành giữ nguyên trạng thái vì rất có thể trạng thái đang filled
+                                                #    unified_id_status_dict[uid_match] = "available"
                                 else:  # Nếu cả hai trường hợp trên đều rỗng: Cứ unified_id nào có ios trên 0.65 thì trạng thái là "filled"
                                     for uid_match in pspace_dict:
                                         if pspace_dict[uid_match]["ios"] > 0.65:
