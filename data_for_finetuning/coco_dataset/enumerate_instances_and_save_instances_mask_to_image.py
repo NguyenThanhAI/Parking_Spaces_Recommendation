@@ -47,6 +47,8 @@ def parse_json_label(args, json_label):
     img_id = 0
     anno_id = 0
 
+    stopped = False
+
     for image_id, items in groupby(sorted(images, key=lambda x: x["id"]), key=lambda x: x["id"]):
         for item in items:
             # print("Path of image of image id {0} is {1}".format(image_id, item["file_name"]))
@@ -55,11 +57,18 @@ def parse_json_label(args, json_label):
             height = item["height"]
             file_path = os.path.join(args.dataset_dir, file_name)
 
+        if stopped:
+            break
+
         cars_or_vehicles = list(filter(lambda x: x["image_id"] == image_id and x["area"] > args.min_area and x["bbox"][2] > args.min_width and x["bbox"][3] > args.min_height, annotations))
 
         img = cv2.imread(file_path)
 
         for i, car_or_vehicle in enumerate(cars_or_vehicles):
+
+            if stopped:
+                break
+
             bbox = car_or_vehicle["bbox"]
             segmentation = car_or_vehicle["segmentation"]
             area = car_or_vehicle["area"]
@@ -120,6 +129,8 @@ def parse_json_label(args, json_label):
                 anno_id += 1
                 img_id += 1
                 cv2.imwrite(os.path.join(args.save_dir, image_name), cropped_instance)
+            elif key == ord("q"):
+                stopped = True
             cv2.destroyAllWindows()
 
     output_json = {}
