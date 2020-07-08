@@ -171,7 +171,7 @@ def threadBoth(source=0):
 
 
 def get_time_amount_from_frames_number(num_frames=1, frame_stride=1, fps=24):
-    num_seconds = int(num_frames / fps) * frame_stride
+    num_seconds = int((num_frames / fps) * frame_stride)
 
     return num_seconds
 

@@ -609,7 +609,7 @@ class Matcher(object):
 
             if is_savevideo:
                 assert save_dir, "When save video, save_dir cannot be None"
-                fps = int(cap.get(cv2.CAP_PROP_FPS))
+                fps = cap.get(cv2.CAP_PROP_FPS)
                 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
                 if video_source.endswith((".mp4", ".avi")):
                     video_name = os.path.basename(video_source)
