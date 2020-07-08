@@ -67,6 +67,8 @@ class PairsScheduler(object):
         else:
             if use_mysql:
                 database_file = database_file.split(".")[0]
+            else:
+                database_file = self.start_time.strftime("%Y-%m-%d") + ".db"
         if not use_mysql:
             self.database = SQLiteDataBase(database_dir=database_dir, database_file=database_file)
         else:
