@@ -775,7 +775,12 @@ class JsonMatcher(Matcher):
             tracker.step(vehicle_detections=vehicles_list)
             vehicles_list = tracker.get_result()  # Sử dụng track lấy ra các vehicle track là list các instance của vehicle_track
         # print(list(vehicle_id_to_vehicle.keys()), matched_vehicles_id_list, tracker.det_id_to_track_id_match_dict)
+        results_json[cam][frame_id]["unified_id_status_dict"] = unified_id_status_dict
+        print(outlier_unified_id_to_remained_vehicle_id_iov, remained_vehicle_id_to_outlier_unified_id_iov)
+        results_json[cam][frame_id]["outlier_unified_id_to_remained_vehicle_id_iov"] = dict([(str(k), dict([(str(k_small), v_small) for k_small, v_small in v.items()])) for k, v in outlier_unified_id_to_remained_vehicle_id_iov.items()])
+        results_json[cam][frame_id]["remained_vehicle_id_to_outlier_unified_id_iov"] = dict([(str(k), dict([(str(k_small), v_small) for k_small, v_small in v.items()])) for k, v in remained_vehicle_id_to_outlier_unified_id_iov.items()])
         results_json[cam][frame_id]["uid_veh_id_match_list_det_id"] = uid_veh_id_match_list
+        results_json[cam][frame_id]["det_id_to_track_id_match_dict"] = tracker.det_id_to_track_id_match_dict
         if len(tracker.det_id_to_track_id_match_dict) > 0:
             uid_veh_id_match_list_copy = uid_veh_id_match_list.copy()
             uid_veh_id_match_list.clear()
