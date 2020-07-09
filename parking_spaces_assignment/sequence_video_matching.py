@@ -59,7 +59,7 @@ def run_function(args, time_intervals):
             reset_table = True
         else:
             reset_table = False
-        print("Interval {}".format(i))
+        print("Interval {}, reset table {}".format(i, reset_table))
         matcher = Matcher(active_cams=cam_list, parking_ground=args.parking_ground, model_arch=args.model_arch,
                           checkpoint_name=args.checkpoint_name, detection_vehicle_thresh=args.detection_vehicle_thresh,
                           run_multiprocessing=args.run_multiprocessing,
@@ -73,7 +73,12 @@ def run_function(args, time_intervals):
 
 
 if __name__ == '__main__':
-    time_intervals = [(datetime(year=2019, month=9, day=29, hour=0), datetime(year=2019, month=9, day=30, hour=0))]
+    time_intervals = [(datetime(year=2019, month=9, day=26, hour=12), datetime(year=2019, month=9, day=27, hour=12)),
+                      (datetime(year=2019, month=9, day=29, hour=0), datetime(year=2019, month=9, day=30, hour=0)),
+                      (datetime(year=2019, month=10, day=27, hour=0), datetime(year=2019, month=10, day=28, hour=0)),
+                      (datetime(year=2019, month=10, day=31, hour=12), datetime(year=2019, month=11, day=1, hour=12)),
+                      (datetime(year=2019, month=11, day=24, hour=0), datetime(year=2019, month=11, day=25, hour=0)),
+                      (datetime(year=2019, month=11, day=28, hour=12), datetime(year=2019, month=11, day=29, hour=12))]
     args = get_args()
 
     run_function(args, time_intervals)
