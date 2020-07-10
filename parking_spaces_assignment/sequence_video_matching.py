@@ -59,7 +59,7 @@ def run_function(args, time_intervals):
             reset_table = True
         else:
             reset_table = False
-        print("Interval {}, reset table {}".format(i, reset_table))
+        print("Interval {}, reset table {}, time: {}".format(i, reset_table, datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
         matcher = Matcher(active_cams=cam_list, parking_ground=args.parking_ground, model_arch=args.model_arch,
                           checkpoint_name=args.checkpoint_name, detection_vehicle_thresh=args.detection_vehicle_thresh,
                           run_multiprocessing=args.run_multiprocessing,
