@@ -53,6 +53,10 @@ def get_args():
 
 def run_function(args, time_intervals):
     cam_list = [cam for cam in args.cam_list.split(",")]
+    matcher = Matcher(active_cams=cam_list, parking_ground=args.parking_ground, model_arch=args.model_arch,
+                      checkpoint_name=args.checkpoint_name, detection_vehicle_thresh=args.detection_vehicle_thresh,
+                      run_multiprocessing=args.run_multiprocessing,
+                      use_config_considered_area=args.use_config_considered_area)
     for i, interval in enumerate(time_intervals):
         sequence_video_source_list = get_sequence_of_video_list(args.video_dir, interval)
         if i == 0 and args.reset_table:
@@ -60,10 +64,6 @@ def run_function(args, time_intervals):
         else:
             reset_table = False
         print("Interval {}, reset table {}, time: {}".format(i, reset_table, datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
-        matcher = Matcher(active_cams=cam_list, parking_ground=args.parking_ground, model_arch=args.model_arch,
-                          checkpoint_name=args.checkpoint_name, detection_vehicle_thresh=args.detection_vehicle_thresh,
-                          run_multiprocessing=args.run_multiprocessing,
-                          use_config_considered_area=args.use_config_considered_area)
         matcher.sequence_video_match(sequence_video_source_list=sequence_video_source_list, is_savevideo=True, save_dir=args.video_output_dir,
                                      database_dir=args.database_dir,
                                      cam_list=cam_list, ios_threshold=args.ios_threshold, iov_threshold=args.iov_threshold,
