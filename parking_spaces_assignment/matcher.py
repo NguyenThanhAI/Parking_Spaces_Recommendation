@@ -755,6 +755,10 @@ class Matcher(object):
             for cam in cam_list:
                 tracker_dict[cam] = None
 
+        accumulated_frame_id = {}
+        for cam in cam_list:
+            accumulated_frame_id[cam] = 0
+
         if sequence_video_source_list[0][0].endswith((".mp4", ".avi")):
             start_time = get_start_time_from_video_name(source=sequence_video_source_list[0][0])
             use_time_stamp = False
@@ -780,10 +784,11 @@ class Matcher(object):
             print(os.path.basename(video_source_list[0]), video_source_list)
 
             output = {}
+            length = {}
             for video_source, cam in zip(video_source_list, cam_list):
                 cap = cv2.VideoCapture(video_source)
 
-                length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                length[cam] = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
@@ -884,6 +889,8 @@ class Matcher(object):
                         self.positions_mask[cam_detect] = self.detector.positions_mask[cam_detect]
                         self.square_of_mask[cam_detect] = self.detector.square_of_mask[cam_detect]
 
+                    frame_id += accumulated_frame_id[cam_detect]
+
                     unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list = self.frame_match(
                         frame=frame,
                         vehicles_list=detections_list,
@@ -919,6 +926,7 @@ class Matcher(object):
 
             for cam in cam_list:
                 pair_scheduler.save_pairs_to_db(cam=cam)
+                accumulated_frame_id[cam] += length[cam]
             if is_savevideo:
                 for cam in cam_list:
                     output[cam].release()
