@@ -18,14 +18,13 @@ else:
 
 
 try:
-    while True:
-        records = database.get_all_pairs()
-        print("=================================================================")
-        for record in records:
-            record = list(map(lambda x: int.from_bytes(x, byteorder="little") if isinstance(x, bytes) else x, record))
-            print(record)
-        print("=================================================================")
-        time.sleep(60)
+    records = database.get_all_pairs()
+    print("=================================================================")
+    for record in records:
+        record = list(map(lambda x: int.from_bytes(x, byteorder="little") if isinstance(x, bytes) else x, record))
+        print(record)
+    print("=================================================================")
+    database.close()
 except KeyboardInterrupt:
     database.close()
     print("Done and exit")
