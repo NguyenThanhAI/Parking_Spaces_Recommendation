@@ -937,6 +937,7 @@ class Matcher(object):
                     print("Save one video and turn to next video")
                 else:
                     print("Save video and exit")
+        pair_scheduler.database.close() # Close database connection
         print("Done")
 
 
