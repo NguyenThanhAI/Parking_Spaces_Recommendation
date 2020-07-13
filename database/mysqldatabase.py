@@ -77,39 +77,46 @@ class MySQLDataBase(object):
         cursor = self.conn.cursor()
         cursor.executemany("REPLACE INTO PAIRS (CELL_ID, VEHICLE_ID, CLASS_ID, TYPE_SPACE, PARKING_GROUND, CAM, INACTIVE_STEPS, START_TIME, END_TIME) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", pairs_info)
         self.conn.commit()
+        cursor.close()
 
     def add_parking_spaces(self, cells_info):
         cursor = self.conn.cursor()
         cursor.executemany("REPLACE INTO PARKING_SPACES (PARKING_GROUND, CELL_ID, TYPE_SPACE, COORDINATE) VALUES (%s, %s, %s, %s)", cells_info)
         self.conn.commit()
+        cursor.close()
 
     def add_image_links(self, links_info):
         cursor = self.conn.cursor()
         cursor.executemany("REPLACE INTO IMAGE_LINKS (PARKING_GROUND, URL) VALUES (%s, %s)", links_info)
         self.conn.commit()
+        cursor.close()
 
     def get_active_pairs(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM PAIRS WHERE INACTIVE_STEPS = 0")
         records = cursor.fetchall()
+        cursor.close()
         return records
 
     def get_non_deleted_pairs(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM PAIRS WHERE END_TIME IS NULL")
         records = cursor.fetchall()
+        cursor.close()
         return records
 
     def get_deleted_pairs(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM PAIRS WHERE END_TIME IS NOT NULL")
         records = cursor.fetchall()
+        cursor.close()
         return records
 
     def get_all_pairs(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM PAIRS")
         records = cursor.fetchall()
+        cursor.close()
         return records
 
     def close(self):

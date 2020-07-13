@@ -66,39 +66,46 @@ class SQLiteDataBase(object):
         cursor = self.conn.cursor()
         cursor.executemany("INSERT OR REPLACE INTO PAIRS VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", pairs_info)
         self.conn.commit()
+        cursor.close()
 
     def add_parking_spaces(self, cells_info):
         cursor = self.conn.cursor()
         cursor.executemany("INSERT INTO PARKING_SPACES VALUES (?, ?, ?, ?)", cells_info)
         self.conn.commit()
+        cursor.close()
 
     def add_image_links(self, links_info):
         cursor = self.conn.cursor()
         cursor.executemany("INSERT OR REPLACE INTO IMAGE_LINKS VALUES (?, ?)", links_info)
         self.conn.commit()
+        cursor.close()
 
     def get_active_pairs(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM PAIRS WHERE INACTIVE_STEPS = 0")
         records = cursor.fetchall()
+        cursor.close()
         return records
 
     def get_non_deleted_pairs(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM PAIRS WHERE END_TIME = NULL")
         records = cursor.fetchall()
+        cursor.close()
         return records
 
     def get_deleted_pairs(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM PAIRS WHERE END_TIME NOT NULL")
         records = cursor.fetchall()
+        cursor.close()
         return records
 
     def get_all_pairs(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM PAIRS")
         records = cursor.fetchall()
+        cursor.close()
         return records
 
     def close(self):
