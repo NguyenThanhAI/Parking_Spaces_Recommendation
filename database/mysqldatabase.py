@@ -111,3 +111,6 @@ class MySQLDataBase(object):
         cursor.execute("SELECT * FROM PAIRS")
         records = cursor.fetchall()
         return records
+
+    def close(self):
+        self.conn.close()

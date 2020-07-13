@@ -27,4 +27,5 @@ try:
         print("=================================================================")
         time.sleep(60)
 except KeyboardInterrupt:
+    database.close()
     print("Done and exit")
