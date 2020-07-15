@@ -45,10 +45,35 @@ for cam, items in groupby(data, key=lambda x: x[5]):
 
 print(cam_to_records)
 
+cam_veh_id_records = {}
+
 for cam in cam_to_records:
     records = cam_to_records[cam]
 
     records.sort(key=lambda x: x[1])
 
+    cam_veh_id_records[cam] = {}
+
     for veh_id, items in groupby(data, key=lambda x: x[1]):
-        print(cam, veh_id, list(items))
+        cam_veh_id_records[cam][veh_id] = list(items)
+
+print(cam_veh_id_records)
+
+for cam in cam_veh_id_records:
+    for veh_id in cam_veh_id_records[cam]:
+        record = []
+        records = cam_veh_id_records[cam][veh_id]
+        if len(records) > 1:
+            cells_id = tuple(map(lambda x: x[0], records))
+            class_id = records[0][2]
+            type_space = tuple(map(lambda x: x[3], records))
+            parking_ground = records[0][4]
+            cam = records[0][5]
+            inactive_steps = min(records, key=lambda x: x[6])
+            start_time = min(records, key=lambda x: x[7])
+            end_time = max(records, key=lambda x: x[8])
+        else:
+            cells_id = records[0]
+            class_id = records[2]
+            start_time = records[7]
+            end_time = records[8]
