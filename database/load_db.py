@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import json
 
 from database.sqldatabase import SQLiteDataBase
 from database.mysqldatabase import MySQLDataBase
@@ -15,6 +16,16 @@ if not use_mysql:
 else:
     #database = MySQLDataBase(host="localhost", user="Thanh", passwd="Aimesoft", database="2019_10_24", reset_table=False)
     database = MySQLDataBase(host="18.181.144.207", port="3306", user="edge_matrix", passwd="edgematrix", database="edge_matrix_thanh", reset_table=False)
+
+#with open("../parking_spaces_data/parking_spaces_unified_id_segmen_in_ground.json", "r") as f:
+#    cell_infos = json.load(f)
+#
+#cell_infos_list = []
+#for parking_ground in cell_infos:
+#    for cell_id in cell_infos[parking_ground]:
+#        cell_infos_list.append((parking_ground, int(cell_id), cell_infos[parking_ground][cell_id]["type_space"], str(cell_infos[parking_ground][cell_id]["positions"])))
+#
+#database.add_parking_spaces(cells_info=cell_infos_list)
 
 
 try:
