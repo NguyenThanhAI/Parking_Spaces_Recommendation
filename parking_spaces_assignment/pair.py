@@ -166,7 +166,7 @@ class PairsScheduler(object):
                     time = self.time + timedelta(seconds=-num_seconds_inactive) # Thời gian trở thành căp inactive
                     inactive_dict[uid_veh_id].delete(time=time) # Tạo period là thời gian khởi tạo pair và thời điểm sang inactive??????
                 else:
-                    inactive_dict[uid_veh_id].delete(time=inactive_to_active[uid_veh_id].time_stamp_traject[-1])
+                    inactive_dict[uid_veh_id].delete(time=inactive_dict[uid_veh_id].time_stamp_traject[-1])
                 inactive_to_deleted[uid_veh_id] = inactive_dict[uid_veh_id] # List các cặp inactive thành deleted thêm phần tử này
 
         inactive_dict = dict(filter(lambda x: x[0] not in inactive_to_deleted, inactive_dict.items())) # Cập nhật lại list inactive bằng cách list inactive loại bỏ đi các inactive thành deleted
