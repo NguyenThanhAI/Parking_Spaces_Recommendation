@@ -835,12 +835,10 @@ class JsonMatcher(Matcher):
         return unified_id_to_ps, vehicle_id_to_vehicle, unified_id_status_dict, frame, uid_veh_id_match_list
 
     def video_match(self, video_source_list, is_savevideo=False, save_dir=None, cam_list=["cam_1"], ios_threshold=0.3,
-                    iov_threshold=0.4,
-                    is_tracking=True, is_showframe=True, tentative_steps_before_accepted=3, tracking_tentative_steps_before_accepted=3,
-                    tracking_inactive_steps_before_removed=10, pair_inactive_steps_before_removed=10, json_save_dir=None, results_json_name="results_json.json",
-                    save_mask_dir=None,
-                    use_mysql=True, host="18.181.144.207", port="3306", user="edge_matrix",
-                    passwd="edgematrix", database_file="edge_matrix_thanh"):
+                    iov_threshold=0.4, is_tracking=True, is_showframe=True, tentative_steps_before_accepted=3,
+                    tracking_tentative_steps_before_accepted=3, tracking_inactive_steps_before_removed=10,
+                    pair_inactive_steps_before_removed=10, json_save_dir=None, results_json_name="results_json.json",
+                    save_mask_dir=None):
         tracker_dict = {}
         if is_tracking:
             for cam in cam_list:
@@ -863,10 +861,8 @@ class JsonMatcher(Matcher):
             use_time_stamp = True
 
         pair_scheduler = JsonPairsScheduler(time=start_time, use_time_stamp=use_time_stamp, active_cams=cam_list,
-                                        tentative_steps_before_accepted=tentative_steps_before_accepted,
-                                        inactive_steps_before_removed=pair_inactive_steps_before_removed,
-                                        use_mysql=use_mysql, host=host, port=port, user=user, passwd=passwd,
-                                        database_file=database_file)
+                                            tentative_steps_before_accepted=tentative_steps_before_accepted,
+                                            inactive_steps_before_removed=pair_inactive_steps_before_removed)
 
         output = {}
         for video_source, cam in zip(video_source_list, cam_list):
@@ -878,7 +874,7 @@ class JsonMatcher(Matcher):
 
             if is_savevideo:
                 assert save_dir, "When save video, save_dir cannot be None"
-                fps = cap.get(cv2.CAP_PROP_FPS)
+                fps = int(cap.get(cv2.CAP_PROP_FPS))
                 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
                 if video_source.endswith((".mp4", ".avi")):
                     video_name = os.path.basename(video_source)
@@ -900,8 +896,7 @@ class JsonMatcher(Matcher):
 
             if not stream_dict[cam].isOpened():
                 print("Can not open video: {}".format(video_source))
-                if self.run_multiprocessing:
-                    self.detector.stop()
+                self.detector.stop()
                 raise StopIteration
 
         results_json = {}
@@ -925,15 +920,9 @@ class JsonMatcher(Matcher):
                 assert cam == cam_stream, "Cam of stream must be cam of this loop, cam {}, cam_stream {}".format(cam,
                                                                                                                  cam_stream)
 
-                if self.use_config_considered_area:
-                    detected_frame = np.where(self.considered_areas_mask[cam_stream][:, :, np.newaxis], frame,
-                                              self.zeros)
-                else:
-                    detected_frame = frame
-
                 if self.run_multiprocessing:
 
-                    self.detector.put_frame(frame_id, detected_frame, time_stamp, cam_stream)
+                    self.detector.put_frame(frame_id, frame, time_stamp, cam_stream)
 
                     rois, scores, class_ids, masks, frame_id, time_stamp, cam_detect = self.detector.get_result()
 
@@ -974,7 +963,7 @@ class JsonMatcher(Matcher):
                 else:
                     cam_detect = cam_stream
 
-                    detections_list = self.detector(detected_frame, parking_ground=self.parking_ground, cam=cam_detect)
+                    detections_list = self.detector(frame, parking_ground=self.parking_ground, cam=cam_detect)
 
                     self.positions_mask[cam_detect] = self.detector.positions_mask[cam_detect]
                     self.square_of_mask[cam_detect] = self.detector.square_of_mask[cam_detect]

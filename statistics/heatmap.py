@@ -5,7 +5,11 @@ import time
 import os
 from datetime import datetime
 from datetime import timedelta
+import json
 import pandas as pd
+import numpy as np
+from skimage.draw import polygon
+import cv2
 import plotly
 import plotly.figure_factory as ff
 
@@ -21,7 +25,7 @@ if not use_mysql:
     database = SQLiteDataBase(database_dir="../database", database_file="2019-11-24.db")
 else:
     #database = MySQLDataBase(host="localhost", user="Thanh", passwd="Aimesoft", database="2019_10_24", reset_table=False)
-    database = MySQLDataBase(host="18.181.144.207", port="3306", user="edge_matrix", passwd="edgematrix", database="edge_matrix_thanh", reset_table=False)
+    database = MySQLDataBase(host="18.181.144.207", port="3306", user="edge_matrix", passwd="edgematrix", database="edge_matrix_thanh1", reset_table=False)
 
 records = database.get_all_pairs()
 
@@ -35,7 +39,7 @@ for record in records:
 
 print(data) # Data from database
 
-parking_ground = "parking_ground_SA"
+parking_ground = "parking_ground_PA"
 
 data = list(filter(lambda x: x[4] == parking_ground, data))
 
@@ -54,16 +58,14 @@ cell_id_list = list(set(map(lambda x: x[0], data))) # List of cell id
 
 print(cell_id_list)
 
-global_start_time = datetime(year=2019, month=9, day=26, hour=12)
+global_start_time = datetime(year=2019, month=11, day=29, hour=0)
 
-start_time_in_data = min(data, key=lambda x: [7])[7]
-
-print(start_time_in_data)
-
-global_end_time = datetime(year=2019, month=9, day=27, hour=12)
+global_end_time = datetime(year=2019, month=11, day=29, hour=12)
 
 data = list(filter(lambda x: (x[7] >= global_start_time and x[7] <= global_end_time) or (x[8] >= global_start_time and x[8] <= global_end_time), data))
-
+#with open("records.txt", "w") as f:
+#    for d in data:
+#        f.write(str(d) + "\n")
 cell_id_to_records = dict(map(lambda x: (x, list(filter(lambda y: y[0] == x, data))), cell_id_list))
 
 cell_id_to_records = dict(map(lambda k: (k, list(map(lambda x: tuple(list(x)[:7] + [global_start_time] + [x[8]]) if (x[7] < global_start_time) else x, cell_id_to_records[k]))), cell_id_to_records.keys()))
@@ -74,10 +76,22 @@ print(cell_id_to_records)
 
 cell_id_to_heatmap = []
 
-for cell_id in cell_id_to_records:
-    start_time_list = list(map(lambda x: (x[7], 0), cell_id_to_records[cell_id]))
+for cell_id in cells_mapping:
+    if cell_id not in cell_id_to_records:
+        cell_id_to_heatmap.append((cells_mapping[cell_id], str(timedelta(seconds=0)), 0))
+        continue
 
-    end_time_list = list(map(lambda x: (x[8], 1), cell_id_to_records[cell_id]))
+    records_of_cell_id = cell_id_to_records[cell_id]
+
+    records_of_cell_id = list(filter(lambda x: x[7] < x[8], records_of_cell_id))
+
+    if len(records_of_cell_id) == 0:
+        cell_id_to_heatmap.append((cells_mapping[cell_id], str(timedelta(seconds=0)), 0))
+        continue
+
+    start_time_list = list(map(lambda x: (x[7], 0), records_of_cell_id))
+
+    end_time_list = list(map(lambda x: (x[8], 1), records_of_cell_id))
 
     terminal_time_list = (start_time_list + end_time_list)
 
@@ -118,4 +132,101 @@ for cell_id in cell_id_to_records:
 
 df = pd.DataFrame(cell_id_to_heatmap, columns=["Cell_id", "Parking_time", "Heatmap"])
 
-df.to_csv("cells_heatmap.csv", encoding="utf_8_sig")
+start_day = global_start_time.strftime("%Y%m%d")
+end_day = global_end_time.strftime("%Y%m%d")
+
+save_dir = r"C:\Users\Thanh\Downloads\heatmap"
+
+if start_day == end_day:
+    save_dir = os.path.join(save_dir, parking_ground.split("_")[-1], global_end_time.strftime("%Y%m%d"))
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir, exist_ok=True)
+
+    csvfilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".csv"
+    imagefilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".jpg"
+else:
+    save_dir = os.path.join(save_dir, parking_ground.split("_")[-1], global_start_time.strftime("%Y%m%d"))
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir, exist_ok=True)
+
+    csvfilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + "-" + start_day + "-" + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".csv"
+    imagefilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + "-" + start_day + "-" + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".jpg"
+
+#filename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + "-" + start_day + "-" + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".csv"
+
+df.to_csv(os.path.join(save_dir, csvfilename), encoding="utf_8_sig")
+
+cells_heatmap = dict(map(lambda x: (x[0], x[2]), cell_id_to_heatmap))
+
+image_ground_dir = r"C:\Users\Thanh\Downloads\Parking_ground_images_and_db_ver_2"
+label_file_path = "../parking_spaces_data/parking_spaces_unified_id_segmen_in_ground.json"
+
+if parking_ground == "parking_ground_SA":
+    file_name = "cropped_SA.jpg"
+else:
+    file_name = "cropped_PA.jpg"
+
+file_path = os.path.join(image_ground_dir, file_name)
+img = cv2.imread(file_path)
+
+with open(label_file_path, "r") as f:
+    json_label = json.load(f)
+
+unified_id_to_polygons = json_label
+
+color_dict = {(0., 1.): (255, 255, 255),
+              (1., 20.): (153, 51, 102),
+              (20., 40.): (255, 0, 0),
+              (40., 60.): (0, 255, 0),
+              (60., 80.): (0, 255, 255),
+              80.: (0, 0, 255)}
+
+for unified_id in unified_id_to_polygons[parking_ground]:
+    if int(unified_id) not in cells_heatmap:
+        cells_heatmap[int(unified_id)] = 0.
+    segment = unified_id_to_polygons[parking_ground][unified_id]["positions"]
+    segment = np.array(segment, dtype=np.uint16).reshape(-1, 2)
+    cc, rr = segment.T
+    rr, cc = polygon(rr, cc)
+    percent = cells_heatmap[cells_mapping[int(unified_id)]]
+    for percent_time in color_dict:
+        if isinstance(percent_time, float):
+            if percent_time == 0.:
+                if percent <= percent_time:
+                    color = color_dict[percent_time]
+                    break
+                else:
+                    continue
+            else:
+                if percent > percent_time:
+                    color = color_dict[percent_time]
+                    break
+                else:
+                    continue
+        else:
+            if percent >= percent_time[0] and percent < percent_time[1]:
+                color = color_dict[percent_time]
+                break
+            else:
+                continue
+    img[rr, cc] = color
+    center_x, center_y = np.mean(segment, axis=0).astype(np.uint16)
+    segment = segment.tolist()
+    color = (0, 0, 0)
+    for j, point in enumerate(segment):
+        x1, y1, = point
+        if j < len(segment) - 1:
+            x2, y2 = segment[j + 1]
+        else:
+            x2, y2 = segment[0]
+
+        cv2.line(img, (x1, y1), (x2, y2), color=color, thickness=1)
+
+    cv2.putText(img, "{}".format(unified_id), (center_x, center_y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), thickness=1)
+
+cv2.imshow("{}".format("".join([parking_ground, "_heatmap"])), img)
+cv2.waitKey(0)
+
+cv2.imwrite(os.path.join(save_dir, imagefilename), img)

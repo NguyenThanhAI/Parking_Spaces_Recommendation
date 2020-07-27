@@ -26,6 +26,8 @@ def get_args():
     parser.add_argument("--min_vertical_dim", type=int, default=20, help="Min dimensional along vertical dimension")
     parser.add_argument("--max_vertical_dim", type=int, default=100, help="Max dimensional along vertical dimension")
     parser.add_argument("--max_num_augmented_instances_per_image", type=int, default=10, help="Max number of augmented instances per image")
+    parser.add_argument("--min_width", type=int, default=400, help="Min width of instance to be considered")
+    parser.add_argument("--min_height", type=int, default=400, help="Min height of instance to be considered")
 
     args = parser.parse_args()
 
@@ -61,7 +63,7 @@ if __name__ == '__main__':
 
     assert isinstance(augmenting_images, list) and isinstance(augmenting_annotations, list)
 
-    augmenting_annotations = list(filter(lambda x: x["area"] >  args.min_area_instance_to_choose and isinstance(x["segmentation"], list) and x["iscrowd"] == 0 and isinstance(x["bbox"][2], float) and isinstance(x["bbox"][3], float) and x["bbox"][2] > 450 and x["bbox"][3] > 450, augmenting_annotations))
+    #augmenting_annotations = list(filter(lambda x: x["area"] >  args.min_area_instance_to_choose and isinstance(x["segmentation"], list) and x["iscrowd"] == 0 and isinstance(x["bbox"][2], float) and isinstance(x["bbox"][3], float) and x["bbox"][2] > args.min_width and x["bbox"][3] > args.min_height, augmenting_annotations))
 
 
     augmented_images = []
@@ -86,17 +88,19 @@ if __name__ == '__main__':
             augmented_annotations.append(car_or_vehicle)
             anno_id += 1
 
-        num_augmented_instances = np.random.randint(low=0, high=args.max_num_augmented_instances_per_image)
+        num_augmented_instances = np.random.randint(low=2, high=args.max_num_augmented_instances_per_image)
         print("num_augmented_instances {}".format(num_augmented_instances))
         added_instances = np.random.choice(augmenting_annotations, size=num_augmented_instances, replace=True)
-
+        print("num chosen instances: {}, {}".format(len(added_instances), len(augmenting_annotations)))
         augmented_mask = np.zeros_like(img, dtype=np.uint8)
 
         for i, instance in enumerate(added_instances):
             segmentation = instance["segmentation"]
             area = instance["area"]
             bbox = instance["bbox"]
-            if len(segmentation) != 1 or bbox[2] <= 450 and bbox[3] <= 450:
+            #if len(segmentation) != 1 or area <= args.min_area_instance_to_choose or bbox[2] <= args.min_width and bbox[3] <= args.min_height:
+            #    continue
+            if len(segmentation) != 1:
                 continue
 
             corresponding_image = list(filter(lambda x: x["id"] == instance["image_id"], augmenting_images))
@@ -112,7 +116,7 @@ if __name__ == '__main__':
             segmentation = segmentation - np.array([x_min, y_min])[np.newaxis, :]
 
             cropped_instance = corresponding_image[y_min: y_max + 1, x_min: x_max + 1].copy()
-            print("shape of instance {}, bbox {}".format(cropped_instance.shape, instance["bbox"]))
+            #print("shape of instance {}, bbox {}".format(cropped_instance.shape, instance["bbox"]))
             if np.prod(cropped_instance.shape) == 0:
                 continue
             y_position = np.random.randint(low=args.min_vertical_image_position, high=args.max_vertical_image_position)
@@ -121,7 +125,7 @@ if __name__ == '__main__':
             target_size = (y_position - args.min_vertical_image_position) * (args.max_vertical_dim - args.min_vertical_dim) / (args.max_vertical_image_position - args.min_vertical_image_position) + args.min_vertical_dim
 
             scale_factor = target_size / cropped_instance.shape[0]
-            print("scale_factor {}".format(scale_factor))
+            #print("scale_factor {}".format(scale_factor))
             segmentation = (segmentation * scale_factor).astype(int) #- np.array([1])[np.newaxis, np.newaxis]
             area = area * (scale_factor ** 2)
 
@@ -129,11 +133,18 @@ if __name__ == '__main__':
 
             rr, cc = polygon(rr, cc)
 
+            rr = np.where(rr >= cropped_instance.shape[0], cropped_instance.shape[0] - 1, rr)
+            cc = np.where(cc >= cropped_instance.shape[1], cropped_instance.shape[1] - 1, cc)
+
             cropped_instance = rescale(cropped_instance, scale=scale_factor)
 
             mask = np.zeros_like(cropped_instance, dtype=np.bool)
 
+            #try:
             mask[rr, cc] = True
+            #except Exception as e:
+            #    print(e)
+            #    continue
 
             cropped_instance = (np.where(mask, cropped_instance, np.zeros_like(cropped_instance)) * 255.).astype(np.uint8)
 

@@ -11,9 +11,9 @@ from database.mysqldatabase import MySQLDataBase
 ROOT_DIR = os.path.abspath("..")
 sys.path.append(ROOT_DIR)
 
-sqlite_database = SQLiteDataBase(database_dir="../database", database_file="edge_matrix_thanh.db")
+sqlite_database = SQLiteDataBase(database_dir="../database", database_file="edge_matrix_thanh1.db")
 
-mysql_database = MySQLDataBase(host="18.181.144.207", port="3306", user="edge_matrix", passwd="edgematrix", database="edge_matrix_thanh", reset_table=False)
+mysql_database = MySQLDataBase(host="18.181.144.207", port="3306", user="edge_matrix", passwd="edgematrix", database="edge_matrix_thanh1", reset_table=False)
 
 
 records = sqlite_database.get_all_pairs()
