@@ -19,13 +19,13 @@ sys.path.append(ROOT_DIR)
 from database.sqldatabase import SQLiteDataBase
 from database.mysqldatabase import MySQLDataBase
 
-use_mysql = True
+use_mysql = False
 print(os.path.abspath("../database"))
 if not use_mysql:
-    database = SQLiteDataBase(database_dir="../database", database_file="2019-11-24.db")
+    database = SQLiteDataBase(database_dir="../database", database_file="edge_matrix_thanh1.db")
 else:
     #database = MySQLDataBase(host="localhost", user="Thanh", passwd="Aimesoft", database="2019_10_24", reset_table=False)
-    database = MySQLDataBase(host="18.181.144.207", port="3306", user="edge_matrix", passwd="edgematrix", database="edge_matrix_thanh1", reset_table=False)
+    database = MySQLDataBase(host="18.181.144.207", port="3306", user="edge_matrix", passwd="edgematrix", database="edge_matrix_thanh", reset_table=False)
 
 records = database.get_all_pairs()
 
@@ -62,6 +62,7 @@ global_start_time = datetime(year=2019, month=11, day=29, hour=0)
 
 global_end_time = datetime(year=2019, month=11, day=29, hour=12)
 
+#data = list(filter(lambda x: (x[7] >= global_start_time and x[7] <= global_end_time) or (x[8] >= global_start_time and x[8] <= global_end_time) or (x[7] <= global_start_time and x[8] >= global_end_time), data))
 data = list(filter(lambda x: (x[7] >= global_start_time and x[7] <= global_end_time) or (x[8] >= global_start_time and x[8] <= global_end_time), data))
 #with open("records.txt", "w") as f:
 #    for d in data:
@@ -144,7 +145,7 @@ if start_day == end_day:
         os.makedirs(save_dir, exist_ok=True)
 
     csvfilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".csv"
-    imagefilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".jpg"
+    imagefilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".png"
 else:
     save_dir = os.path.join(save_dir, parking_ground.split("_")[-1], global_start_time.strftime("%Y%m%d"))
 
@@ -152,7 +153,7 @@ else:
         os.makedirs(save_dir, exist_ok=True)
 
     csvfilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + "-" + start_day + "-" + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".csv"
-    imagefilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + "-" + start_day + "-" + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".jpg"
+    imagefilename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + "-" + start_day + "-" + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".png"
 
 #filename = "cells_heatmap" + "-" + str(global_start_time.hour).zfill(2) + "-" + start_day + "-" + str(global_end_time.hour).zfill(2) + "-" + end_day + "-" + parking_ground.split("_")[-1] + ".csv"
 
