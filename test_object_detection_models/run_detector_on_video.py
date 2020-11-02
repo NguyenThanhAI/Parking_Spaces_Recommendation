@@ -12,6 +12,17 @@ from vehicle_tracking.multiprocess_vehicle_detector import MultiProcessVehicleDe
 from vehicle_tracking.utils import non_maximum_suppression, iou_mat
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 def get_args():
     parser = argparse.ArgumentParser()
 
@@ -19,9 +30,9 @@ def get_args():
     parser.add_argument("--model_arch", type=str, choices=["mask_rcnn", "yolact"], default="mask_rcnn", help="Model detector")
     parser.add_argument("--checkpoint_name", type=str, default="mask_rcnn_cars_and_vehicles_0008.h5", help="Checkpoint name")
     parser.add_argument("--detection_vehicle_thresh", type=float, default=0.4, help="Detection threshold")
-    parser.add_argument("--is_savevideo", type=bool, default=True, help="Show result or not")
+    parser.add_argument("--is_savevideo", type=str2bool, default=True, help="Show result or not")
     parser.add_argument("--save_dir", type=str, help="Show result or not")
-    parser.add_argument("--is_showframe", type=bool, default=True, help="Show result or not")
+    parser.add_argument("--is_showframe", type=str2bool, default=True, help="Show result or not")
 
     args = parser.parse_args()
 
