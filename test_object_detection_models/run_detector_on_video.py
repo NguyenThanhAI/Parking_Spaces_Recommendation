@@ -7,8 +7,12 @@ sys.path.append(ROOT_DIR)
 import argparse
 import numpy as np
 import cv2
+
+import torch
+
 from load_videos.videostream import QueuedStream
 from vehicle_tracking.multiprocess_vehicle_detector import MultiProcessVehicleDetector
+from vehicle_tracking.vehicle_detector_1 import VehicleDetector
 from vehicle_tracking.utils import non_maximum_suppression, iou_mat
 
 
@@ -32,6 +36,9 @@ def get_args():
     parser.add_argument("--detection_vehicle_thresh", type=float, default=0.4, help="Detection threshold")
     parser.add_argument("--is_savevideo", type=str2bool, default=True, help="Show result or not")
     parser.add_argument("--save_dir", type=str, help="Show result or not")
+    parser.add_argument("--run_multiprocessing", type=str2bool, default=False, help="Run multiprocessing or not")
+    parser.add_argument("--is_nms", type=str2bool, default=False, help="Run NMS or not")
+    parser.add_argument("--is_filterboxes", type=str2bool, default=False, help="Filter boxes or not")
     parser.add_argument("--is_showframe", type=str2bool, default=True, help="Show result or not")
 
     args = parser.parse_args()
@@ -89,9 +96,17 @@ if __name__ == '__main__':
 
     class_id_to_name = {1: "Car", 2: "Truck", 3: "Bus", 4: "Bicycle"}
 
-    detector = MultiProcessVehicleDetector(checkpoint_name=args.checkpoint_name, detection_vehicle_thresh=args.detection_vehicle_thresh, model_arch=args.model_arch)
-    detector.start()
-    detector.warm_up()
+    if args.run_multiprocessing:
+        print("Run mutiprocessing")
+        detector = MultiProcessVehicleDetector(checkpoint_name=args.checkpoint_name, detection_vehicle_thresh=args.detection_vehicle_thresh, model_arch=args.model_arch)
+        detector.start()
+        detector.warm_up()
+    else:
+        print("Don't run multiprocessing")
+        detector = VehicleDetector(checkpoint_name=args.checkpoint_name,
+                                   detection_vehicle_thresh=args.detection_vehicle_thresh,
+                                   model_arch=args.model_arch,
+                                   cuda=torch.cuda.is_available())
     run = False
 
     cap = cv2.VideoCapture(args.video_source)
@@ -133,23 +148,29 @@ if __name__ == '__main__':
             run = False
             break
 
-        detector.put_frame(frame_id, frame, time_stamp, cam_stream)
+        if args.run_multiprocessing:
+            detector.put_frame(frame_id, frame, time_stamp, cam_stream)
 
-        rois, scores, class_ids, masks, frame_id, time_stamp, cam_detect = detector.get_result()
+            rois, scores, class_ids, masks, frame_id, time_stamp, cam_detect = detector.get_result()
+            print(rois.shape, scores.shape, class_ids.shape, masks.shape)
+        else:
+            rois, scores, class_ids, masks = detector(frame, parking_ground=None, cam=None)
 
-        chosen_indices = non_maximum_suppression(bboxes=rois, scores=scores, max_bbox_overlap=0.3)
-        rois = rois[chosen_indices]
-        scores = scores[chosen_indices]
-        class_ids = class_ids[chosen_indices]
-        masks = masks[chosen_indices]
+        if args.is_nms:
+            chosen_indices = non_maximum_suppression(bboxes=rois, scores=scores, max_bbox_overlap=0.3)
+            rois = rois[chosen_indices]
+            scores = scores[chosen_indices]
+            class_ids = class_ids[chosen_indices]
+            masks = masks[chosen_indices]
 
-        rois, scores, class_ids, masks = filter_boxes(rois=rois, scores=scores, class_ids=class_ids, masks=masks, size=frame.shape)
+        if args.is_filterboxes:
+            rois, scores, class_ids, masks = filter_boxes(rois=rois, scores=scores, class_ids=class_ids, masks=masks, size=frame.shape)
 
-        hold_idx = filter_iou(rois, scores, class_ids, masks)
-        rois = rois[hold_idx]
-        scores = scores[hold_idx]
-        class_ids = class_ids[hold_idx]
-        masks = masks[hold_idx]
+            hold_idx = filter_iou(rois, scores, class_ids, masks)
+            rois = rois[hold_idx]
+            scores = scores[hold_idx]
+            class_ids = class_ids[hold_idx]
+            masks = masks[hold_idx]
 
         if args.model_arch == "mask_rcnn":
             class_id_list = [1, 2, 3, 4]
@@ -182,7 +203,8 @@ if __name__ == '__main__':
             cv2.imshow("Detector", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             run = False
-            detector.stop()
+            if args.run_multiprocessing:
+                detector.stop()
             stream.stop()
             cv2.destroyAllWindows()
             break

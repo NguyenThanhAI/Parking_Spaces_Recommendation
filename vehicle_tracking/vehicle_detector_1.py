@@ -122,30 +122,7 @@ class VehicleDetector(object):
 
                 class_ids, scores, rois, masks = [x.cpu().numpy() for x in t]
 
-        detections_list = []
-        if self.model_arch == "mask_rcnn":
-            class_id_list = [1, 2, 3, 4]
-        else:
-            class_id_list = [2, 5, 7]
-        for det_id, (roi, score, class_id, mask) in enumerate(zip(rois, scores, class_ids, masks)):
-            if score >= self.detection_vehicle_thresh and class_id in class_id_list:
-                rr, cc = np.where(mask)
-                if len(rr) == 0 or len(cc) == 0:
-                    continue
-                self.positions_mask[cam][rr, cc] = det_id
-                self.square_of_mask[cam][det_id] = rr.shape[0]
-                y_min, y_max = np.min(rr), np.max(rr)
-                x_min, x_max = np.min(cc), np.max(cc)
-                bbox = [x_min, y_min, x_max, y_max]
-                positions = np.array([rr, cc]) # Tập hợp các điểm [y1, y2, ..., yn], [x1, x2, ..., xn] nằm trong vehicle mask
-                if parking_ground == "parking_ground_SA" and cam == "cam_1": # Thêm điều kiện nếu là sân đỗ SA và camera là camera 1 thêm điều kiện để vùng nằm trên đường thẳng 9x + 10y - 5760 (góc trên bên trái màn hình), các xe được phát hiện trong vùng này sẽ bị bỏ qua
-                    if 81 * x_max + 96 * y_max - 62208 >= 0:
-                        detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, parking_ground, cam))
-                    else:
-                        self.positions_mask[cam][rr, cc] = -1
-                else:
-                    detections_list.append(VehicleDetection(score, bbox, positions, class_id, det_id, parking_ground, cam))
-        return detections_list
+        return rois, scores, class_ids, masks
 
     def get_dict_convert_col_to_det_id(self, cam):
         return dict(zip(list(range(len(self.square_of_mask[cam].keys()))), list(self.square_of_mask[cam].keys())))
