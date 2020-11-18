@@ -1,5 +1,9 @@
 import os
+import sys
 import argparse
+
+ROOT_DIR = os.path.abspath("..")
+sys.path.append(ROOT_DIR)
 
 from itertools import groupby
 from operator import itemgetter
@@ -135,11 +139,9 @@ def json_to_parking_spaces_mask(args, json_label):
 if __name__ == '__main__':
     args = get_args()
 
-    ROOT_DIR = Path(".")
+    MODEL_DIR = os.path.join(ROOT_DIR, "test_object_detection_models", "logs")
 
-    MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-
-    COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_cars_and_vehicles_0008.h5")
+    COCO_MODEL_PATH = os.path.join(ROOT_DIR, "test_object_detection_models", "mask_rcnn_cars_and_vehicles_0008.h5")
 
     if not os.path.exists(args.result_dir):
         os.makedirs(args.result_dir, exist_ok=True)
