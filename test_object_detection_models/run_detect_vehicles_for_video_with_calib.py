@@ -28,6 +28,8 @@ from sklearn.neighbors import KDTree
 #from shapely.geometry import Point
 #from shapely.geometry.polygon import Polygon
 
+import matplotlib.path as mlpPath
+
 
 class MaskRCNNConfig(mrcnn.config.Config):
     NAME = "coco_pretrained_model_config"
@@ -53,11 +55,12 @@ def get_args():
 
     parser.add_argument("--video_path", type=str, default=r"C:\Users\Thanh\Downloads\production_ID_3858833.mp4")
     parser.add_argument("--parking_spaces_config_json", type=str, default=r"C:\Users\Thanh\Downloads\task_parking_11_19-2020_11_17_03_18_12-coco_1.0\annotations\instances_default.json")
-    parser.add_argument("--restricted_area_json", type=str, default=r"C:\Users\Thanh\Downloads\task_restricted_areas-2020_11_19_02_59_45-coco_1.0\annotations\instances_default.json")
+    parser.add_argument("--restricted_area_json", type=str, default=r"C:\Users\Thanh\Downloads\task_restricted_areas-2020_11_19_02_07_26-coco_1.0\annotations\instances_default.json")
     parser.add_argument("--ios_threshold", type=float, default=0.3)
     parser.add_argument("--result_dir", type=str, default=r"results")
     parser.add_argument("--is_nms", type=str2bool, default=True, help="Run NMS or not")
     parser.add_argument("--is_filterboxes", type=str2bool, default=True, help="Filter boxes or not")
+    parser.add_argument("--is_filterareas", type=str2bool, default=True)
     parser.add_argument("--is_showframe", type=str2bool, default=False, help="Show result or not")
 
     args = parser.parse_args()
@@ -75,7 +78,27 @@ def filter_boxes(rois, scores, class_ids, masks, size):
         rr, cc = np.where(mask)
         y_min, y_max = np.min(rr), np.max(rr)
         x_min, x_max = np.min(cc), np.max(cc)
-        if x_max - x_min > 0.07 * width or y_max - y_min > 0.12 * height or x_max - x_min < 0.04 * width or y_max - y_min < 0.04 * height or (y_max - y_min) * (x_max - x_min) < 0.003 * height * width:
+        if x_max - x_min > 0.15 * width or y_max - y_min > 0.15 * height or x_max - x_min < 0.03 * width or y_max - y_min < 0.03 * height or (y_max - y_min) * (x_max - x_min) < 0.002 * height * width:
+            continue
+        new_rois.append(rois[idx])
+        new_scores.append(scores[idx])
+        new_class_ids.append(class_ids[idx])
+        new_maskes.append(masks[idx])
+
+    return np.array(new_rois), np.array(new_scores), np.array(new_class_ids), np.array(new_maskes)
+
+def filter_areas(bbPath, rois, scores, class_ids, masks, size):
+    height, width, _ = size
+    new_rois = []
+    new_scores = []
+    new_class_ids = []
+    new_maskes = []
+    for idx, mask in enumerate(masks):
+        rr, cc = np.where(mask)
+        y_mean = np.mean(rr)
+        x_mean = np.mean(cc)
+        #print(idx, bbPath.contains_point((x_mean, y_mean)))
+        if not bbPath.contains_point((x_mean, y_mean)):
             continue
         new_rois.append(rois[idx])
         new_scores.append(scores[idx])
@@ -159,18 +182,14 @@ def json_to_restricted_area(args, json_label):
 
         restricted_areas = list(filter(lambda x: x["image_id"] == image_id, annotations))
 
-        restricted_mask = np.zeros(shape=[height, width], dtype=np.bool)
-
         for i, restricted_area in enumerate(restricted_areas):
             segmentation = restricted_area["segmentation"]
             id = restricted_area["id"]
             segmentation = np.array(segmentation, dtype=np.uint16).reshape(-1, 2)
-            cc, rr = segmentation.T
-            rr, cc = polygon(rr, cc)
-            restricted_mask[rr, cc] = True
+            bbPath = mlpPath.Path(segmentation)
 
 
-        image_to_restricted_area[frame_id] = restricted_mask
+        image_to_restricted_area[frame_id] = bbPath
 
     return image_to_restricted_area
 
@@ -197,7 +216,7 @@ if __name__ == '__main__':
 
     json_restricted_area = read_label_file(args.restricted_area_json)
     image_to_restricted_area = json_to_restricted_area(args, json_restricted_area)
-    print("image_to_restricted_area: {}".format(image_to_restricted_area))
+    #print("image_to_restricted_area: {}".format(image_to_restricted_area))
 
     frame_milestone = np.array(list(image_to_mask.keys()))
 
@@ -231,7 +250,6 @@ if __name__ == '__main__':
         restricted_area = image_to_restricted_area[respective_milestone]
 
         rgb_img = frame[:, :, ::-1]
-        rgb_img = np.where(restricted_area[:, :, np.newaxis], rgb_img, np.zeros_like(rgb_img))
 
         start = time.time()
         results = model.detect([rgb_img], verbose=0)
@@ -252,6 +270,11 @@ if __name__ == '__main__':
 
         if args.is_filterboxes:
             rois, scores, class_ids, masks = filter_boxes(rois=rois, scores=scores, class_ids=class_ids, masks=masks, size=frame.shape)
+            #print("Filter boxes")
+            #rois, scores, class_ids, masks = filter_areas(bbPath=restricted_area, rois=rois, scores=scores, class_ids=class_ids, masks=masks, size=frame.shape)
+
+        if args.is_filterareas:
+            rois, scores, class_ids, masks = filter_areas(bbPath=restricted_area, rois=rois, scores=scores, class_ids=class_ids, masks=masks, size=frame.shape)
 
         color = np.array([255, 255, 0], dtype=np.uint8)
 
@@ -339,16 +362,16 @@ if __name__ == '__main__':
         # cv2.imshow("Color mask", color_mask)
         # cv2.waitKey(0)
 
-        results = np.where(color_mask > 0, cv2.addWeighted(frame, 0.5, color_mask, 0.5, 0), frame)
+        results = np.where(color_mask > 0, cv2.addWeighted(frame, 0.2, color_mask, 0.8, 0), frame)
 
         for veh_id in vehicle_bbox:
         #for roi in rois:
             x_min, y_min, x_max, y_max = vehicle_bbox[veh_id]
             #y_min, x_min, y_max, x_max = roi
-            roi_width = round((x_max - x_min) / width, 3)
-            roi_height = round((y_max - y_min) / height, 3)
-            square = round(roi_width * roi_height, 3)
-            cv2.putText(results, "roi_width: {}, roi_height: {}, square: {}".format(roi_width, roi_height, square), org=(x_min + 50, y_min + 50), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.3, color=(0, 255, 0))
+            #roi_width = round((x_max - x_min) / width, 3)
+            #roi_height = round((y_max - y_min) / height, 3)
+            #square = round(roi_width * roi_height, 3)
+            #cv2.putText(results, "roi_width: {}, roi_height: {}, square: {}".format(roi_width, roi_height, square), org=(x_min + 50, y_min + 50), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.3, color=(0, 255, 0))
             cv2.rectangle(results, (x_min, y_min), (x_max, y_max), color=(0, 255, 0), thickness=2)
 
         if args.is_showframe:
