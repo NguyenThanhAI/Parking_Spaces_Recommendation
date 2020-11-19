@@ -133,6 +133,10 @@ def json_to_parking_spaces_mask(args, json_label):
             width = item["width"]
             height = item["height"]
 
+        vertical_border = height / 2
+        upper_group = []
+        lower_group = []
+
         ps_mask_view = 255 * np.ones(shape=[height, width, 3], dtype=np.uint8)
 
         parking_spaces = list(filter(lambda x: x["image_id"] == image_id, annotations))
@@ -146,11 +150,37 @@ def json_to_parking_spaces_mask(args, json_label):
             id = parking_space["id"]
             segmentation = np.array(segmentation, dtype=np.uint16).reshape(-1, 2)
             cc, rr = segmentation.T
+            x_mean = np.mean(cc)
+            y_mean = np.mean(rr)
+            if y_mean <= vertical_border:
+                upper_group.append({"id": id, "cc": cc, "rr": rr, "x_mean": x_mean, "y_mean": y_mean})
+            else:
+                lower_group.append({"id": id, "cc": cc, "rr": rr, "x_mean": x_mean, "y_mean": y_mean})
+
+        upper_group = sorted(upper_group, key=lambda x: x["x_mean"])
+        lower_group = sorted(lower_group, key=lambda x: x["x_mean"])
+
+        print("upper: {}, lower: {}".format(len(upper_group), len(lower_group)))
+
+        for j, space in enumerate(upper_group):
+            rr = space["rr"]
+            cc = space["cc"]
             rr, cc = polygon(rr, cc)
-            img_mask[rr, cc] = id
+            space_id = j
+            img_mask[rr, cc] = space_id
             ps_mask_view[rr, cc] = np.random.randint(0, 255, size=[3])
-            square_mask[id] = rr.shape[0]
-            pos_mask[id] = (rr, cc)
+            square_mask[space_id] = rr.shape[0]
+            pos_mask[space_id] = (rr, cc)
+
+        for k, space in enumerate(lower_group):
+            rr = space["rr"]
+            cc = space["cc"]
+            rr, cc = polygon(rr, cc)
+            space_id = k + len(upper_group)
+            img_mask[rr, cc] = space_id
+            ps_mask_view[rr, cc] = np.random.randint(0, 255, size=[3])
+            square_mask[space_id] = rr.shape[0]
+            pos_mask[space_id] = (rr, cc)
 
         image_to_mask[frame_id]["img_mask"] = img_mask
         image_to_mask[frame_id]["square_mask"] = square_mask
@@ -235,6 +265,10 @@ if __name__ == '__main__':
     num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     writer = cv2.VideoWriter(os.path.join(args.result_dir, "result.mp4"), fourcc, fps, (width, height))
+
+    tentative_full = {}
+    active_full = []
+    inactive_full = {}
 
     #frame_id = 0
     for frame_id in tqdm(range(num_frames)):
@@ -337,17 +371,96 @@ if __name__ == '__main__':
 
         has_vehicle = []
 
+        inactive_to_active = []
+        active_this_step = []
+        brand_new = []
+        new_tentatives = []
+        inactive_this_step = []
+
         for veh_id in vehicle_id_to_unified_id_ios:
             if len(vehicle_id_to_unified_id_ios[veh_id]) > 0:
                 for uid in vehicle_id_to_unified_id_ios[veh_id]:
                     if vehicle_id_to_unified_id_ios[veh_id][uid] > args.ios_threshold:
-                        if uid not in has_vehicle:
+                        if uid in tentative_full:
+                            tentative_full[uid] += 1
+                            if tentative_full[uid] > 25: # tentative_steps_before_accepted
+                                brand_new.append(uid)
+                            #del tentative_full[uid]
                             has_vehicle.append(uid)
-                            rr, cc = pos_mask[uid]
-                            color_mask[rr, cc] = (0, 0, 255)
+                            continue
+
+                        if uid in active_full:
+                            #active_this_step.append(uid)
+                            has_vehicle.append(uid)
+                            continue
+
+                        if uid in inactive_full:
+                            inactive_to_active.append(uid)
+                            #del inactive_full[uid]
+                            has_vehicle.append(uid)
+                            continue
+
+                        new_tentatives.append(uid)
+                        has_vehicle.append(uid)
+
+        for uid in brand_new:
+            active_full.append(uid)
+            del tentative_full[uid]
+
+        for uid in inactive_to_active:
+            active_full.append(uid)
+            del inactive_full[uid]
+
+        active_full = list(set(active_full))
+        has_vehicle = list(set(has_vehicle))
+
+        deleted = []
+        for uid in tentative_full:
+            if uid not in has_vehicle:
+                #del tentative_full[uid]
+                deleted.append(uid)
+        for uid in deleted:
+            del tentative_full[uid]
+
+        for uid in new_tentatives:
+            tentative_full[uid] = 1
 
         for uid in parking_space_square_of_mask:
             if uid not in has_vehicle:
+                inactive_this_step.append(uid)
+
+        deleted = []
+        for uid in inactive_this_step:
+            if uid in active_full:
+                active_full.remove(uid)
+                assert uid not in inactive_full
+                inactive_full[uid] = 1
+                continue
+            if uid in inactive_full:
+                inactive_full[uid] += 1
+                if inactive_full[uid] > 50:
+                    deleted.append(uid)
+        for uid in deleted:
+            del inactive_full[uid]
+
+        print("tentative_full: {}, active_full: {}, inactive_full: {}".format(tentative_full, active_full, inactive_full))
+
+        red_uid = []
+
+        for uid in active_full:
+            rr, cc = pos_mask[uid]
+            #print(uid, rr, cc)
+            red_uid.append(uid)
+            color_mask[rr, cc] = (0, 0, 255)
+
+        for uid in inactive_full:
+            rr, cc = pos_mask[uid]
+            #print(uid, rr, cc)
+            red_uid.append(uid)
+            color_mask[rr, cc] = (0, 0, 255)
+
+        for uid in parking_space_square_of_mask:
+            if uid not in red_uid:
                 rr, cc = pos_mask[uid]
                 color_mask[rr, cc] = (0, 255, 0)
 
