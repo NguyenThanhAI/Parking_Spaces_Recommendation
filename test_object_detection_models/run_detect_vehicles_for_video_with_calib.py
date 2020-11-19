@@ -25,6 +25,9 @@ from vehicle_tracking.utils import non_maximum_suppression
 from scipy.interpolate import NearestNDInterpolator
 from sklearn.neighbors import KDTree
 
+#from shapely.geometry import Point
+#from shapely.geometry.polygon import Polygon
+
 
 class MaskRCNNConfig(mrcnn.config.Config):
     NAME = "coco_pretrained_model_config"
@@ -50,6 +53,7 @@ def get_args():
 
     parser.add_argument("--video_path", type=str, default=r"C:\Users\Thanh\Downloads\production_ID_3858833.mp4")
     parser.add_argument("--parking_spaces_config_json", type=str, default=r"C:\Users\Thanh\Downloads\task_parking_11_19-2020_11_17_03_18_12-coco_1.0\annotations\instances_default.json")
+    parser.add_argument("--restricted_area_json", type=str, default=r"C:\Users\Thanh\Downloads\task_restricted_areas-2020_11_19_02_59_45-coco_1.0\annotations\instances_default.json")
     parser.add_argument("--ios_threshold", type=float, default=0.3)
     parser.add_argument("--result_dir", type=str, default=r"results")
     parser.add_argument("--is_nms", type=str2bool, default=True, help="Run NMS or not")
@@ -136,6 +140,41 @@ def json_to_parking_spaces_mask(args, json_label):
     return image_to_mask
 
 
+def json_to_restricted_area(args, json_label):
+    assert isinstance(json_label, dict)
+    images = json_label["images"]
+    annotations = json_label["annotations"]
+    assert isinstance(images, list) and isinstance(annotations, list)
+
+    image_to_restricted_area = {}
+
+    for image_id, items in groupby(images, key=itemgetter("id")):
+        for item in items:
+            print("Path of image id {0} is {1}".format(image_id, item["file_name"]))
+            file_name = item["file_name"]
+            frame_id = int(file_name.split(".")[0].split("_")[1])
+            image_to_restricted_area[frame_id] = {}
+            width = item["width"]
+            height = item["height"]
+
+        restricted_areas = list(filter(lambda x: x["image_id"] == image_id, annotations))
+
+        restricted_mask = np.zeros(shape=[height, width], dtype=np.bool)
+
+        for i, restricted_area in enumerate(restricted_areas):
+            segmentation = restricted_area["segmentation"]
+            id = restricted_area["id"]
+            segmentation = np.array(segmentation, dtype=np.uint16).reshape(-1, 2)
+            cc, rr = segmentation.T
+            rr, cc = polygon(rr, cc)
+            restricted_mask[rr, cc] = True
+
+
+        image_to_restricted_area[frame_id] = restricted_mask
+
+    return image_to_restricted_area
+
+
 if __name__ == '__main__':
     args = get_args()
 
@@ -146,12 +185,19 @@ if __name__ == '__main__':
     if not os.path.exists(args.result_dir):
         os.makedirs(args.result_dir, exist_ok=True)
 
+    if not os.path.exists(os.path.join(args.result_dir, "images")):
+        os.makedirs(os.path.join(args.result_dir, "images"), exist_ok=True)
+
     model = MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=MaskRCNNConfig())
 
     model.load_weights(COCO_MODEL_PATH, by_name=True)
 
     json_label = read_label_file(args.parking_spaces_config_json)
     image_to_mask = json_to_parking_spaces_mask(args, json_label)
+
+    json_restricted_area = read_label_file(args.restricted_area_json)
+    image_to_restricted_area = json_to_restricted_area(args, json_restricted_area)
+    print("image_to_restricted_area: {}".format(image_to_restricted_area))
 
     frame_milestone = np.array(list(image_to_mask.keys()))
 
@@ -177,7 +223,15 @@ if __name__ == '__main__':
         if not ret:
             break
 
+        index = tree.query([[frame_id]], return_distance=False)
+
+        respective_milestone = frame_milestone[np.squeeze(index)]
+        print("Frame id: {}, Respective milestone: {}".format(frame_id, respective_milestone))
+
+        restricted_area = image_to_restricted_area[respective_milestone]
+
         rgb_img = frame[:, :, ::-1]
+        rgb_img = np.where(restricted_area[:, :, np.newaxis], rgb_img, np.zeros_like(rgb_img))
 
         start = time.time()
         results = model.detect([rgb_img], verbose=0)
@@ -201,7 +255,7 @@ if __name__ == '__main__':
 
         color = np.array([255, 255, 0], dtype=np.uint8)
 
-        color_mask = 255 * np.ones_like(frame, dtype=np.uint8)
+        color_mask = 255 * np.zeros_like(frame, dtype=np.uint8)
 
         vehicle_mask = -1 * np.ones(shape=[height, width], dtype=np.uint8)
         vehicle_square_of_mask = {}
@@ -218,10 +272,6 @@ if __name__ == '__main__':
             vehicle_bbox[veh_id] = [x_min, y_min, x_max, y_max]
             veh_id += 1
 
-        index = tree.query([[frame_id]], return_distance=False)
-
-        respective_milestone = frame_milestone[np.squeeze(index)]
-        print("Frame id: {}, Respective milestone: {}".format(frame_id, respective_milestone))
         parking_space_mask, parking_space_square_of_mask, pos_mask = image_to_mask[respective_milestone]["img_mask"], image_to_mask[respective_milestone]["square_mask"], image_to_mask[respective_milestone]["pos_mask"]
         # print(parking_space_square_of_mask)
 
@@ -295,15 +345,16 @@ if __name__ == '__main__':
         #for roi in rois:
             x_min, y_min, x_max, y_max = vehicle_bbox[veh_id]
             #y_min, x_min, y_max, x_max = roi
-            #roi_width = round((x_max - x_min) / width, 3)
-            #roi_height = round((y_max - y_min) / height, 3)
-            #square = round(roi_width * roi_height, 3)
-            #cv2.putText(results, "roi_width: {}, roi_height: {}, square: {}".format(roi_width, roi_height, square), org=(x_min + 50, y_min + 50), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.3, color=(0, 255, 0))
+            roi_width = round((x_max - x_min) / width, 3)
+            roi_height = round((y_max - y_min) / height, 3)
+            square = round(roi_width * roi_height, 3)
+            cv2.putText(results, "roi_width: {}, roi_height: {}, square: {}".format(roi_width, roi_height, square), org=(x_min + 50, y_min + 50), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.3, color=(0, 255, 0))
             cv2.rectangle(results, (x_min, y_min), (x_max, y_max), color=(0, 255, 0), thickness=2)
 
         if args.is_showframe:
             cv2.imshow("Results", results)
-            cv2.waitKey(0)
+            cv2.waitKey(100)
+            cv2.imwrite(os.path.join(args.result_dir, "images", str(frame_id) + ".jpg"), results)
 
         writer.write(results)
 
